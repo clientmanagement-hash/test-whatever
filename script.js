@@ -86,7 +86,7 @@ const I18N = {
         'reservar.booking.p': 'Secure booking, instant confirmation and free cancellation on most options.',
         'reservar.booking.go': 'Check availability <span aria-hidden="true">→</span>',
         'reservar.wa.title': 'WhatsApp',
-        'reservar.wa.p': 'Message us directly on WhatsApp for enquiries, special offers and personal attention.',
+        'reservar.wa.p': 'Message us directly on WhatsApp at +506 8306 3336 for enquiries, special offers and personal attention.',
         'reservar.wa.go': 'Open WhatsApp chat <span aria-hidden="true">→</span>',
         'reservar.social.title': 'Social media',
         'reservar.social.p': 'Follow us and message us on our social networks.',
@@ -105,6 +105,8 @@ const I18N = {
         'reservar.form.ok': 'Thank you, {name}! We will contact you soon to confirm your request.',
         'reservar.form.errNombre': 'Please enter your name.',
         'reservar.form.errEmail': 'Please enter a valid email.',
+        'reservar.form.subject': 'New enquiry · Cabañas la Maite',
+        'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
 
         // Footer
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
@@ -450,13 +452,26 @@ if (contactForm && formMessage) {
         submitBtn.textContent = tr('reservar.form.sending', 'Enviando...');
         submitBtn.disabled = true;
 
-        // Simular envío (reemplazar con un endpoint real cuando exista)
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-
-        setMessage(
-            tr('reservar.form.ok', '¡Gracias {name}! Te contactaremos pronto para confirmar tu consulta.').replace('{name}', data.nombre.trim()),
-            'success'
-        );
+        // Envío real por FormSubmit → llega a cabanaslamaite@gmail.com
+        try {
+            const res = await fetch('https://formsubmit.co/ajax/cabanaslamaite@gmail.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    ...data,
+                    _subject: tr('reservar.form.subject', 'Nueva consulta · Cabañas la Maite'),
+                    _template: 'table',
+                    _captcha: 'false'
+                })
+            });
+            if (!res.ok) throw new Error('formsubmit_error');
+            setMessage(
+                tr('reservar.form.ok', '¡Gracias {name}! Te contactaremos pronto para confirmar tu consulta.').replace('{name}', data.nombre.trim()),
+                'success'
+            );
+        } catch (err) {
+            setMessage(tr('reservar.form.errSend', 'Hubo un error al enviar. Escríbenos por WhatsApp o intenta de nuevo.'), 'error');
+        }
         contactForm.reset();
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
