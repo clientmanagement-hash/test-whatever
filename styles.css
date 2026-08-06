@@ -1,6 +1,6 @@
 /* ==========================================================================
    Cabañas la Maite — Playa Sámara, Costa Rica
-   Estilo: sobrio · playero · alegre  |  Paleta: #000 #FFF verde rosado
+   Estilo: sobrio · playero · alegre  |  Paleta: #000 #FFF verde arena
    Fuente: Roboto
    ========================================================================== */
 
@@ -8,19 +8,19 @@
     /* Paleta */
     --ink: #0d0d0d;
     --paper: #ffffff;
-    --arena: #f7f5f0;          /* fondo cálido tipo arena */
-    --arena-2: #efece4;
+    --arena: #f6f2e9;          /* fondo cálido tipo arena */
+    --arena-2: #ece5d6;
 
-    --verde-950: #0a2318;
-    --verde-900: #0e2f20;
-    --verde-800: #12402b;
-    --verde-700: #175338;
-    --verde-600: #1d6b47;      /* verde principal */
-    --verde-500: #2f9a66;
-    --verde-300: #8fd4b0;
+    --verde-950: #0b1f12;
+    --verde-900: #112a19;
+    --verde-800: #163520;
+    --verde-700: #1d452a;
+    --verde-600: #265a38;      /* verde bosque principal */
+    --verde-500: #41754f;
+    --verde-300: #a3bfa9;
 
-    --rosa-600: #d6347a;
-    --rosa-500: #e84d8a;       /* acento rosado */
+    --tan-600: #8a6536;        /* arena oscura (hover) */
+    --tan-500: #a97d45;        /* arena — acento principal (del logo) */
 
     --gris-600: #5b635e;
     --gris-400: #9aa39d;
@@ -62,7 +62,7 @@ a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 button { font-family: inherit; cursor: pointer; }
 
-::selection { background: var(--rosa-500); color: #fff; }
+::selection { background: var(--tan-500); color: var(--verde-950); }
 
 .container {
     width: min(1180px, 100% - 48px);
@@ -80,7 +80,7 @@ section { position: relative; }
     color: var(--verde-600);
 }
 
-.text-pink { color: var(--rosa-500); }
+.text-tan { color: var(--tan-500); }
 .text-green { color: var(--verde-600); }
 
 .section { padding-block: clamp(72px, 10vw, 120px); }
@@ -125,11 +125,11 @@ section { position: relative; }
 .btn:hover { transform: translateY(-2px); }
 
 .btn-primary {
-    background: var(--rosa-500);
-    color: #fff;
-    box-shadow: 0 10px 26px rgba(232, 77, 138, 0.35);
+    background: var(--tan-500);
+    color: var(--verde-950);
+    box-shadow: 0 10px 26px rgba(169, 125, 69, 0.35);
 }
-.btn-primary:hover { background: var(--rosa-600); box-shadow: 0 14px 30px rgba(232, 77, 138, 0.45); }
+.btn-primary:hover { background: var(--tan-600); box-shadow: 0 14px 30px rgba(138, 101, 54, 0.45); }
 
 .btn-green {
     background: var(--verde-600);
@@ -214,7 +214,7 @@ section { position: relative; }
     bottom: 0;
     width: 100%;
     height: 2px;
-    background: var(--rosa-500);
+    background: var(--tan-500);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.25s ease;
@@ -226,14 +226,14 @@ section { position: relative; }
 .nav-cta {
     padding: 10px 22px;
     border-radius: var(--r-pill);
-    background: var(--rosa-500);
-    color: #fff !important;
+    background: var(--tan-500);
+    color: var(--verde-950) !important;
     font-weight: 700;
     font-size: 0.9rem;
-    box-shadow: 0 8px 20px rgba(232, 77, 138, 0.35);
+    box-shadow: 0 8px 20px rgba(169, 125, 69, 0.35);
     transition: background 0.2s ease, transform 0.2s ease;
 }
-.nav-cta:hover { background: var(--rosa-600); transform: translateY(-1px); }
+.nav-cta:hover { background: var(--tan-600); transform: translateY(-1px); }
 
 .nav-toggle {
     display: none;
@@ -318,7 +318,7 @@ section { position: relative; }
     text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
 }
 
-.hero h1 .accent { color: var(--rosa-500); }
+.hero h1 .accent { color: var(--tan-500); }
 
 .hero-tagline {
     margin: 22px auto 36px;
@@ -355,7 +355,7 @@ section { position: relative; }
     color: #fff;
     font-weight: 900;
     font-size: 1.05rem;
-    box-shadow: 0 6px 16px rgba(47, 154, 102, 0.5);
+    box-shadow: 0 6px 16px rgba(65, 117, 79, 0.5);
 }
 
 .scroll-cue {
@@ -391,7 +391,7 @@ section { position: relative; }
     height: 7px;
     margin-left: -1.5px;
     border-radius: 2px;
-    background: var(--rosa-500);
+    background: var(--tan-500);
     animation: cue 1.8s ease-in-out infinite;
 }
 
@@ -430,8 +430,8 @@ section { position: relative; }
     display: grid;
     place-items: center;
     border-radius: 14px;
-    background: rgba(47, 154, 102, 0.18);
-    border: 1px solid rgba(47, 154, 102, 0.4);
+    background: rgba(65, 117, 79, 0.18);
+    border: 1px solid rgba(65, 117, 79, 0.4);
     font-size: 1.25rem;
 }
 
@@ -480,13 +480,13 @@ section { position: relative; }
     left: 18px;
     padding: 8px 16px;
     border-radius: var(--r-pill);
-    background: var(--rosa-500);
-    color: #fff;
+    background: var(--tan-500);
+    color: var(--verde-950);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    box-shadow: 0 8px 18px rgba(232, 77, 138, 0.45);
+    box-shadow: 0 8px 18px rgba(169, 125, 69, 0.45);
 }
 
 .loft-info h3 {
@@ -536,7 +536,7 @@ section { position: relative; }
     font-size: 0.98rem;
     transition: gap 0.2s ease, color 0.2s ease;
 }
-.loft-link:hover { gap: 14px; color: var(--rosa-500); }
+.loft-link:hover { gap: 14px; color: var(--tan-500); }
 
 /* ---------- Galería (mosaico) ---------- */
 .galeria {
@@ -653,7 +653,7 @@ section { position: relative; }
     display: grid;
     place-items: center;
     border-radius: 12px;
-    background: rgba(47, 154, 102, 0.14);
+    background: rgba(65, 117, 79, 0.14);
     font-size: 1.25rem;
 }
 
@@ -694,14 +694,14 @@ section { position: relative; }
     font-size: 0.88rem;
     box-shadow: var(--shadow-md);
 }
-.map-badge svg { width: 20px; height: 20px; color: var(--rosa-500); flex: none; }
+.map-badge svg { width: 20px; height: 20px; color: var(--tan-500); flex: none; }
 .map-badge strong { display: block; font-size: 0.95rem; }
 
 /* ---------- Reservar ---------- */
 .reservar {
     background:
-        radial-gradient(1100px 500px at 85% -10%, rgba(232, 77, 138, 0.16), transparent 60%),
-        radial-gradient(900px 500px at 0% 110%, rgba(47, 154, 102, 0.22), transparent 55%),
+        radial-gradient(1100px 500px at 85% -10%, rgba(169, 125, 69, 0.16), transparent 60%),
+        radial-gradient(900px 500px at 0% 110%, rgba(65, 117, 79, 0.22), transparent 55%),
         var(--verde-950);
     color: #fff;
 }
@@ -739,7 +739,7 @@ section { position: relative; }
     position: absolute;
     inset: 0 0 auto 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--rosa-500), var(--verde-500));
+    background: linear-gradient(90deg, var(--tan-500), var(--verde-500));
 }
 
 .reservar-card-top {
@@ -757,7 +757,7 @@ section { position: relative; }
     display: grid;
     place-items: center;
     border-radius: 12px;
-    background: rgba(47, 154, 102, 0.12);
+    background: rgba(65, 117, 79, 0.12);
     font-size: 1.1rem;
 }
 
@@ -772,7 +772,7 @@ section { position: relative; }
     font-size: 0.92rem;
     transition: gap 0.2s ease, color 0.2s ease;
 }
-.reservar-card:hover .go { gap: 14px; color: var(--rosa-500); }
+.reservar-card:hover .go { gap: 14px; color: var(--tan-500); }
 
 /* Formulario */
 .contact-form {
@@ -827,9 +827,9 @@ section { position: relative; }
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--rosa-500);
+    border-color: var(--tan-500);
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(232, 77, 138, 0.14);
+    box-shadow: 0 0 0 4px rgba(169, 125, 69, 0.14);
 }
 
 .contact-form .btn { width: 100%; }
@@ -845,7 +845,7 @@ section { position: relative; }
 }
 
 .form-message.success { display: block; background: #e5f4ec; color: var(--verde-700); border: 1px solid #b7e2cc; }
-.form-message.error { display: block; background: #fde8ee; color: var(--rosa-600); border: 1px solid #f5c0d4; }
+.form-message.error { display: block; background: #f7ead2; color: var(--tan-600); border: 1px solid #e5cf9f; }
 
 /* ---------- Footer ---------- */
 footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
@@ -878,7 +878,7 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
 .footer-col ul { display: grid; gap: 10px; }
 
 .footer-col a { font-size: 0.93rem; color: rgba(255, 255, 255, 0.72); transition: color 0.2s ease; }
-.footer-col a:hover { color: var(--rosa-500); }
+.footer-col a:hover { color: var(--tan-500); }
 
 .footer-social { display: flex; gap: 12px; margin-top: 20px; }
 
@@ -893,7 +893,7 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     color: #fff;
     transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
-.footer-social a:hover { background: var(--rosa-500); border-color: var(--rosa-500); transform: translateY(-2px); }
+.footer-social a:hover { background: var(--tan-500); border-color: var(--tan-500); transform: translateY(-2px); }
 
 .footer-social svg { width: 18px; height: 18px; }
 
@@ -910,7 +910,7 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
 }
 
 .footer-bottom a { color: rgba(255, 255, 255, 0.6); }
-.footer-bottom a:hover { color: var(--rosa-500); }
+.footer-bottom a:hover { color: var(--tan-500); }
 
 /* ==========================================================================
    Páginas de detalle (loft-1 / loft-2)
@@ -948,7 +948,7 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     margin-bottom: 22px;
     transition: color 0.2s ease;
 }
-.crumb:hover { color: var(--rosa-500); }
+.crumb:hover { color: var(--tan-500); }
 
 .page-hero h1 {
     font-size: clamp(2.6rem, 6vw, 4.2rem);
@@ -1080,14 +1080,14 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     display: grid;
     place-items: center;
     border-radius: 11px;
-    background: rgba(47, 154, 102, 0.14);
+    background: rgba(65, 117, 79, 0.14);
     font-size: 1.05rem;
     flex: none;
 }
 
 .amenity-card ul { display: grid; gap: 8px; }
 .amenity-card li { font-size: 0.9rem; color: var(--gris-600); display: flex; gap: 8px; align-items: baseline; }
-.amenity-card li::before { content: '·'; color: var(--rosa-500); font-weight: 900; }
+.amenity-card li::before { content: '·'; color: var(--tan-500); font-weight: 900; }
 
 .detail-gallery { background: var(--arena); }
 
@@ -1152,8 +1152,8 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
 
 .cta-band {
     background:
-        radial-gradient(900px 420px at 12% 0%, rgba(47, 154, 102, 0.25), transparent 60%),
-        radial-gradient(800px 420px at 90% 100%, rgba(232, 77, 138, 0.2), transparent 55%),
+        radial-gradient(900px 420px at 12% 0%, rgba(65, 117, 79, 0.25), transparent 60%),
+        radial-gradient(800px 420px at 90% 100%, rgba(169, 125, 69, 0.2), transparent 55%),
         var(--verde-950);
     color: #fff;
     text-align: center;
@@ -1207,7 +1207,7 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     font-size: 1.3rem;
     transition: background 0.2s ease;
 }
-.lightbox button:hover { background: var(--rosa-500); border-color: var(--rosa-500); }
+.lightbox button:hover { background: var(--tan-500); border-color: var(--tan-500); }
 
 .lightbox .lb-close { top: 20px; right: 20px; }
 .lightbox .lb-prev { left: 20px; top: 50%; transform: translateY(-50%); }
