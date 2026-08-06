@@ -178,7 +178,7 @@ const I18N = {
         'loft1.h2': 'Your pool among palm trees',
         'loft1.lead': 'The main highlight of this apartment is its pool. With a private entrance and air conditioning, it includes a living room, a separate bedroom and a bathroom with shower.',
         'loft1.p2': 'The fully equipped kitchen includes a refrigerator, kitchenware, microwave and toaster, so you can cook with total comfort. The loft also offers a coffee maker and tea kettle, a seating area, a dining area and a terrace with garden views.',
-        'loft1.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, hypoallergenic bedding and a ceiling fan in addition to the individual air conditioning.',
+        'loft1.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, bedding and individual air conditioning.',
         'loft1.galleryH2': 'This is Loft 1',
 
         // Detalle Loft 2
@@ -188,7 +188,7 @@ const I18N = {
         'loft2.h2': 'Your pool, your hideaway',
         'loft2.lead': 'The pool is the main highlight of this apartment. With a private entrance and air conditioning, it includes a living room, a separate bedroom and a bathroom with shower.',
         'loft2.p2': 'The kitchen is fully equipped with a refrigerator, kitchenware, microwave and toaster, so you can cook with total comfort. The loft also has a coffee maker and tea kettle, a seating area, a dining area and a terrace with garden views.',
-        'loft2.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, hypoallergenic bedding and a ceiling fan in addition to the individual air conditioning.',
+        'loft2.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, bedding and individual air conditioning.',
         'loft2.galleryH2': 'This is Loft 2',
         'gallery.sub': 'Click any photo to view it full size.',
 
