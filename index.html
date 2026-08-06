@@ -3,207 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Cabañas Las Maite - Hospedaje playero en Sámara, Costa Rica. Cabañas cómodas, ambiente alegre y sobrio, cerca de la playa.">
-    <title>Cabañas Las Maite | Sámara, Costa Rica</title>
+    <meta name="description" content="Cabañas la Maite · Lofts con piscina privada en Playa Sámara, Costa Rica. A 50 metros de la playa, con aire acondicionado, cocina equipada y ambiente sobrio y playero.">
+    <title>Cabañas la Maite · Lofts en Playa Sámara, Costa Rica</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231d6b47'/%3E%3Ccircle cx='32' cy='42' r='14' fill='%23e84d8a'/%3E%3Cpath d='M32 6c6 8 8 14 8 20a8 8 0 1 1-16 0c0-6 2-12 8-20z' fill='%23fff'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <div class="logo">Cabañas Las Maite</div>
-            <ul class="nav-links">
+
+    <header class="site-header" id="site-header">
+        <nav class="nav container">
+            <a href="#inicio" class="brand">
+                <span class="brand-mark">Cabañas <em>la Maite</em></span>
+            </a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
                 <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#cabanas">Cabañas</a></li>
+                <li><a href="#lofts">Lofts</a></li>
+                <li><a href="#galeria">Galería</a></li>
                 <li><a href="#ubicacion">Ubicación</a></li>
-                <li><a href="#reservar">Reservar</a></li>
+                <li><a href="#reservar" class="nav-cta">Reservar</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
+        <!-- ============ HERO ============ -->
         <section id="inicio" class="hero">
+            <div class="hero-bg" style="background-image: url('img/loft1/374865794.jpg')"></div>
+            <div class="hero-overlay"></div>
             <div class="hero-content">
-                <span class="hero-badge">Sámara, Costa Rica</span>
-                <h1>Cabañas Las Maite</h1>
-                <p class="hero-tagline">Tu refugio playero: sobrio, alegre y a pasos del mar</p>
+                <p class="eyebrow">Playa Sámara · Guanacaste · Costa Rica</p>
+                <h1>Cabañas <span class="accent">la Maite</span></h1>
+                <p class="hero-tagline">Tu refugio playero: sobrio, alegre y a pasos del mar. Lofts con piscina privada, jardín tropical y todo lo que necesitas para desconectar.</p>
                 <div class="hero-buttons">
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary">Reservar en Booking</a>
-                    <a href="#cabanas" class="btn btn-outline">Ver cabañas</a>
+                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary">Reservar en Booking.com</a>
+                    <a href="#lofts" class="btn btn-ghost">Ver los lofts</a>
+                </div>
+                <div class="hero-rating">
+                    <span class="rating-badge">9.2</span>
+                    Valoración de huéspedes · más de 50 reseñas
                 </div>
             </div>
-            <div class="hero-wave" aria-hidden="true"></div>
+            <a href="#stats" class="scroll-cue" aria-label="Bajar a la siguiente sección">
+                Bajar
+                <span class="wheel"></span>
+            </a>
         </section>
 
-        <section id="cabanas" class="cabanas">
+        <!-- ============ FRANJA DE DATOS ============ -->
+        <section id="stats" class="stats">
+            <div class="container stats-grid">
+                <div class="stat">
+                    <span class="stat-icon">🏖️</span>
+                    <div>
+                        <strong>50 m</strong>
+                        <span>de la playa</span>
+                    </div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🏊</span>
+                    <div>
+                        <strong>Piscina privada</strong>
+                        <span>en cada loft</span>
+                    </div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">⭐</span>
+                    <div>
+                        <strong>9.2 / 10</strong>
+                        <span>valoración de huéspedes</span>
+                    </div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🚌</span>
+                    <div>
+                        <strong>Acceso fácil</strong>
+                        <span>en auto o bus</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ LOFTS ============ -->
+        <section id="lofts" class="lofts section">
             <div class="container">
-                <header class="section-header">
-                    <h2>Nuestras Cabañas</h2>
-                    <p>Diseño sobrio con toque playero, equipadas para tu comodidad</p>
+                <header class="section-head reveal">
+                    <p class="eyebrow">Nuestros lofts</p>
+                    <h2>Dos espacios, <span class="text-green">una misma calma</span></h2>
+                    <p class="sub">Apartamentos independientes con entrada privada, aire acondicionado, cocina equipada y piscina propia entre palmeras.</p>
                 </header>
-                <div class="cabanas-grid">
-                    <article class="cabana-card">
-                        <div class="cabana-image" style="background: linear-gradient(135deg, #2d5a27 0%, #1a3d16 100%)"></div>
-                        <div class="cabana-content">
-                            <h3>Cabaña Verde</h3>
-                            <p>Ambiente fresco y natural, ideal para parejas que buscan tranquilidad rodeados de vegetación.</p>
-                            <ul class="cabana-features">
-                                <li>🛏️ Cama queen</li>
-                                <li>🚿 Baño privado</li>
-                                <li>🍃 Terraza con hamaca</li>
-                                <li>🌿 Vista al jardín</li>
-                            </ul>
-                        </div>
-                    </article>
-                    <article class="cabana-card">
-                        <div class="cabana-image" style="background: linear-gradient(135deg, #e84d8a 0%, #c73672 100%)"></div>
-                        <div class="cabana-content">
-                            <h3>Cabaña Rosada</h3>
-                            <p>Toque alegre y romántico, perfecta para una escapada especial frente al mar.</p>
-                            <ul class="cabana-features">
-                                <li>🛏️ Cama king</li>
-                                <li>🚿 Baño privado</li>
-                                <li>🌅 Terraza vista mar</li>
-                                <li>🌺 Decoración tropical</li>
-                            </ul>
-                        </div>
-                    </article>
-                    <article class="cabana-card">
-                        <div class="cabana-image" style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%)"></div>
-                        <div class="cabana-content">
-                            <h3>Cabaña Familiar</h3>
-                            <p>Espaciosa y sobria, para familias que valoran comodidad y estilo en su estadía.</p>
-                            <ul class="cabana-features">
-                                <li>🛏️ 2 habitaciones</li>
-                                <li>🚿 Baño completo</li>
-                                <li>🍳 Kitchenette equipada</li>
-                                <li>🏖️ Área social amplia</li>
-                            </ul>
-                        </div>
-                    </article>
+
+                <article class="loft-row reveal">
+                    <div class="loft-media">
+                        <img src="img/loft1/372832196.jpg" alt="Loft 1 — terraza y jardín tropical" loading="lazy">
+                        <span class="loft-tag">Loft 01</span>
+                    </div>
+                    <div class="loft-info">
+                        <p class="eyebrow">Loft 01</p>
+                        <h3>Loft 1<br>Piscina privada y jardín</h3>
+                        <p class="desc">Un apartamento luminoso con piscina privada, entrada independiente y aire acondicionado. Sala de estar, dormitorio propio, baño con ducha y una terraza con vistas al jardín tropical.</p>
+                        <ul class="feature-chips">
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>60 m²</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>3 camas</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cocina equipada</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>WiFi</li>
+                        </ul>
+                        <a href="loft-1.html" class="loft-link">Ver el Loft 1 <span aria-hidden="true">→</span></a>
+                    </div>
+                </article>
+
+                <article class="loft-row reversed reveal">
+                    <div class="loft-media">
+                        <img src="img/loft2/374865745.jpg" alt="Loft 2 — espacio acogedor con piscina privada" loading="lazy">
+                        <span class="loft-tag">Loft 02</span>
+                    </div>
+                    <div class="loft-info">
+                        <p class="eyebrow">Loft 02</p>
+                        <h3>Loft 2<br>Dos dormitorios, un refugio</h3>
+                        <p class="desc">Pensado para parejas y escapadas inolvidables: dos dormitorios independientes, piscina privada, cocina completamente equipada y una terraza que da al jardín.</p>
+                        <ul class="feature-chips">
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>60 m²</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>2 dormitorios</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Terraza privada</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Piscina privada</li>
+                        </ul>
+                        <a href="loft-2.html" class="loft-link">Ver el Loft 2 <span aria-hidden="true">→</span></a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ============ GALERÍA ============ -->
+        <section id="galeria" class="galeria section">
+            <div class="container">
+                <header class="section-head center reveal">
+                    <p class="eyebrow">Galería</p>
+                    <h2>Vive la experiencia</h2>
+                    <p class="sub">Piscina privada, jardines tropicales y la playa a unos pasos. Así se siente quedarse en Cabañas la Maite.</p>
+                </header>
+                <div class="mosaic reveal">
+                    <figure class="g-wide"><img src="img/loft1/372833463.jpg" alt="Vista del Loft 1" loading="lazy"></figure>
+                    <figure class="g-square"><img src="img/loft2/372833384.jpg" alt="Espacio interior" loading="lazy"></figure>
+                    <figure class="g-square"><img src="img/loft1/372833382.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
+                    <figure class="g-wide"><img src="img/loft1/372833545.jpg" alt="Jardín tropical" loading="lazy"></figure>
+                    <figure class="g-tall"><img src="img/loft2/374865745.jpg" alt="Loft 2" loading="lazy"></figure>
+                    <figure class="g-square"><img src="img/loft1/372834061.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
+                    <figure class="g-square"><img src="img/loft1/372833917.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
+                    <figure class="g-wide"><img src="img/loft1/374865774.jpg" alt="Espacio del Loft 1" loading="lazy"></figure>
+                    <figure class="g-square"><img src="img/loft2/372834120.jpg" alt="Loft 2" loading="lazy"></figure>
                 </div>
             </div>
         </section>
 
-        <section id="ubicacion" class="ubicacion">
+        <!-- ============ UBICACIÓN ============ -->
+        <section id="ubicacion" class="ubicacion section">
             <div class="container">
-                <div class="ubicacion-content">
-                    <div class="ubicacion-text">
-                        <h2>Ubicación Privilegiada</h2>
-                        <p>Estamos en <strong>Playa Sámara</strong>, una de las playas más hermosas y seguras de Costa Rica. Arena blanca, oleaje suave y atardeceres inolvidables.</p>
-                        <div class="ubicacion-highlights">
+                <div class="ubicacion-grid">
+                    <div class="ubicacion-text reveal">
+                        <p class="eyebrow">Ubicación</p>
+                        <h2>Playa Sámara, <span class="text-green">una de las mejores del Pacífico</span></h2>
+                        <p>Arena blanca, oleaje suave y atardeceres inolvidables. Estamos a 50 metros del mar, en una de las playas más hermosas y seguras de Costa Rica.</p>
+                        <div class="highlights">
                             <div class="highlight">
                                 <span class="highlight-icon">🏖️</span>
                                 <div>
-                                    <strong>50 metros</strong> de la playa
+                                    <strong>50 metros de la playa</strong>
+                                    <span>a pasos del mar</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🍽️</span>
                                 <div>
-                                    <strong>Restaurantes</strong> y sodas a pasos
+                                    <strong>Restaurantes y sodas</strong>
+                                    <span>gastronomía a pasos</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🛍️</span>
                                 <div>
-                                    <strong>Minisuper</strong> y farmacia cerca
+                                    <strong>Minisuper y farmacia</strong>
+                                    <span>cerca del hospedaje</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🚌</span>
                                 <div>
-                                    Acceso fácil en <strong>auto o bus</strong>
+                                    <strong>Acceso fácil</strong>
+                                    <span>en auto o bus</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="ubicacion-map" aria-label="Mapa de ubicación">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3929.8!2d-85.4167!3d9.8712!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8fa0e4b8c8c8c8c8%3A0xc8c8c8c8c8c8c8c8!2sPlaya%20S%C3%A1mara%2C%20Nicoya%2C%20Guanacaste!5e0!3m2!1ses!2scr!4v1234567890"
-                            width="100%" height="300" style="border:0; border-radius: 16px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
+                    <div class="ubicacion-map reveal">
+                        <iframe
+                            src="https://www.google.com/maps?q=Playa+S%C3%A1mara,+Nicoya,+Guanacaste,+Costa+Rica&z=14&output=embed"
+                            allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                            title="Mapa de Playa Sámara, Guanacaste, Costa Rica"></iframe>
+                        <div class="map-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <div>
+                                <strong>Playa Sámara</strong>
+                                Nicoya · Guanacaste
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="reservar" class="reservar">
+        <!-- ============ RESERVAR ============ -->
+        <section id="reservar" class="reservar section">
             <div class="container">
-                <header class="section-header">
-                    <h2>Reserva tu Estadía</h2>
-                    <p>Mejor precio garantizado reservando directo o por Booking.com</p>
+                <header class="section-head center reveal">
+                    <p class="eyebrow">Reservas</p>
+                    <h2>Reserva tu estadía</h2>
+                    <p class="sub">Mejor precio garantizado reservando directo o por Booking.com.</p>
                 </header>
-                <div class="reservar-options">
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="reservar-card booking">
-                        <div class="reservar-icon">🏨</div>
-                        <h3>Booking.com</h3>
-                        <p>Reserva segura, cancelación gratis en la mayoría de opciones, confirmación inmediata.</p>
-                        <span class="reservar-btn">Ver disponibilidad</span>
-                    </a>
-                    <a href="https://facebook.com/cabanaslasmaite" target="_blank" rel="noopener" class="reservar-card facebook">
-                        <div class="reservar-icon">💬</div>
-                        <h3>WhatsApp / Facebook</h3>
-                        <p>Escríbenos directo para consultas, ofertas especiales y atención personalizada.</p>
-                        <span class="reservar-btn">Contactar ahora</span>
-                    </a>
+
+                <div class="reservar-grid">
+                    <div class="reservar-cards reveal">
+                        <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="reservar-card">
+                            <div class="reservar-card-top">
+                                <h3><span class="icon">🏨</span> Booking.com</h3>
+                                <span class="rating-badge" style="width:40px;height:40px;font-size:.95rem">9.2</span>
+                            </div>
+                            <p>Reserva segura, confirmación inmediata y cancelación gratis en la mayoría de las opciones.</p>
+                            <span class="go">Ver disponibilidad <span aria-hidden="true">→</span></span>
+                        </a>
+                        <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" class="reservar-card">
+                            <div class="reservar-card-top">
+                                <h3><span class="icon">💬</span> WhatsApp / Facebook</h3>
+                            </div>
+                            <p>Escríbenos directo para consultas, ofertas especiales y atención personalizada.</p>
+                            <span class="go">Contactar ahora <span aria-hidden="true">→</span></span>
+                        </a>
+                    </div>
+
+                    <form id="contact-form" class="contact-form reveal" novalidate>
+                        <h3>O déjanos tu consulta</h3>
+                        <p class="form-intro">Cuéntanos tus fechas y te respondemos con disponibilidad y precio.</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required placeholder="tu@email.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fecha-entrada">Entrada</label>
+                                <input type="date" id="fecha-entrada" name="fechaEntrada">
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha-salida">Salida</label>
+                                <input type="date" id="fecha-salida" name="fechaSalida">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="mensaje">Mensaje</label>
+                            <textarea id="mensaje" name="mensaje" rows="4" placeholder="¿Qué loft te interesa? ¿Cuántas personas?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar consulta</button>
+                        <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
+                    </form>
                 </div>
-                <form id="contact-form" class="contact-form">
-                    <h3>O déjanos tu consulta</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nombre">Nombre</label>
-                            <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required placeholder="tu@email.com">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="fecha-entrada">Entrada</label>
-                            <input type="date" id="fecha-entrada" name="fechaEntrada">
-                        </div>
-                        <div class="form-group">
-                            <label for="fecha-salida">Salida</label>
-                            <input type="date" id="fecha-salida" name="fechaSalida">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="mensaje">Mensaje</label>
-                        <textarea id="mensaje" name="mensaje" rows="4" placeholder="Cuéntanos qué buscas..."></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Enviar consulta</button>
-                    <div id="form-message" class="form-message"></div>
-                </form>
             </div>
         </section>
     </main>
 
     <footer>
         <div class="container">
-            <div class="footer-content">
+            <div class="footer-grid">
                 <div class="footer-brand">
-                    <h3>Cabañas Las Maite</h3>
-                    <p>Playa Sámara, Nicoya, Guanacaste, Costa Rica</p>
+                    <a href="#inicio" class="brand">
+                        <span class="brand-mark">Cabañas <em>la Maite</em></span>
+                    </a>
+                    <p>Lofts con piscina privada a 50 metros de la playa. Ambiente sobrio, playero y alegre en Sámara, Costa Rica.</p>
+                    <div class="footer-social">
+                        <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" aria-label="Facebook">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                        </a>
+                        <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" aria-label="Booking.com">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        </a>
+                    </div>
                 </div>
-                <div class="footer-social">
-                    <a href="https://facebook.com/cabanaslasmaite" target="_blank" rel="noopener" aria-label="Facebook">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                    </a>
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" aria-label="Booking.com">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                    </a>
+                <div class="footer-col">
+                    <h4>Explorar</h4>
+                    <ul>
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#lofts">Lofts</a></li>
+                        <li><a href="#galeria">Galería</a></li>
+                        <li><a href="#ubicacion">Ubicación</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li><a href="#reservar">Reservar</a></li>
+                        <li><a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener">Booking.com</a></li>
+                        <li><a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener">Facebook</a></li>
+                    </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Cabañas Las Maite. Todos los derechos reservados.</p>
+                <p>&copy; 2025 Cabañas la Maite · Playa Sámara, Nicoya, Guanacaste, Costa Rica</p>
+                <p>Hecho con <span style="color:var(--rosa-500)">♥</span> junto al mar</p>
             </div>
         </div>
     </footer>
+
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visor de fotos">
+        <button class="lb-close" aria-label="Cerrar">✕</button>
+        <button class="lb-prev" aria-label="Foto anterior">‹</button>
+        <img src="" alt="Foto ampliada">
+        <button class="lb-next" aria-label="Foto siguiente">›</button>
+        <span class="lb-count"></span>
+    </div>
 
     <script src="script.js"></script>
 </body>

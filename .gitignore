@@ -1,0 +1,9 @@
+# Archivos de trabajo locales
+contenido/
+
+# Herramientas / sistema
+.reasonix/
+.DS_Store
+
+# Logs y cachés
+*.log
