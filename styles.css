@@ -235,6 +235,36 @@ section { position: relative; }
 }
 .nav-cta:hover { background: var(--tan-600); transform: translateY(-1px); }
 
+/* Selector de idioma ES/EN */
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    margin-left: 4px;
+    border-radius: var(--r-pill);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(6px);
+}
+
+.lang-btn {
+    background: transparent;
+    border: 0;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 7px 13px;
+    border-radius: var(--r-pill);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.lang-btn:hover { color: #fff; }
+.lang-btn.active { background: var(--tan-500); color: var(--verde-950); }
+
 .nav-toggle {
     display: none;
     flex-direction: column;

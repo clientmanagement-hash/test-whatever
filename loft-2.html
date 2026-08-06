@@ -22,11 +22,15 @@
                 <span></span><span></span><span></span>
             </button>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html#inicio">Inicio</a></li>
-                <li><a href="index.html#lofts">Lofts</a></li>
-                <li><a href="index.html#galeria">Galería</a></li>
-                <li><a href="index.html#ubicacion">Ubicación</a></li>
-                <li><a href="index.html#reservar" class="nav-cta">Reservar</a></li>
+                <li><a href="index.html#inicio" data-i18n="nav.inicio">Inicio</a></li>
+                <li><a href="index.html#lofts" data-i18n="nav.lofts">Lofts</a></li>
+                <li><a href="index.html#galeria" data-i18n="nav.galeria">Galería</a></li>
+                <li><a href="index.html#ubicacion" data-i18n="nav.ubicacion">Ubicación</a></li>
+                <li><a href="index.html#reservar" class="nav-cta" data-i18n="nav.reservar">Reservar</a></li>
+                <li class="lang-switch" role="group" aria-label="Idioma / Language">
+                    <button class="lang-btn" data-lang="es" type="button" aria-pressed="true">ES</button>
+                    <button class="lang-btn" data-lang="en" type="button" aria-pressed="false">EN</button>
+                </li>
             </ul>
         </nav>
     </header>
@@ -38,10 +42,10 @@
             <div class="hero-overlay"></div>
             <div class="page-hero-content">
                 <div class="container">
-                    <a href="index.html#lofts" class="crumb">← Volver a los lofts</a>
-                    <p class="eyebrow">Loft 02 · Playa Sámara</p>
+                    <a href="index.html#lofts" class="crumb" data-i18n="loft.back">← Volver a los lofts</a>
+                    <p class="eyebrow" data-i18n="loft2.eyebrow">Loft 02 · Playa Sámara</p>
                     <h1>Loft 2</h1>
-                    <p class="tagline">Apartamento de 60 m² con piscina, entrada independiente y terraza con vistas al jardín.</p>
+                    <p class="tagline" data-i18n="loft2.tagline">Apartamento de 60 m² con piscina, entrada independiente y terraza con vistas al jardín.</p>
                 </div>
             </div>
         </section>
@@ -50,51 +54,51 @@
         <section class="detail-intro section">
             <div class="container detail-grid">
                 <div class="detail-copy reveal">
-                    <p class="eyebrow">El espacio</p>
-                    <h2>Tu piscina, tu refugio</h2>
-                    <p class="lead">La piscina es el principal atractivo de este apartamento. Con entrada independiente y aire acondicionado, incluye sala de estar, un dormitorio independiente y un baño con ducha.</p>
-                    <p>La cocina está completamente equipada con refrigerador, utensilios de cocina, microondas y tostadora, lo que permite preparar comidas con total comodidad. Además, el loft dispone de cafetera y tetera, zona de estar, comedor y una terraza con vistas al jardín.</p>
-                    <p>La unidad cuenta con <strong>2 camas dobles y 1 sofá cama</strong>, ropa de cama hipoalergénica y ventilador además del aire acondicionado individual.</p>
+                    <p class="eyebrow" data-i18n="loft2.space">El espacio</p>
+                    <h2 data-i18n="loft2.h2">Tu piscina, tu refugio</h2>
+                    <p class="lead" data-i18n="loft2.lead">La piscina es el principal atractivo de este apartamento. Con entrada independiente y aire acondicionado, incluye sala de estar, un dormitorio independiente y un baño con ducha.</p>
+                    <p data-i18n="loft2.p2">La cocina está completamente equipada con refrigerador, utensilios de cocina, microondas y tostadora, lo que permite preparar comidas con total comodidad. Además, el loft dispone de cafetera y tetera, zona de estar, comedor y una terraza con vistas al jardín.</p>
+                    <p data-i18n-html="loft2.p3">La unidad cuenta con <strong>2 camas dobles y 1 sofá cama</strong>, ropa de cama hipoalergénica y ventilador además del aire acondicionado individual.</p>
                 </div>
 
                 <aside class="specs reveal">
-                    <h3>Ficha del loft</h3>
+                    <h3 data-i18n="spec.title">Ficha del loft</h3>
                     <dl>
                         <div>
-                            <dt>📐 Tamaño</dt>
+                            <dt data-i18n="spec.size">📐 Tamaño</dt>
                             <dd>60 m²</dd>
                         </div>
                         <div>
-                            <dt>🛏️ Camas</dt>
-                            <dd>2 camas + 1 sofá</dd>
+                            <dt data-i18n="spec.beds">🛏️ Camas</dt>
+                            <dd data-i18n="spec.bedsVal">2 camas + 1 sofá</dd>
                         </div>
                         <div>
-                            <dt>🚿 Baños</dt>
-                            <dd>1 baño privado</dd>
+                            <dt data-i18n="spec.baths">🚿 Baños</dt>
+                            <dd data-i18n="spec.bathVal">1 baño privado</dd>
                         </div>
                         <div>
-                            <dt>🌡️ Clima</dt>
-                            <dd>A/C individual</dd>
+                            <dt data-i18n="spec.climate">🌡️ Clima</dt>
+                            <dd data-i18n="spec.climateVal">A/C individual</dd>
                         </div>
                         <div>
-                            <dt>🏊 Piscina</dt>
-                            <dd>Sí</dd>
+                            <dt data-i18n="spec.pool">🏊 Piscina</dt>
+                            <dd data-i18n="spec.poolVal">Sí</dd>
                         </div>
                         <div>
-                            <dt>🚪 Entrada</dt>
-                            <dd>Independiente</dd>
+                            <dt data-i18n="spec.entry">🚪 Entrada</dt>
+                            <dd data-i18n="spec.entryVal">Independiente</dd>
                         </div>
                         <div>
-                            <dt>✅ Check-in</dt>
+                            <dt data-i18n="spec.checkin">✅ Check-in</dt>
                             <dd>15:00</dd>
                         </div>
                         <div>
-                            <dt>✅ Check-out</dt>
+                            <dt data-i18n="spec.checkout">✅ Check-out</dt>
                             <dd>12:00</dd>
                         </div>
                     </dl>
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary">Reservar el Loft 2</a>
-                    <p class="spec-note">Cancelación gratis en la mayoría de las opciones</p>
+                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="spec.book2">Reservar el Loft 2</a>
+                    <p class="spec-note" data-i18n="spec.note">Cancelación gratis en la mayoría de las opciones</p>
                 </aside>
             </div>
         </section>
@@ -102,75 +106,75 @@
         <!-- ============ SERVICIOS ============ -->
         <section class="amenities section">
             <div class="container">
-                <p class="eyebrow reveal">Servicios y equipamiento</p>
-                <h2 class="reveal">Todo lo que necesitas</h2>
-                <p class="sub reveal">Diseñado para que solo te preocupes por disfrutar.</p>
+                <p class="eyebrow reveal" data-i18n="amen.eyebrow">Servicios y equipamiento</p>
+                <h2 class="reveal" data-i18n="amen.title">Todo lo que necesitas</h2>
+                <p class="sub reveal" data-i18n="amen.sub">Diseñado para que solo te preocupes por disfrutar.</p>
                 <div class="amenity-cards reveal">
                     <div class="amenity-card">
-                        <h4><span class="icon">🍳</span> Cocina privada</h4>
+                        <h4><span class="icon">🍳</span> <span data-i18n="amen.cocina">Cocina privada</span></h4>
                         <ul>
-                            <li>Refrigerador</li>
-                            <li>Microondas</li>
-                            <li>Tostadora</li>
-                            <li>Hervidor eléctrico</li>
-                            <li>Utensilios de cocina</li>
+                            <li data-i18n="amen.fridge">Refrigerador</li>
+                            <li data-i18n="amen.micro">Microondas</li>
+                            <li data-i18n="amen.toaster">Tostadora</li>
+                            <li data-i18n="amen.kettle">Hervidor eléctrico</li>
+                            <li data-i18n="amen.utensils">Utensilios de cocina</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">☕</span> Cafetería</h4>
+                        <h4><span class="icon">☕</span> <span data-i18n="amen.cafe">Cafetería</span></h4>
                         <ul>
-                            <li>Cafetera</li>
-                            <li>Tetera</li>
-                            <li>Zona de comedor</li>
-                            <li>Mesa de comedor</li>
-                            <li>Muebles de exterior</li>
+                            <li data-i18n="amen.coffeemaker">Cafetera</li>
+                            <li data-i18n="amen.teakettle">Tetera</li>
+                            <li data-i18n="amen.dining">Zona de comedor</li>
+                            <li data-i18n="amen.diningTable">Mesa de comedor</li>
+                            <li data-i18n="amen.outdoor">Muebles de exterior</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">🛁</span> Baño privado</h4>
+                        <h4><span class="icon">🛁</span> <span data-i18n="amen.bano">Baño privado</span></h4>
                         <ul>
-                            <li>Ducha independiente</li>
-                            <li>Aseo</li>
-                            <li>Papel higiénico</li>
-                            <li>Toallas</li>
+                            <li data-i18n="amen.shower2">Ducha independiente</li>
+                            <li data-i18n="amen.toilet">Aseo</li>
+                            <li data-i18n="amen.tp">Papel higiénico</li>
+                            <li data-i18n="amen.towels">Toallas</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">🌿</span> Comodidad</h4>
+                        <h4><span class="icon">🌿</span> <span data-i18n="amen.comodidad">Comodidad</span></h4>
                         <ul>
-                            <li>Aire acondicionado individual</li>
-                            <li>Ventilador</li>
-                            <li>Ropa de cama hipoalergénica</li>
-                            <li>Armario y perchero</li>
-                            <li>Mosquitera</li>
+                            <li data-i18n="amen.ac">Aire acondicionado individual</li>
+                            <li data-i18n="amen.fan">Ventilador</li>
+                            <li data-i18n="amen.bedding">Ropa de cama hipoalergénica</li>
+                            <li data-i18n="amen.wardrobe">Armario y perchero</li>
+                            <li data-i18n="amen.mosquito">Mosquitera</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">🌅</span> Vistas</h4>
+                        <h4><span class="icon">🌅</span> <span data-i18n="amen.vistas">Vistas</span></h4>
                         <ul>
-                            <li>Balcón / terraza</li>
-                            <li>Vistas al jardín</li>
-                            <li>Vistas a la piscina</li>
-                            <li>Suelo de baldosa</li>
+                            <li data-i18n="amen.balcony">Balcón / terraza</li>
+                            <li data-i18n="amen.gardenView">Vistas al jardín</li>
+                            <li data-i18n="amen.poolView">Vistas a la piscina</li>
+                            <li data-i18n="amen.floor">Suelo de baldosa</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">🚭</span> Políticas</h4>
+                        <h4><span class="icon">🚭</span> <span data-i18n="amen.politicas">Políticas</span></h4>
                         <ul>
-                            <li>No se puede fumar</li>
-                            <li>Detector de monóxido</li>
-                            <li>Desinfectante de manos</li>
+                            <li data-i18n="amen.nosmoke">No se puede fumar</li>
+                            <li data-i18n="amen.co">Detector de monóxido</li>
+                            <li data-i18n="amen.sanitizer">Desinfectante de manos</li>
                             <li>Check-in 15:00 · Check-out 12:00</li>
                         </ul>
                     </div>
                     <div class="amenity-card">
-                        <h4><span class="icon">📶</span> Servicios</h4>
+                        <h4><span class="icon">📶</span> <span data-i18n="amen.servicios">Servicios</span></h4>
                         <ul>
-                            <li>Internet satelital</li>
-                            <li>Estacionamiento privado</li>
-                            <li>Desayuno en la cabaña con reservación previa (no incluido)</li>
-                            <li>Servicio de limpieza (5 noches o más)</li>
-                            <li>Cama para bebés</li>
+                            <li data-i18n="amen.internet">Internet satelital</li>
+                            <li data-i18n="amen.parking">Estacionamiento privado</li>
+                            <li data-i18n="amen.breakfast">Desayuno en la cabaña con reservación previa (no incluido)</li>
+                            <li data-i18n="amen.cleaning">Servicio de limpieza (5 noches o más)</li>
+                            <li data-i18n="amen.crib">Cama para bebés</li>
                         </ul>
                     </div>
                 </div>
@@ -180,15 +184,15 @@
         <!-- ============ GALERÍA ============ -->
         <section class="detail-gallery section">
             <div class="container">
-                <p class="eyebrow reveal">Galería</p>
-                <h2 class="reveal">Así se ve el Loft 2</h2>
-                <p class="sub reveal">Haz clic en cualquier foto para verla en grande.</p>
+                <p class="eyebrow reveal" data-i18n="galeria.eyebrow">Galería</p>
+                <h2 class="reveal" data-i18n="loft2.galleryH2">Así se ve el Loft 2</h2>
+                <p class="sub reveal" data-i18n="gallery.sub">Haz clic en cualquier foto para verla en grande.</p>
                 <div class="detail-gallery-grid reveal">
-                    <figure><img src="img/loft2/372833384.jpg" alt="Loft 2 — interior" loading="lazy"></figure>
-                    <figure><img src="img/loft2/372834120.jpg" alt="Loft 2 — detalle" loading="lazy"></figure>
-                    <figure><img src="img/loft2/372834238.jpg" alt="Loft 2 — detalle" loading="lazy"></figure>
-                    <figure><img src="img/loft2/372834271.jpg" alt="Loft 2 — detalle" loading="lazy"></figure>
-                    <figure><img src="img/loft2/374865745.jpg" alt="Loft 2 — exterior" loading="lazy"></figure>
+                    <figure><img src="img/loft2/372833384.jpg" alt="Loft 2 — interior" loading="lazy" data-i18n-attr="alt:alt.loft2.interior"></figure>
+                    <figure><img src="img/loft2/372834120.jpg" alt="Loft 2 — detalle" loading="lazy" data-i18n-attr="alt:alt.loft2.detail"></figure>
+                    <figure><img src="img/loft2/372834238.jpg" alt="Loft 2 — detalle" loading="lazy" data-i18n-attr="alt:alt.loft2.detail"></figure>
+                    <figure><img src="img/loft2/372834271.jpg" alt="Loft 2 — detalle" loading="lazy" data-i18n-attr="alt:alt.loft2.detail"></figure>
+                    <figure><img src="img/loft2/374865745.jpg" alt="Loft 2 — exterior" loading="lazy" data-i18n-attr="alt:alt.loft2.exterior"></figure>
                 </div>
             </div>
         </section>
@@ -196,11 +200,11 @@
         <!-- ============ CTA ============ -->
         <section class="cta-band section">
             <div class="container reveal">
-                <h2>¿Listo para tu escapada?</h2>
-                <p>Reserva el Loft 2 en Booking.com o escríbenos directo para ofertas especiales.</p>
+                <h2 data-i18n="cta.h2">¿Listo para tu escapada?</h2>
+                <p data-i18n="cta2.p">Reserva el Loft 2 en Booking.com o escríbenos directo para ofertas especiales.</p>
                 <div>
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary">Reservar en Booking.com</a>
-                    <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" class="btn btn-ghost">Escribir por Facebook</a>
+                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="cta.book">Reservar en Booking.com</a>
+                    <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="cta.fb">Escribir por Facebook</a>
                 </div>
             </div>
         </section>
@@ -213,7 +217,7 @@
                     <a href="index.html" class="brand">
                     <img class="logo-img" src="img/logo.png" alt="Cabañas la Maite — logo">
                     </a>
-                    <p>Lofts con piscina a 900 m de Playa Buena Vista y 1,6 km de Playa Sámara. Ambiente sobrio, playero y alegre en Sámara, Costa Rica.</p>
+                    <p data-i18n="footer.brand">Lofts con piscina a 900 m de Playa Buena Vista y 1,6 km de Playa Sámara. Ambiente sobrio, playero y alegre en Sámara, Costa Rica.</p>
                     <div class="footer-social">
                         <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" aria-label="Facebook">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -224,18 +228,18 @@
                     </div>
                 </div>
                 <div class="footer-col">
-                    <h4>Explorar</h4>
+                    <h4 data-i18n="footer.explorar">Explorar</h4>
                     <ul>
-                        <li><a href="index.html#inicio">Inicio</a></li>
-                        <li><a href="index.html#lofts">Lofts</a></li>
-                        <li><a href="index.html#galeria">Galería</a></li>
-                        <li><a href="index.html#ubicacion">Ubicación</a></li>
+                        <li><a href="index.html#inicio" data-i18n="nav.inicio">Inicio</a></li>
+                        <li><a href="index.html#lofts" data-i18n="nav.lofts">Lofts</a></li>
+                        <li><a href="index.html#galeria" data-i18n="nav.galeria">Galería</a></li>
+                        <li><a href="index.html#ubicacion" data-i18n="nav.ubicacion">Ubicación</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4>Contacto</h4>
+                    <h4 data-i18n="footer.contacto">Contacto</h4>
                     <ul>
-                        <li><a href="index.html#reservar">Reservar</a></li>
+                        <li><a href="index.html#reservar" data-i18n="nav.reservar">Reservar</a></li>
                         <li><a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener">Booking.com</a></li>
                         <li><a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener">Facebook</a></li>
                     </ul>
@@ -248,10 +252,10 @@
     </footer>
 
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visor de fotos">
-        <button class="lb-close" aria-label="Cerrar">✕</button>
-        <button class="lb-prev" aria-label="Foto anterior">‹</button>
-        <img src="" alt="Foto ampliada">
-        <button class="lb-next" aria-label="Foto siguiente">›</button>
+        <button class="lb-close" aria-label="Cerrar" data-i18n-attr="aria-label:lb.close">✕</button>
+        <button class="lb-prev" aria-label="Foto anterior" data-i18n-attr="aria-label:lb.prev">‹</button>
+        <img src="" alt="Foto ampliada" data-i18n-attr="alt:lb.alt">
+        <button class="lb-next" aria-label="Foto siguiente" data-i18n-attr="aria-label:lb.next">›</button>
         <span class="lb-count"></span>
     </div>
 

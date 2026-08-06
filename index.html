@@ -22,11 +22,15 @@
                 <span></span><span></span><span></span>
             </button>
             <ul class="nav-links" id="nav-links">
-                <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#lofts">Lofts</a></li>
-                <li><a href="#galeria">Galería</a></li>
-                <li><a href="#ubicacion">Ubicación</a></li>
-                <li><a href="#reservar" class="nav-cta">Reservar</a></li>
+                <li><a href="#inicio" data-i18n="nav.inicio">Inicio</a></li>
+                <li><a href="#lofts" data-i18n="nav.lofts">Lofts</a></li>
+                <li><a href="#galeria" data-i18n="nav.galeria">Galería</a></li>
+                <li><a href="#ubicacion" data-i18n="nav.ubicacion">Ubicación</a></li>
+                <li><a href="#reservar" class="nav-cta" data-i18n="nav.reservar">Reservar</a></li>
+                <li class="lang-switch" role="group" aria-label="Idioma / Language">
+                    <button class="lang-btn" data-lang="es" type="button" aria-pressed="true">ES</button>
+                    <button class="lang-btn" data-lang="en" type="button" aria-pressed="false">EN</button>
+                </li>
             </ul>
         </nav>
     </header>
@@ -39,17 +43,17 @@
             <div class="hero-content">
                 <p class="eyebrow">Playa Sámara · Guanacaste · Costa Rica</p>
                 <h1>Cabañas <span class="accent">la Maite</span></h1>
-                <p class="hero-tagline">Tu refugio playero: sobrio, alegre y a minutos de Playa Buena Vista y Sámara. Lofts con piscina, jardín tropical y todo lo que necesitas para desconectar.</p>
+                <p class="hero-tagline" data-i18n="hero.tagline">Tu refugio playero: sobrio, alegre y a minutos de Playa Buena Vista y Sámara. Lofts con piscina, jardín tropical y todo lo que necesitas para desconectar.</p>
                 <div class="hero-buttons">
-                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary">Reservar en Booking.com</a>
-                    <a href="#lofts" class="btn btn-ghost">Ver los lofts</a>
+                    <a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="hero.book">Reservar en Booking.com</a>
+                    <a href="#lofts" class="btn btn-ghost" data-i18n="hero.seeLofts">Ver los lofts</a>
                 </div>
                 <div class="hero-rating">
                     <span class="rating-badge">9.8</span>
-                    Excepcional · 155 comentarios
+                    <span class="rating-text" data-i18n="hero.rating">Excepcional · 155 comentarios</span>
                 </div>
             </div>
-            <a href="#stats" class="scroll-cue" aria-label="Bajar a la siguiente sección">
+            <a href="#stats" class="scroll-cue" aria-label="Bajar a la siguiente sección" data-i18n="hero.scroll" data-i18n-attr="aria-label:hero.scrollAria">
                 Bajar
                 <span class="wheel"></span>
             </a>
@@ -62,28 +66,28 @@
                     <span class="stat-icon">🏖️</span>
                     <div>
                         <strong>900 m</strong>
-                        <span>a Playa Buena Vista</span>
+                        <span data-i18n="stat.1.label">a Playa Buena Vista</span>
                     </div>
                 </div>
                 <div class="stat">
                     <span class="stat-icon">🏊</span>
                     <div>
-                        <strong>Piscina</strong>
-                        <span>en cada loft</span>
+                        <strong data-i18n="stat.2.strong">Piscina</strong>
+                        <span data-i18n="stat.2.label">en cada loft</span>
                     </div>
                 </div>
                 <div class="stat">
                     <span class="stat-icon">⭐</span>
                     <div>
                         <strong>9.8 / 10</strong>
-                        <span>Excepcional · 155 comentarios</span>
+                        <span data-i18n="stat.3.label">Excepcional · 155 comentarios</span>
                     </div>
                 </div>
                 <div class="stat">
                     <span class="stat-icon">🌊</span>
                     <div>
-                        <strong>1,6 km</strong>
-                        <span>a Playa Sámara</span>
+                        <strong data-i18n="stat.4.strong">1,6 km</strong>
+                        <span data-i18n="stat.4.label">a Playa Sámara</span>
                     </div>
                 </div>
             </div>
@@ -93,57 +97,57 @@
         <section id="lofts" class="lofts section">
             <div class="container">
                 <header class="section-head reveal">
-                    <p class="eyebrow">Nuestros lofts</p>
-                    <h2>Dos espacios, <span class="text-green">una misma calma</span></h2>
-                    <p class="sub">Apartamentos independientes con entrada privada, aire acondicionado, cocina equipada y piscina entre palmeras.</p>
+                    <p class="eyebrow" data-i18n="lofts.eyebrow">Nuestros lofts</p>
+                    <h2 data-i18n-html="lofts.title">Dos espacios, <span class="text-green">una misma calma</span></h2>
+                    <p class="sub" data-i18n="lofts.sub">Apartamentos independientes con entrada privada, aire acondicionado, cocina equipada y piscina entre palmeras.</p>
                 </header>
 
                 <article class="loft-row reveal">
                     <div class="loft-media">
-                        <img src="img/loft1/372822130.jpg" alt="Loft 1 — vista principal" loading="lazy">
+                        <img src="img/loft1/372822130.jpg" alt="Loft 1 — vista principal" loading="lazy" data-i18n-attr="alt:alt.loft1.view">
                         <span class="loft-tag">Loft 01</span>
                     </div>
                     <div class="loft-info">
                         <p class="eyebrow">Loft 01</p>
-                        <h3>Loft 1<br>Piscina y jardín</h3>
-                        <p class="desc">Piscina, jardín y terraza.</p>
+                        <h3 data-i18n-html="loft1.title">Loft 1<br>Piscina y jardín</h3>
+                        <p class="desc" data-i18n="loft.desc">Piscina, jardín y terraza.</p>
                         <ul class="feature-chips">
                             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>60 m²</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>2 camas + sofá</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cocina equipada</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Internet satelital</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Estacionamiento privado</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Desayuno (no incluido)</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Limpieza (5+ noches)</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cama para bebés</li>
+                            <li data-i18n="chip.beds"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>2 camas + sofá</li>
+                            <li data-i18n="chip.ac"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
+                            <li data-i18n="chip.kitchen"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cocina equipada</li>
+                            <li data-i18n="chip.internet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Internet satelital</li>
+                            <li data-i18n="chip.parking"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Estacionamiento privado</li>
+                            <li data-i18n="chip.breakfast"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Desayuno (no incluido)</li>
+                            <li data-i18n="chip.cleaning"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Limpieza (5+ noches)</li>
+                            <li data-i18n="chip.crib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cama para bebés</li>
                         </ul>
-                        <a href="loft-1.html" class="loft-link">Ver el Loft 1 <span aria-hidden="true">→</span></a>
+                        <a href="loft-1.html" class="loft-link" data-i18n-html="loft1.link">Ver el Loft 1 <span aria-hidden="true">→</span></a>
                     </div>
                 </article>
 
                 <article class="loft-row reversed reveal">
                     <div class="loft-media">
-                        <img src="img/loft2/374865745.jpg" alt="Loft 2 — espacio acogedor con piscina" loading="lazy">
+                        <img src="img/loft2/374865745.jpg" alt="Loft 2 — espacio acogedor con piscina" loading="lazy" data-i18n-attr="alt:alt.loft2.card">
                         <span class="loft-tag">Loft 02</span>
                     </div>
                     <div class="loft-info">
                         <p class="eyebrow">Loft 02</p>
-                        <h3>Loft 2<br>Piscina y terraza</h3>
-                        <p class="desc">Piscina, jardín y terraza.</p>
+                        <h3 data-i18n-html="loft2.title">Loft 2<br>Piscina y terraza</h3>
+                        <p class="desc" data-i18n="loft.desc">Piscina, jardín y terraza.</p>
                         <ul class="feature-chips">
                             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>60 m²</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>2 camas + sofá</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Terraza privada</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Piscina</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Internet satelital</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Estacionamiento privado</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Desayuno (no incluido)</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Limpieza (5+ noches)</li>
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cama para bebés</li>
+                            <li data-i18n="chip.beds"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>2 camas + sofá</li>
+                            <li data-i18n="chip.ac"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Aire acondicionado</li>
+                            <li data-i18n="chip.terrace"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Terraza privada</li>
+                            <li data-i18n="chip.pool"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Piscina</li>
+                            <li data-i18n="chip.internet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Internet satelital</li>
+                            <li data-i18n="chip.parking"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Estacionamiento privado</li>
+                            <li data-i18n="chip.breakfast"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Desayuno (no incluido)</li>
+                            <li data-i18n="chip.cleaning"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Limpieza (5+ noches)</li>
+                            <li data-i18n="chip.crib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>Cama para bebés</li>
                         </ul>
-                        <a href="loft-2.html" class="loft-link">Ver el Loft 2 <span aria-hidden="true">→</span></a>
+                        <a href="loft-2.html" class="loft-link" data-i18n-html="loft2.link">Ver el Loft 2 <span aria-hidden="true">→</span></a>
                     </div>
                 </article>
             </div>
@@ -153,20 +157,20 @@
         <section id="galeria" class="galeria section">
             <div class="container">
                 <header class="section-head center reveal">
-                    <p class="eyebrow">Galería</p>
-                    <h2>Vive la experiencia</h2>
-                    <p class="sub">Piscina, jardines tropicales y las mejores playas a minutos. Así se siente quedarse en Cabañas la Maite.</p>
+                    <p class="eyebrow" data-i18n="galeria.eyebrow">Galería</p>
+                    <h2 data-i18n="galeria.title">Vive la experiencia</h2>
+                    <p class="sub" data-i18n="galeria.sub">Piscina, jardines tropicales y las mejores playas a minutos. Así se siente quedarse en Cabañas la Maite.</p>
                 </header>
                 <div class="mosaic reveal">
-                    <figure class="g-wide"><img src="img/loft1/372833463.jpg" alt="Vista del Loft 1" loading="lazy"></figure>
-                    <figure class="g-square"><img src="img/loft2/372833384.jpg" alt="Espacio interior" loading="lazy"></figure>
-                    <figure class="g-square"><img src="img/loft1/372833382.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
-                    <figure class="g-wide"><img src="img/loft1/372833545.jpg" alt="Jardín tropical" loading="lazy"></figure>
-                    <figure class="g-tall"><img src="img/loft2/374865745.jpg" alt="Loft 2" loading="lazy"></figure>
-                    <figure class="g-square"><img src="img/loft1/372834061.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
-                    <figure class="g-square"><img src="img/loft1/372833917.jpg" alt="Detalle del Loft 1" loading="lazy"></figure>
-                    <figure class="g-wide"><img src="img/loft1/374865774.jpg" alt="Espacio del Loft 1" loading="lazy"></figure>
-                    <figure class="g-square"><img src="img/loft2/372834120.jpg" alt="Loft 2" loading="lazy"></figure>
+                    <figure class="g-wide"><img src="img/loft1/372833463.jpg" alt="Vista del Loft 1" loading="lazy" data-i18n-attr="alt:alt.loft1.view"></figure>
+                    <figure class="g-square"><img src="img/loft2/372833384.jpg" alt="Espacio interior" loading="lazy" data-i18n-attr="alt:alt.interior"></figure>
+                    <figure class="g-square"><img src="img/loft1/372833382.jpg" alt="Detalle del Loft 1" loading="lazy" data-i18n-attr="alt:alt.loft1.detail"></figure>
+                    <figure class="g-wide"><img src="img/loft1/372833545.jpg" alt="Jardín tropical" loading="lazy" data-i18n-attr="alt:alt.garden"></figure>
+                    <figure class="g-tall"><img src="img/loft2/374865745.jpg" alt="Loft 2" loading="lazy" data-i18n-attr="alt:alt.loft2"></figure>
+                    <figure class="g-square"><img src="img/loft1/372834061.jpg" alt="Detalle del Loft 1" loading="lazy" data-i18n-attr="alt:alt.loft1.detail"></figure>
+                    <figure class="g-square"><img src="img/loft1/372833917.jpg" alt="Detalle del Loft 1" loading="lazy" data-i18n-attr="alt:alt.loft1.detail"></figure>
+                    <figure class="g-wide"><img src="img/loft1/374865774.jpg" alt="Espacio del Loft 1" loading="lazy" data-i18n-attr="alt:alt.loft1.space"></figure>
+                    <figure class="g-square"><img src="img/loft2/372834120.jpg" alt="Loft 2" loading="lazy" data-i18n-attr="alt:alt.loft2"></figure>
                 </div>
             </div>
         </section>
@@ -176,36 +180,36 @@
             <div class="container">
                 <div class="ubicacion-grid">
                     <div class="ubicacion-text reveal">
-                        <p class="eyebrow">Ubicación</p>
-                        <h2>Playa Sámara, <span class="text-green">una de las mejores del Pacífico</span></h2>
-                        <p>Arena blanca, oleaje suave y atardeceres inolvidables. Estamos a 1,6 km del mar, en una de las playas más hermosas y seguras de Costa Rica.</p>
+                        <p class="eyebrow" data-i18n="ubicacion.eyebrow">Ubicación</p>
+                        <h2 data-i18n-html="ubicacion.title">Playa Sámara, <span class="text-green">una de las mejores del Pacífico</span></h2>
+                        <p data-i18n="ubicacion.sub">Arena blanca, oleaje suave y atardeceres inolvidables. Estamos a 1,6 km del mar, en una de las playas más hermosas y seguras de Costa Rica.</p>
                         <div class="highlights">
                             <div class="highlight">
                                 <span class="highlight-icon">🏖️</span>
                                 <div>
-                                    <strong>900 m a Playa Buena Vista</strong>
-                                    <span>1,6 km a Playa Sámara</span>
+                                    <strong data-i18n="ubicacion.h1">900 m a Playa Buena Vista</strong>
+                                    <span data-i18n="ubicacion.h1b">1,6 km a Playa Sámara</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🍽️</span>
                                 <div>
-                                    <strong>Restaurantes y sodas</strong>
-                                    <span>gastronomía a pasos</span>
+                                    <strong data-i18n="ubicacion.h2">Restaurantes y sodas</strong>
+                                    <span data-i18n="ubicacion.h2b">gastronomía a pasos</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🛍️</span>
                                 <div>
-                                    <strong>Minisuper y farmacia</strong>
-                                    <span>cerca del hospedaje</span>
+                                    <strong data-i18n="ubicacion.h3">Minisuper y farmacia</strong>
+                                    <span data-i18n="ubicacion.h3b">cerca del hospedaje</span>
                                 </div>
                             </div>
                             <div class="highlight">
                                 <span class="highlight-icon">🚌</span>
                                 <div>
-                                    <strong>Acceso fácil</strong>
-                                    <span>en auto o bus</span>
+                                    <strong data-i18n="ubicacion.h4">Acceso fácil</strong>
+                                    <span data-i18n="ubicacion.h4b">en auto o bus</span>
                                 </div>
                             </div>
                         </div>
@@ -214,7 +218,7 @@
                         <iframe
                             src="https://www.google.com/maps?q=9.8799882,-85.5441426&z=16&output=embed"
                             allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-                            title="Mapa de Cabañas Lamaite, Sámara, Guanacaste, Costa Rica"></iframe>
+                            title="Mapa de Cabañas Lamaite, Sámara, Guanacaste, Costa Rica" data-i18n-attr="title:ubicacion.mapTitle"></iframe>
                         <div class="map-badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                             <div>
@@ -231,9 +235,9 @@
         <section id="reservar" class="reservar section">
             <div class="container">
                 <header class="section-head center reveal">
-                    <p class="eyebrow">Reservas</p>
-                    <h2>Reserva tu estadía</h2>
-                    <p class="sub">Mejor precio garantizado reservando directo o por Booking.com.</p>
+                    <p class="eyebrow" data-i18n="reservar.eyebrow">Reservas</p>
+                    <h2 data-i18n="reservar.title">Reserva tu estadía</h2>
+                    <p class="sub" data-i18n="reservar.sub">Mejor precio garantizado reservando directo o por Booking.com.</p>
                 </header>
 
                 <div class="reservar-grid">
@@ -243,46 +247,46 @@
                                 <h3><span class="icon">🏨</span> Booking.com</h3>
                                 <span class="rating-badge" style="width:40px;height:40px;font-size:.95rem">9.8</span>
                             </div>
-                            <p>Reserva segura, confirmación inmediata y cancelación gratis en la mayoría de las opciones.</p>
-                            <span class="go">Ver disponibilidad <span aria-hidden="true">→</span></span>
+                            <p data-i18n="reservar.booking.p">Reserva segura, confirmación inmediata y cancelación gratis en la mayoría de las opciones.</p>
+                            <span class="go" data-i18n-html="reservar.booking.go">Ver disponibilidad <span aria-hidden="true">→</span></span>
                         </a>
                         <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" class="reservar-card">
                             <div class="reservar-card-top">
                                 <h3><span class="icon">💬</span> WhatsApp / Facebook</h3>
                             </div>
-                            <p>Escríbenos directo para consultas, ofertas especiales y atención personalizada.</p>
-                            <span class="go">Contactar ahora <span aria-hidden="true">→</span></span>
+                            <p data-i18n="reservar.fb.p">Escríbenos directo para consultas, ofertas especiales y atención personalizada.</p>
+                            <span class="go" data-i18n-html="reservar.fb.go">Contactar ahora <span aria-hidden="true">→</span></span>
                         </a>
                     </div>
 
                     <form id="contact-form" class="contact-form reveal" novalidate>
-                        <h3>O déjanos tu consulta</h3>
-                        <p class="form-intro">Cuéntanos tus fechas y te respondemos con disponibilidad y precio.</p>
+                        <h3 data-i18n="reservar.form.title">O déjanos tu consulta</h3>
+                        <p class="form-intro" data-i18n="reservar.form.intro">Cuéntanos tus fechas y te respondemos con disponibilidad y precio.</p>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="nombre">Nombre</label>
-                                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+                                <label for="nombre" data-i18n="reservar.form.nombre">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre" data-i18n-attr="placeholder:reservar.form.nombre.ph">
                             </div>
                             <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" required placeholder="tu@email.com">
+                                <label for="email" data-i18n="reservar.form.email">Email</label>
+                                <input type="email" id="email" name="email" required placeholder="tu@email.com" data-i18n-attr="placeholder:reservar.form.email.ph">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="fecha-entrada">Entrada</label>
+                                <label for="fecha-entrada" data-i18n="reservar.form.entrada">Entrada</label>
                                 <input type="date" id="fecha-entrada" name="fechaEntrada">
                             </div>
                             <div class="form-group">
-                                <label for="fecha-salida">Salida</label>
+                                <label for="fecha-salida" data-i18n="reservar.form.salida">Salida</label>
                                 <input type="date" id="fecha-salida" name="fechaSalida">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="mensaje">Mensaje</label>
-                            <textarea id="mensaje" name="mensaje" rows="4" placeholder="¿Qué loft te interesa? ¿Cuántas personas?"></textarea>
+                            <label for="mensaje" data-i18n="reservar.form.mensaje">Mensaje</label>
+                            <textarea id="mensaje" name="mensaje" rows="4" placeholder="¿Qué loft te interesa? ¿Cuántas personas?" data-i18n-attr="placeholder:reservar.form.mensaje.ph"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Enviar consulta</button>
+                        <button type="submit" class="btn btn-primary" data-i18n="reservar.form.submit">Enviar consulta</button>
                         <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
                     </form>
                 </div>
@@ -297,7 +301,7 @@
                     <a href="#inicio" class="brand">
                     <img class="logo-img" src="img/logo.png" alt="Cabañas la Maite — logo">
                     </a>
-                    <p>Lofts con piscina a 900 m de Playa Buena Vista y 1,6 km de Playa Sámara. Ambiente sobrio, playero y alegre en Sámara, Costa Rica.</p>
+                    <p data-i18n="footer.brand">Lofts con piscina a 900 m de Playa Buena Vista y 1,6 km de Playa Sámara. Ambiente sobrio, playero y alegre en Sámara, Costa Rica.</p>
                     <div class="footer-social">
                         <a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener" aria-label="Facebook">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -308,18 +312,18 @@
                     </div>
                 </div>
                 <div class="footer-col">
-                    <h4>Explorar</h4>
+                    <h4 data-i18n="footer.explorar">Explorar</h4>
                     <ul>
-                        <li><a href="#inicio">Inicio</a></li>
-                        <li><a href="#lofts">Lofts</a></li>
-                        <li><a href="#galeria">Galería</a></li>
-                        <li><a href="#ubicacion">Ubicación</a></li>
+                        <li><a href="#inicio" data-i18n="nav.inicio">Inicio</a></li>
+                        <li><a href="#lofts" data-i18n="nav.lofts">Lofts</a></li>
+                        <li><a href="#galeria" data-i18n="nav.galeria">Galería</a></li>
+                        <li><a href="#ubicacion" data-i18n="nav.ubicacion">Ubicación</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4>Contacto</h4>
+                    <h4 data-i18n="footer.contacto">Contacto</h4>
                     <ul>
-                        <li><a href="#reservar">Reservar</a></li>
+                        <li><a href="#reservar" data-i18n="nav.reservar">Reservar</a></li>
                         <li><a href="https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html" target="_blank" rel="noopener">Booking.com</a></li>
                         <li><a href="https://www.facebook.com/LamaiteEcologicas" target="_blank" rel="noopener">Facebook</a></li>
                     </ul>
@@ -327,16 +331,16 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2025 Cabañas la Maite · VFH4+X8 Sámara, Guanacaste, Costa Rica</p>
-                <p>Hecho con <span style="color:var(--tan-500)">♥</span> junto al mar</p>
+                <p data-i18n-html="footer.made">Hecho con <span style="color:var(--tan-500)">♥</span> junto al mar</p>
             </div>
         </div>
     </footer>
 
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visor de fotos">
-        <button class="lb-close" aria-label="Cerrar">✕</button>
-        <button class="lb-prev" aria-label="Foto anterior">‹</button>
-        <img src="" alt="Foto ampliada">
-        <button class="lb-next" aria-label="Foto siguiente">›</button>
+        <button class="lb-close" aria-label="Cerrar" data-i18n-attr="aria-label:lb.close">✕</button>
+        <button class="lb-prev" aria-label="Foto anterior" data-i18n-attr="aria-label:lb.prev">‹</button>
+        <img src="" alt="Foto ampliada" data-i18n-attr="alt:lb.alt">
+        <button class="lb-next" aria-label="Foto siguiente" data-i18n-attr="aria-label:lb.next">›</button>
         <span class="lb-count"></span>
     </div>
 

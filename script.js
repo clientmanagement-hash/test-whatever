@@ -1,11 +1,297 @@
 /* ==========================================================================
-   Cabañas la Maite — comportamiento del sitio
+   Cabañas la Maite — comportamiento del sitio + i18n ES/EN
    ========================================================================== */
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
-/* ---------- Menú móvil ---------- */
+/* ==========================================================================
+   Traducción ES/EN
+   - El contenido por defecto del HTML es español.
+   - Si el navegador no es español (y no hay idioma guardado), se muestra en inglés.
+   - El botón ES|EN del menú cambia y recuerda el idioma elegido.
+   ========================================================================== */
+const I18N = {
+    en: {
+        // Navegación
+        'nav.inicio': 'Home',
+        'nav.lofts': 'Lofts',
+        'nav.galeria': 'Gallery',
+        'nav.ubicacion': 'Location',
+        'nav.reservar': 'Book',
+        'nav.menu': 'Open menu',
+        'nav.menuClose': 'Close menu',
+
+        // Hero
+        'hero.tagline': 'Your beach hideaway: sober, cheerful and minutes from Buena Vista and Sámara beaches. Lofts with pool, tropical garden and everything you need to unwind.',
+        'hero.book': 'Book on Booking.com',
+        'hero.seeLofts': 'See the lofts',
+        'hero.rating': 'Exceptional · 155 reviews',
+        'hero.scroll': 'Scroll',
+        'hero.scrollAria': 'Scroll to the next section',
+
+        // Franja de datos
+        'stat.1.label': 'to Buena Vista Beach',
+        'stat.2.strong': 'Pool',
+        'stat.2.label': 'in each loft',
+        'stat.3.label': 'Exceptional · 155 reviews',
+        'stat.4.strong': '1.6 km',
+        'stat.4.label': 'to Sámara Beach',
+
+        // Sección lofts
+        'lofts.eyebrow': 'Our lofts',
+        'lofts.title': 'Two spaces, <span class="text-green">one calm</span>',
+        'lofts.sub': 'Self-contained apartments with private entrance, air conditioning, equipped kitchen and a pool among palm trees.',
+        'loft1.title': 'Loft 1<br>Pool and garden',
+        'loft2.title': 'Loft 2<br>Pool and terrace',
+        'loft.desc': 'Pool, garden and terrace.',
+        'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
+        'loft2.link': 'See Loft 2 <span aria-hidden="true">→</span>',
+
+        // Chips
+        'chip.beds': '2 beds + sofa',
+        'chip.ac': 'Air conditioning',
+        'chip.kitchen': 'Equipped kitchen',
+        'chip.internet': 'Satellite internet',
+        'chip.parking': 'Private parking',
+        'chip.breakfast': 'Breakfast (not included)',
+        'chip.cleaning': 'Cleaning (5+ nights)',
+        'chip.crib': 'Baby crib',
+        'chip.terrace': 'Private terrace',
+        'chip.pool': 'Pool',
+
+        // Galería
+        'galeria.eyebrow': 'Gallery',
+        'galeria.title': 'Live the experience',
+        'galeria.sub': 'Pool, tropical gardens and the best beaches minutes away. This is what staying at Cabañas la Maite feels like.',
+
+        // Ubicación
+        'ubicacion.eyebrow': 'Location',
+        'ubicacion.title': 'Sámara Beach, <span class="text-green">one of the best in the Pacific</span>',
+        'ubicacion.sub': 'White sand, gentle waves and unforgettable sunsets. We are 1.6 km from the sea, in one of the most beautiful and safest beaches in Costa Rica.',
+        'ubicacion.h1': '900 m to Buena Vista Beach',
+        'ubicacion.h1b': '1.6 km to Sámara Beach',
+        'ubicacion.h2': 'Restaurants and sodas',
+        'ubicacion.h2b': 'local food nearby',
+        'ubicacion.h3': 'Minimarket and pharmacy',
+        'ubicacion.h3b': 'close to the lodge',
+        'ubicacion.h4': 'Easy access',
+        'ubicacion.h4b': 'by car or bus',
+        'ubicacion.mapTitle': 'Map of Cabañas Lamaite, Sámara, Guanacaste, Costa Rica',
+
+        // Reservas
+        'reservar.eyebrow': 'Bookings',
+        'reservar.title': 'Book your stay',
+        'reservar.sub': 'Best price guaranteed booking directly or via Booking.com.',
+        'reservar.booking.p': 'Secure booking, instant confirmation and free cancellation on most options.',
+        'reservar.booking.go': 'Check availability <span aria-hidden="true">→</span>',
+        'reservar.fb.p': 'Message us directly for enquiries, special offers and personal attention.',
+        'reservar.fb.go': 'Contact us now <span aria-hidden="true">→</span>',
+        'reservar.form.title': 'Or send us your question',
+        'reservar.form.intro': 'Tell us your dates and we will reply with availability and price.',
+        'reservar.form.nombre': 'Name',
+        'reservar.form.email': 'Email',
+        'reservar.form.entrada': 'Check-in',
+        'reservar.form.salida': 'Check-out',
+        'reservar.form.mensaje': 'Message',
+        'reservar.form.nombre.ph': 'Your name',
+        'reservar.form.email.ph': 'you@email.com',
+        'reservar.form.mensaje.ph': 'Which loft interests you? How many people?',
+        'reservar.form.submit': 'Send request',
+        'reservar.form.sending': 'Sending...',
+        'reservar.form.ok': 'Thank you, {name}! We will contact you soon to confirm your request.',
+        'reservar.form.errNombre': 'Please enter your name.',
+        'reservar.form.errEmail': 'Please enter a valid email.',
+
+        // Footer
+        'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
+        'footer.explorar': 'Explore',
+        'footer.contacto': 'Contact',
+        'footer.made': 'Made with <span style="color:var(--tan-500)">♥</span> by the sea',
+
+        // Lightbox
+        'lb.close': 'Close',
+        'lb.prev': 'Previous photo',
+        'lb.next': 'Next photo',
+        'lb.alt': 'Enlarged photo',
+
+        // Páginas de loft (compartido)
+        'loft.back': '← Back to the lofts',
+        'spec.title': 'Loft details',
+        'spec.size': '📐 Size',
+        'spec.beds': '🛏️ Beds',
+        'spec.baths': '🚿 Bathrooms',
+        'spec.climate': '🌡️ Climate',
+        'spec.pool': '🏊 Pool',
+        'spec.entry': '🚪 Entrance',
+        'spec.checkin': '✅ Check-in',
+        'spec.checkout': '✅ Check-out',
+        'spec.bedsVal': '2 beds + 1 sofa',
+        'spec.bathVal': '1 private bathroom',
+        'spec.climateVal': 'Individual A/C',
+        'spec.poolVal': 'Yes',
+        'spec.entryVal': 'Independent',
+        'spec.book1': 'Book Loft 1',
+        'spec.book2': 'Book Loft 2',
+        'spec.note': 'Free cancellation on most options',
+
+        // Servicios
+        'amen.eyebrow': 'Services & equipment',
+        'amen.title': 'Everything you need',
+        'amen.sub': 'Designed so you only worry about enjoying.',
+        'amen.cocina': 'Private kitchen',
+        'amen.cafe': 'Coffee station',
+        'amen.bano': 'Private bathroom',
+        'amen.comodidad': 'Comfort',
+        'amen.vistas': 'Views',
+        'amen.politicas': 'Policies',
+        'amen.servicios': 'Services',
+        'amen.fridge': 'Refrigerator',
+        'amen.micro': 'Microwave',
+        'amen.toaster': 'Toaster',
+        'amen.kettle': 'Electric kettle',
+        'amen.utensils': 'Kitchen utensils',
+        'amen.coffeemaker': 'Coffee maker',
+        'amen.teakettle': 'Tea kettle',
+        'amen.dining': 'Dining area',
+        'amen.diningTable': 'Dining table',
+        'amen.outdoor': 'Outdoor furniture',
+        'amen.shower': 'Shower',
+        'amen.shower2': 'Standalone shower',
+        'amen.toilet': 'Toilet',
+        'amen.tp': 'Toilet paper',
+        'amen.towels': 'Towels',
+        'amen.ac': 'Individual air conditioning',
+        'amen.fan': 'Ceiling fan',
+        'amen.bedding': 'Hypoallergenic bedding',
+        'amen.wardrobe': 'Wardrobe and clothes rack',
+        'amen.mosquito': 'Mosquito net',
+        'amen.balcony': 'Balcony / terrace',
+        'amen.gardenView': 'Garden views',
+        'amen.poolView': 'Pool views',
+        'amen.floor': 'Tile / marble floor',
+        'amen.nosmoke': 'No smoking',
+        'amen.co': 'Carbon monoxide detector',
+        'amen.sanitizer': 'Hand sanitizer',
+        'amen.internet': 'Satellite internet',
+        'amen.parking': 'Private parking',
+        'amen.breakfast': 'Breakfast in the cabin with prior reservation (not included)',
+        'amen.cleaning': 'Cleaning service (5 nights or more)',
+        'amen.crib': 'Baby crib',
+
+        // Detalle Loft 1
+        'loft1.eyebrow': 'Loft 01 · Sámara Beach',
+        'loft1.tagline': '60 m² apartment with pool, private entrance and terrace with tropical garden views.',
+        'loft1.space': 'The space',
+        'loft1.h2': 'Your pool among palm trees',
+        'loft1.lead': 'The main highlight of this apartment is its pool. With a private entrance and air conditioning, it includes a living room, a separate bedroom and a bathroom with shower.',
+        'loft1.p2': 'The fully equipped kitchen includes a refrigerator, kitchenware, microwave and toaster, so you can cook with total comfort. The loft also offers a coffee maker and tea kettle, a seating area, a dining area and a terrace with garden views.',
+        'loft1.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, hypoallergenic bedding and a ceiling fan in addition to the individual air conditioning.',
+        'loft1.galleryH2': 'This is Loft 1',
+
+        // Detalle Loft 2
+        'loft2.eyebrow': 'Loft 02 · Sámara Beach',
+        'loft2.tagline': '60 m² apartment with pool, private entrance and terrace with garden views.',
+        'loft2.space': 'The space',
+        'loft2.h2': 'Your pool, your hideaway',
+        'loft2.lead': 'The pool is the main highlight of this apartment. With a private entrance and air conditioning, it includes a living room, a separate bedroom and a bathroom with shower.',
+        'loft2.p2': 'The kitchen is fully equipped with a refrigerator, kitchenware, microwave and toaster, so you can cook with total comfort. The loft also has a coffee maker and tea kettle, a seating area, a dining area and a terrace with garden views.',
+        'loft2.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, hypoallergenic bedding and a ceiling fan in addition to the individual air conditioning.',
+        'loft2.galleryH2': 'This is Loft 2',
+        'gallery.sub': 'Click any photo to view it full size.',
+
+        // CTA
+        'cta.h2': 'Ready for your getaway?',
+        'cta1.p': 'Book Loft 1 on Booking.com or message us directly for special offers.',
+        'cta2.p': 'Book Loft 2 on Booking.com or message us directly for special offers.',
+        'cta.book': 'Book on Booking.com',
+        'cta.fb': 'Message us on Facebook',
+
+        // Alt de imágenes
+        'alt.loft1.view': 'Loft 1 — main view',
+        'alt.loft2.card': 'Loft 2 — cozy space with pool',
+        'alt.loft1.interior': 'Loft 1 — interior',
+        'alt.loft1.detail': 'Loft 1 — detail',
+        'alt.loft1.space': 'Loft 1 — space',
+        'alt.loft1.garden': 'Loft 1 — garden',
+        'alt.loft1.exterior': 'Loft 1 — exterior',
+        'alt.loft2.interior': 'Loft 2 — interior',
+        'alt.loft2.detail': 'Loft 2 — detail',
+        'alt.loft2.exterior': 'Loft 2 — exterior',
+        'alt.interior': 'Interior space',
+        'alt.garden': 'Tropical garden',
+        'alt.loft2': 'Loft 2'
+    }
+};
+
+function getInitialLang() {
+    let saved = null;
+    try { saved = localStorage.getItem('maite-lang'); } catch (e) { /* sin almacenamiento */ }
+    if (saved === 'es' || saved === 'en') return saved;
+    const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    return nav.startsWith('es') ? 'es' : 'en';
+}
+
+let lang = getInitialLang();
+
+const tr = (key, es) => (lang === 'en' && I18N.en[key]) ? I18N.en[key] : es;
+
+function applyLang() {
+    document.documentElement.lang = lang;
+    const d = I18N[lang] || null;
+
+    // Texto plano
+    $$('[data-i18n]').forEach((el) => {
+        if (el.dataset.esText === undefined) el.dataset.esText = el.textContent;
+        el.textContent = (d && d[el.dataset.i18n]) ? d[el.dataset.i18n] : el.dataset.esText;
+    });
+
+    // Texto con HTML interno (br, span, strong...)
+    $$('[data-i18n-html]').forEach((el) => {
+        if (el.dataset.esHtml === undefined) el.dataset.esHtml = el.innerHTML;
+        el.innerHTML = (d && d[el.dataset.i18nHtml]) ? d[el.dataset.i18nHtml] : el.dataset.esHtml;
+    });
+
+    // Atributos (placeholder, alt, title, aria-label...)
+    $$('[data-i18n-attr]').forEach((el) => {
+        if (!el.dataset.esAttrs) {
+            const map = {};
+            el.dataset.i18nAttr.split(';').forEach((pair) => {
+                const [attr, key] = pair.split(':');
+                map[attr] = el.getAttribute(attr);
+            });
+            el.dataset.esAttrs = JSON.stringify(map);
+        }
+        const es = JSON.parse(el.dataset.esAttrs);
+        el.dataset.i18nAttr.split(';').forEach((pair) => {
+            const [attr, key] = pair.split(':');
+            el.setAttribute(attr, (d && d[key]) ? d[key] : es[attr]);
+        });
+    });
+
+    // Botones del selector
+    $$('.lang-btn').forEach((btn) => {
+        const on = btn.dataset.lang === lang;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', String(on));
+    });
+}
+
+function setLang(next) {
+    lang = next;
+    try { localStorage.setItem('maite-lang', next); } catch (e) { /* sin almacenamiento */ }
+    applyLang();
+}
+
+$$('.lang-btn').forEach((btn) => {
+    btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+
+applyLang();
+
+/* ==========================================================================
+   Menú móvil
+   ========================================================================== */
 const navToggle = $('#nav-toggle');
 const navLinks = $('#nav-links');
 
@@ -13,15 +299,14 @@ if (navToggle && navLinks) {
     navToggle.addEventListener('click', () => {
         const open = navLinks.classList.toggle('open');
         navToggle.setAttribute('aria-expanded', String(open));
-        navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+        navToggle.setAttribute('aria-label', open ? tr('nav.menuClose', 'Cerrar menú') : tr('nav.menu', 'Abrir menú'));
     });
 
-    // Cerrar el menú al elegir una opción o al hacer clic fuera
     navLinks.addEventListener('click', (e) => {
         if (e.target.closest('a')) {
             navLinks.classList.remove('open');
             navToggle.setAttribute('aria-expanded', 'false');
-            navToggle.setAttribute('aria-label', 'Abrir menú');
+            navToggle.setAttribute('aria-label', tr('nav.menu', 'Abrir menú'));
         }
     });
 
@@ -33,7 +318,9 @@ if (navToggle && navLinks) {
     });
 }
 
-/* ---------- Header al hacer scroll ---------- */
+/* ==========================================================================
+   Header al hacer scroll
+   ========================================================================== */
 const header = $('#site-header');
 
 if (header) {
@@ -44,7 +331,9 @@ if (header) {
     onScroll();
 }
 
-/* ---------- Scroll suave para anclas de la misma página ---------- */
+/* ==========================================================================
+   Scroll suave para anclas de la misma página
+   ========================================================================== */
 $$('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener('click', (e) => {
         const target = $(anchor.getAttribute('href'));
@@ -55,11 +344,12 @@ $$('a[href^="#"]').forEach((anchor) => {
     });
 });
 
-/* ---------- Animaciones de aparición ---------- */
+/* ==========================================================================
+   Animaciones de aparición
+   ========================================================================== */
 const revealEls = $$('.reveal');
 
 if ('IntersectionObserver' in window && revealEls.length) {
-    // Escalonar los hijos de una misma grilla para un efecto en cascada
     revealEls.forEach((el) => {
         const children = Array.from(el.children);
         if (children.length > 2 && el.classList.contains('mosaic')) {
@@ -81,7 +371,9 @@ if ('IntersectionObserver' in window && revealEls.length) {
     revealEls.forEach((el) => el.classList.add('in-view'));
 }
 
-/* ---------- Lightbox para galerías ---------- */
+/* ==========================================================================
+   Lightbox para galerías
+   ========================================================================== */
 const lightbox = $('#lightbox');
 const galleryFigures = $$('.mosaic figure, .detail-gallery-grid figure');
 
@@ -94,7 +386,7 @@ if (lightbox && galleryFigures.length) {
         current = (i + galleryFigures.length) % galleryFigures.length;
         const src = galleryFigures[current].querySelector('img');
         lbImg.src = src.currentSrc || src.src;
-        lbImg.alt = src.alt || 'Foto';
+        lbImg.alt = src.alt || tr('lb.alt', 'Foto ampliada');
         lbCount.textContent = `${current + 1} / ${galleryFigures.length}`;
     };
 
@@ -130,7 +422,9 @@ if (lightbox && galleryFigures.length) {
     });
 }
 
-/* ---------- Formulario de contacto ---------- */
+/* ==========================================================================
+   Formulario de contacto
+   ========================================================================== */
 const contactForm = $('#contact-form');
 const formMessage = $('#form-message');
 
@@ -147,26 +441,25 @@ if (contactForm && formMessage) {
 
         const data = Object.fromEntries(new FormData(contactForm));
 
-        // Validación simple
         if (!data.nombre || !data.nombre.trim()) {
-            setMessage('Por favor, escribe tu nombre.', 'error');
+            setMessage(tr('reservar.form.errNombre', 'Por favor, escribe tu nombre.'), 'error');
             return;
         }
         if (!data.email || !isValidEmail(data.email)) {
-            setMessage('Por favor, escribe un email válido.', 'error');
+            setMessage(tr('reservar.form.errEmail', 'Por favor, escribe un email válido.'), 'error');
             return;
         }
 
         const submitBtn = contactForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Enviando...';
+        submitBtn.textContent = tr('reservar.form.sending', 'Enviando...');
         submitBtn.disabled = true;
 
         // Simular envío (reemplazar con un endpoint real cuando exista)
         await new Promise((resolve) => setTimeout(resolve, 1200));
 
         setMessage(
-            `¡Gracias ${data.nombre.trim()}! Te contactaremos pronto para confirmar tu consulta.`,
+            tr('reservar.form.ok', '¡Gracias {name}! Te contactaremos pronto para confirmar tu consulta.').replace('{name}', data.nombre.trim()),
             'success'
         );
         contactForm.reset();
@@ -178,7 +471,6 @@ if (contactForm && formMessage) {
         }, 6000);
     });
 
-    // Fechas mínimas: hoy para entrada; salida >= entrada
     const checkIn = $('#fecha-entrada');
     const checkOut = $('#fecha-salida');
 
