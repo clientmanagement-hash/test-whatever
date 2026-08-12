@@ -534,6 +534,17 @@ section { position: relative; }
     max-width: 52ch;
 }
 
+.price-line {
+    margin: -12px 0 20px;
+    font-size: 1rem;
+    color: var(--gris-600);
+}
+
+.price-line strong {
+    color: var(--tan-600);
+    font-size: 1.3rem;
+}
+
 .feature-chips {
     display: flex;
     flex-wrap: wrap;

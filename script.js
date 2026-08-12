@@ -45,6 +45,7 @@ const I18N = {
         'loft1.title': 'Loft 1<br>Pool and garden',
         'loft2.title': 'Loft 2<br>Pool and terrace',
         'loft.desc': 'Pool, garden and terrace.',
+        'loft.price': 'From <strong>$90</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
         'loft2.link': 'See Loft 2 <span aria-hidden="true">→</span>',
 
@@ -573,46 +574,59 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
 
-        const valid = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL'
-            && BOOKING.seasons.length
-            && directIn.value && directOut.value
+        const hasDates = directIn.value && directOut.value
             && new Date(directOut.value) > new Date(directIn.value);
 
-        if (!valid) {
-            directRate.textContent = '—';
-            directNights.textContent = '—';
-            directTotal.textContent = tr('direct.selectDates', 'Elige tus fechas');
-            directDeposit.textContent = '—';
-            directPay.removeAttribute('href');
-            directPay.classList.add('disabled');
-            return;
-        }
-
-        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
-
-        // Sumar cada noche: tarifa de temporada + cargo por persona adicional
-        const d = new Date(directIn.value);
-        const end = new Date(directOut.value);
         let total = 0;
         let nights = 0;
         const ratesSeen = [];
-        while (d < end) {
-            const r = rateForDate(d) + extraFee;
-            total += r;
-            if (!ratesSeen.includes(r)) ratesSeen.push(r);
-            nights += 1;
-            d.setDate(d.getDate() + 1);
+        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
+
+        if (hasDates) {
+            const d = new Date(directIn.value);
+            const end = new Date(directOut.value);
+            while (d < end) {
+                const r = rateForDate(d) + extraFee;
+                total += r;
+                if (!ratesSeen.includes(r)) ratesSeen.push(r);
+                nights += 1;
+                d.setDate(d.getDate() + 1);
+            }
         }
+
+        // Precio por noche: con fechas → tarifa exacta; sin fechas → rango de temporadas
+        if (hasDates) {
+            directRate.textContent = ratesSeen.length === 1
+                ? fmtUSD(ratesSeen[0])
+                : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
+        } else {
+            const rates = BOOKING.seasons.map((s) => s.rate);
+            directRate.textContent = rates.length === 1
+                ? fmtUSD(rates[0])
+                : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
+        }
+
         const deposit = total * BOOKING.depositPct / 100;
 
-        directRate.textContent = ratesSeen.length === 1
-            ? fmtUSD(ratesSeen[0])
-            : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
-        directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
-        directTotal.textContent = fmtUSD(total);
-        directDeposit.textContent = `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
-        directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${Math.round(deposit)}`);
-        directPay.classList.remove('disabled');
+        if (hasDates) {
+            directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
+            directTotal.textContent = fmtUSD(total);
+            directDeposit.textContent = `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
+        } else {
+            directNights.textContent = '—';
+            directTotal.textContent = tr('direct.selectDates', 'Elige tus fechas');
+            directDeposit.textContent = '—';
+        }
+
+        // El botón de PayPal solo se habilita con fechas válidas y usuario configurado
+        const paypalReady = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL';
+        if (!hasDates || !paypalReady) {
+            directPay.removeAttribute('href');
+            directPay.classList.add('disabled');
+        } else {
+            directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${deposit.toFixed(2)}`);
+            directPay.classList.remove('disabled');
+        }
     };
 
     window.updateDirect = updateDirect;
