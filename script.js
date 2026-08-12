@@ -524,14 +524,14 @@ if (contactForm && formMessage) {
    Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
    ========================================================================== */
 const BOOKING = {
-    currency: 'CRC',                     // colones
+    currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
-    extraGuestFee: 5000,                 // ₡ por persona adicional por noche
-    // Temporada alta: 1 nov → 31 may: ₡50.000/noche por 2 personas
-    // Temporada baja (incluye sep–oct): ₡45.000/noche por 2 personas
+    extraGuestFee: 10,                   // $ por persona adicional por noche
+    // Temporada alta: 1 nov → 31 may: $100/noche por 2 personas
+    // Temporada baja (incluye sep–oct): $90/noche por 2 personas
     seasons: [
-        { from: '11-01', to: '05-31', rate: 50000 },   // alta
-        { from: '06-01', to: '10-31', rate: 45000 }    // baja
+        { from: '11-01', to: '05-31', rate: 100 },   // alta
+        { from: '06-01', to: '10-31', rate: 90 }     // baja
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
@@ -563,7 +563,7 @@ const directDepositLabel = $('#direct-deposit-label');
 const directPay = $('#direct-pay');
 const directFeeNote = $('#direct-fee-note');
 
-const fmtColones = (n) => '₡' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 if (directLoft && directGuests && directIn && directOut && directPay) {
     const updateDirect = () => {
@@ -571,7 +571,7 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
 
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
-        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtColones(BOOKING.extraGuestFee)}`;
+        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
 
         const valid = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL'
             && BOOKING.seasons.length
@@ -606,11 +606,11 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         const deposit = total * BOOKING.depositPct / 100;
 
         directRate.textContent = ratesSeen.length === 1
-            ? fmtColones(ratesSeen[0])
-            : `${fmtColones(Math.min(...ratesSeen))}–${fmtColones(Math.max(...ratesSeen))}`;
+            ? fmtUSD(ratesSeen[0])
+            : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
         directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
-        directTotal.textContent = fmtColones(total);
-        directDeposit.textContent = `${fmtColones(deposit)} (${BOOKING.depositPct}%)`;
+        directTotal.textContent = fmtUSD(total);
+        directDeposit.textContent = `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
         directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${Math.round(deposit)}`);
         directPay.classList.remove('disabled');
     };
