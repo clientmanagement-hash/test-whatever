@@ -107,6 +107,21 @@ const I18N = {
         'reservar.form.errEmail': 'Please enter a valid email.',
         'reservar.form.subject': 'New enquiry · Cabañas la Maite',
         'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
+        'direct.title': 'Direct booking',
+        'direct.sub': 'Choose your loft and dates and pay only the deposit. The rest is paid on arrival.',
+        'direct.loft': 'Loft',
+        'direct.loft1': 'Loft 1',
+        'direct.loft2': 'Loft 2',
+        'direct.in': 'Check-in',
+        'direct.out': 'Check-out',
+        'direct.nightsLabel': 'Nights',
+        'direct.total': 'Total',
+        'direct.deposit': 'Deposit',
+        'direct.pay': 'Pay deposit with PayPal',
+        'direct.note': 'The rest is paid on arrival. The booking is confirmed once the deposit is received.',
+        'direct.night': 'night',
+        'direct.nights': 'nights',
+        'direct.selectDates': 'Select your dates',
 
         // Footer
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
@@ -235,6 +250,7 @@ const tr = (key, es) => (lang === 'en' && I18N.en[key]) ? I18N.en[key] : es;
 
 function applyLang() {
     document.documentElement.lang = lang;
+    if (typeof window.updateDirect === 'function') window.updateDirect();
     const d = I18N[lang] || null;
 
     // Texto plano
@@ -496,6 +512,72 @@ if (contactForm && formMessage) {
             }
         });
     }
+}
+
+/* ==========================================================================
+   Reserva directa con PayPal (seña)
+   CONFIGURACIÓN: precios por noche (USD), % de seña y tu usuario de paypal.me
+   ========================================================================== */
+const BOOKING = {
+    rates: { loft1: 95, loft2: 95 },   // USD por noche — CAMBIAR por tus tarifas
+    depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
+    paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
+};
+
+const directLoft = $('#direct-loft');
+const directIn = $('#direct-in');
+const directOut = $('#direct-out');
+const directNights = $('#direct-nights');
+const directTotal = $('#direct-total');
+const directDeposit = $('#direct-deposit');
+const directDepositLabel = $('#direct-deposit-label');
+const directPay = $('#direct-pay');
+
+if (directLoft && directIn && directOut && directPay) {
+    const fmt = (n) => '$' + n.toFixed(2);
+
+    const updateDirect = () => {
+        const rate = BOOKING.rates[directLoft.value] || 0;
+        const label = directDepositLabel;
+        label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
+
+        const nights = directIn.value && directOut.value
+            ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
+            : 0;
+
+        if (!nights || nights <= 0 || BOOKING.paypalUser === 'TU_USUARIO_PAYPAL') {
+            directNights.textContent = nights > 0 ? String(nights) : '—';
+            directTotal.textContent = nights > 0 ? fmt(0) : tr('direct.selectDates', 'Elige tus fechas');
+            directDeposit.textContent = '—';
+            directPay.removeAttribute('href');
+            directPay.classList.add('disabled');
+            return;
+        }
+
+        const total = nights * rate;
+        const deposit = total * BOOKING.depositPct / 100;
+
+        directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
+        directTotal.textContent = fmt(total);
+        directDeposit.textContent = `${fmt(deposit)} (${BOOKING.depositPct}%)`;
+        directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${deposit.toFixed(2)}`);
+        directPay.classList.remove('disabled');
+    };
+
+    window.updateDirect = updateDirect;
+
+    const today = new Date().toISOString().split('T')[0];
+    directIn.min = today;
+    directOut.min = today;
+
+    directLoft.addEventListener('change', updateDirect);
+    directIn.addEventListener('change', () => {
+        directOut.min = directIn.value || today;
+        updateDirect();
+    });
+    directOut.addEventListener('change', updateDirect);
+
+    updateDirect();
 }
 
 console.log('Cabañas la Maite · sitio cargado 🌴');
