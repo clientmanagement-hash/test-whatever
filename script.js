@@ -115,6 +115,7 @@ const I18N = {
         'direct.in': 'Check-in',
         'direct.out': 'Check-out',
         'direct.nightsLabel': 'Nights',
+        'direct.rate': 'Price per night',
         'direct.total': 'Total',
         'direct.deposit': 'Deposit',
         'direct.pay': 'Pay deposit with PayPal',
@@ -516,17 +517,37 @@ if (contactForm && formMessage) {
 
 /* ==========================================================================
    Reserva directa con PayPal (seña)
-   CONFIGURACIÓN: precios por noche (USD), % de seña y tu usuario de paypal.me
+   CONFIGURACIÓN: temporadas (fechas 'MM-DD' + tarifa USD), % de seña y tu usuario de paypal.me
+   Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
    ========================================================================== */
 const BOOKING = {
-    rates: { loft1: 95, loft2: 95 },   // USD por noche — CAMBIAR por tus tarifas
+    // Temporada alta: 1 nov → 31 may | Temporada baja: 1 jun → 31 oct
+    seasons: [
+        { from: '11-01', to: '05-31', rate: 120 },   // alta — CAMBIAR tarifa
+        { from: '06-01', to: '10-31', rate: 90 }     // baja — CAMBIAR tarifa
+    ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
 };
 
+function rateForDate(date) {
+    const v = (date.getMonth() + 1) * 100 + date.getDate();
+    for (const s of BOOKING.seasons) {
+        const f = parseInt(s.from.slice(0, 2), 10) * 100 + parseInt(s.from.slice(3), 10);
+        const t = parseInt(s.to.slice(0, 2), 10) * 100 + parseInt(s.to.slice(3), 10);
+        if (f <= t) {
+            if (v >= f && v <= t) return s.rate;
+        } else if (v >= f || v <= t) {
+            return s.rate; // la temporada cruza el año nuevo
+        }
+    }
+    return BOOKING.seasons.length ? BOOKING.seasons[0].rate : 0;
+}
+
 const directLoft = $('#direct-loft');
 const directIn = $('#direct-in');
 const directOut = $('#direct-out');
+const directRate = $('#direct-rate');
 const directNights = $('#direct-nights');
 const directTotal = $('#direct-total');
 const directDeposit = $('#direct-deposit');
@@ -537,26 +558,42 @@ if (directLoft && directIn && directOut && directPay) {
     const fmt = (n) => '$' + n.toFixed(2);
 
     const updateDirect = () => {
-        const rate = BOOKING.rates[directLoft.value] || 0;
         const label = directDepositLabel;
         label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
 
-        const nights = directIn.value && directOut.value
-            ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
-            : 0;
+        const valid = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL'
+            && BOOKING.seasons.length
+            && directIn.value && directOut.value
+            && new Date(directOut.value) > new Date(directIn.value);
 
-        if (!nights || nights <= 0 || BOOKING.paypalUser === 'TU_USUARIO_PAYPAL') {
-            directNights.textContent = nights > 0 ? String(nights) : '—';
-            directTotal.textContent = nights > 0 ? fmt(0) : tr('direct.selectDates', 'Elige tus fechas');
+        if (!valid) {
+            directRate.textContent = '—';
+            directNights.textContent = '—';
+            directTotal.textContent = tr('direct.selectDates', 'Elige tus fechas');
             directDeposit.textContent = '—';
             directPay.removeAttribute('href');
             directPay.classList.add('disabled');
             return;
         }
 
-        const total = nights * rate;
+        // Sumar cada noche con la tarifa de su temporada
+        const d = new Date(directIn.value);
+        const end = new Date(directOut.value);
+        let total = 0;
+        let nights = 0;
+        const ratesSeen = [];
+        while (d < end) {
+            const r = rateForDate(d);
+            total += r;
+            if (!ratesSeen.includes(r)) ratesSeen.push(r);
+            nights += 1;
+            d.setDate(d.getDate() + 1);
+        }
         const deposit = total * BOOKING.depositPct / 100;
 
+        directRate.textContent = ratesSeen.length === 1
+            ? fmt(ratesSeen[0])
+            : `${fmt(Math.min(...ratesSeen))}–${fmt(Math.max(...ratesSeen))}`;
         directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
         directTotal.textContent = fmt(total);
         directDeposit.textContent = `${fmt(deposit)} (${BOOKING.depositPct}%)`;
