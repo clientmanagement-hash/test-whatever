@@ -109,7 +109,7 @@ const I18N = {
         'reservar.form.subject': 'New enquiry · Cabañas la Maite',
         'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
         'direct.title': 'Direct booking',
-        'direct.sub': 'Choose your loft and dates and pay only the deposit. The rest is paid on arrival. Minimum stay: 2 nights.',
+        'direct.sub': 'Choose your loft and dates and pay the total for your stay. Minimum stay: 2 nights.',
         'direct.loft': 'Loft',
         'direct.loft1': 'Loft 1',
         'direct.loft2': 'Loft 2',
@@ -119,8 +119,9 @@ const I18N = {
         'direct.rate': 'Price per night',
         'direct.total': 'Total',
         'direct.deposit': 'Deposit',
+        'direct.totalPay': 'Total payment',
         'direct.pay': 'Payment to confirm your booking',
-        'direct.note': 'The rest is paid on arrival. The booking is confirmed once the deposit is received. You can pay with credit or debit card, no PayPal account needed.',
+        'direct.note': 'The booking is confirmed once payment is received. You can pay with credit or debit card, no PayPal account needed.',
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
@@ -534,7 +535,7 @@ const BOOKING = {
     seasons: [
         { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
     ],
-    depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
+    depositPct: 100,                     // % a pagar al reservar (100 = pago total)
     paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (pago con tarjeta sin cuenta)
 };
 
@@ -575,7 +576,9 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
 
     const updateDirect = () => {
         const label = directDepositLabel;
-        label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
+        label.textContent = BOOKING.depositPct >= 100
+            ? tr('direct.totalPay', 'Pago total')
+            : `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
 
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
@@ -619,7 +622,9 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         if (hasDates) {
             directNights.textContent = `${n} ${n === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
             directTotal.textContent = fmtUSD(total);
-            directDeposit.textContent = `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
+            directDeposit.textContent = BOOKING.depositPct >= 100
+                ? fmtUSD(total)
+                : `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
         } else if (nights > 0) {
             directNights.textContent = String(nights);
             directTotal.textContent = tr('direct.minNights', 'Mínimo 2 noches');
