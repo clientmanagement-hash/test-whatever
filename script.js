@@ -524,9 +524,6 @@ if (contactForm && formMessage) {
    Reserva directa con PayPal (seña) — pago por enlace NCP (tarjeta sin cuenta)
    CONFIGURACIÓN: tarifa fija $130/noche, % de seña y tu enlace NCP de PayPal
    ========================================================================== */
-   CONFIGURACIÓN: temporadas (fechas 'MM-DD' + tarifa USD), % de seña y tu usuario de paypal.me
-   Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
-   ========================================================================== */
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
