@@ -45,7 +45,7 @@ const I18N = {
         'loft1.title': 'Loft 1<br>Pool and garden',
         'loft2.title': 'Loft 2<br>Pool and terrace',
         'loft.desc': 'Pool, garden and terrace.',
-        'loft.price': 'From <strong>$130</strong> per night',
+        'loft.price': 'From <strong>$116</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
         'loft2.link': 'See Loft 2 <span aria-hidden="true">→</span>',
 
@@ -528,9 +528,9 @@ const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
     extraGuestFee: 10,                   // $ por persona adicional por noche
-    // Tarifa fija: $130/noche por 2 personas, todo el año
+    // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
-        { from: '01-01', to: '12-31', rate: 130 }   // tarifa fija
+        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (pago con tarjeta sin cuenta)
