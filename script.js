@@ -521,19 +521,9 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
-   Botón alojado de PayPal (permite pagar con tarjeta sin cuenta PayPal)
-   CONFIGURACIÓN: hostedButtonId = el ID del botón que creas en tu panel PayPal
+   Reserva directa con PayPal (seña) — pago por enlace NCP (tarjeta sin cuenta)
+   CONFIGURACIÓN: tarifa fija $130/noche, % de seña y tu enlace NCP de PayPal
    ========================================================================== */
-const HOSTED_BUTTON_ID = 'TU_BUTTON_ID';   // CAMBIAR por el ID del botón alojado
-
-const paypalContainer = $('#paypal-button-container');
-if (paypalContainer && window.paypal && window.paypal.HostedButtons && HOSTED_BUTTON_ID !== 'TU_BUTTON_ID') {
-    window.paypal.HostedButtons({ hostedButtonId: HOSTED_BUTTON_ID }).render('#paypal-button-container');
-    paypalContainer.classList.add('ready');
-}
-
-/* ==========================================================================
-   Reserva directa con PayPal (seña)
    CONFIGURACIÓN: temporadas (fechas 'MM-DD' + tarifa USD), % de seña y tu usuario de paypal.me
    Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
    ========================================================================== */
@@ -546,7 +536,7 @@ const BOOKING = {
         { from: '01-01', to: '12-31', rate: 130 }   // tarifa fija
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
-    paypalEmail: 'cabanaslamaite@gmail.com'   // correo de tu cuenta PayPal (recibe pagos) — CONFIRMAR
+    paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (pago con tarjeta sin cuenta)
 };
 
 function rateForDate(date) {
@@ -629,19 +619,13 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
             directDeposit.textContent = '—';
         }
 
-        // El botón de PayPal solo se habilita con fechas válidas y correo configurado
-        const paypalReady = BOOKING.paypalEmail && !String(BOOKING.paypalEmail).startsWith('TU_');
+        // El botón de PayPal solo se habilita con fechas válidas y enlace NCP configurado
+        const paypalReady = BOOKING.paypalNcpUrl && !String(BOOKING.paypalNcpUrl).startsWith('TU_');
         if (!hasDates || !paypalReady) {
             directPay.removeAttribute('href');
             directPay.classList.add('disabled');
         } else {
-            const url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick'
-                + '&business=' + encodeURIComponent(BOOKING.paypalEmail)
-                + '&amount=' + deposit.toFixed(2)
-                + '&currency_code=USD'
-                + '&no_shipping=1'
-                + '&item_name=' + encodeURIComponent(tr('paypal.item', 'Seña · Cabañas la Maite'));
-            directPay.setAttribute('href', url);
+            directPay.setAttribute('href', BOOKING.paypalNcpUrl);
             directPay.classList.remove('disabled');
         }
     };
