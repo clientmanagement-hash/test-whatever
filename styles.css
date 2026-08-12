@@ -970,6 +970,15 @@ section { position: relative; }
     color: var(--gris-600);
 }
 
+.paypal-hosted {
+    display: none;
+    margin-top: 16px;
+}
+
+.paypal-hosted.ready {
+    display: block;
+}
+
 .form-message {
     margin-top: 16px;
     padding: 14px 18px;

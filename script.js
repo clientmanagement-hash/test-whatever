@@ -521,6 +521,18 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
+   Botón alojado de PayPal (permite pagar con tarjeta sin cuenta PayPal)
+   CONFIGURACIÓN: hostedButtonId = el ID del botón que creas en tu panel PayPal
+   ========================================================================== */
+const HOSTED_BUTTON_ID = 'TU_BUTTON_ID';   // CAMBIAR por el ID del botón alojado
+
+const paypalContainer = $('#paypal-button-container');
+if (paypalContainer && window.paypal && window.paypal.HostedButtons && HOSTED_BUTTON_ID !== 'TU_BUTTON_ID') {
+    window.paypal.HostedButtons({ hostedButtonId: HOSTED_BUTTON_ID }).render('#paypal-button-container');
+    paypalContainer.classList.add('ready');
+}
+
+/* ==========================================================================
    Reserva directa con PayPal (seña)
    CONFIGURACIÓN: temporadas (fechas 'MM-DD' + tarifa USD), % de seña y tu usuario de paypal.me
    Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
