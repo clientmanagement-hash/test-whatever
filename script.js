@@ -120,7 +120,7 @@ const I18N = {
         'direct.total': 'Total',
         'direct.deposit': 'Deposit',
         'direct.pay': 'Pay deposit with PayPal',
-        'direct.note': 'The rest is paid on arrival. The booking is confirmed once the deposit is received.',
+        'direct.note': 'The rest is paid on arrival. The booking is confirmed once the deposit is received. You can pay with credit or debit card, no PayPal account needed.',
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
