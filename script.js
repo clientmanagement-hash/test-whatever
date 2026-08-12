@@ -109,7 +109,7 @@ const I18N = {
         'reservar.form.subject': 'New enquiry · Cabañas la Maite',
         'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
         'direct.title': 'Direct booking',
-        'direct.sub': 'Choose your loft and dates and pay only the deposit. The rest is paid on arrival.',
+        'direct.sub': 'Choose your loft and dates and pay only the deposit. The rest is paid on arrival. Minimum stay: 2 nights.',
         'direct.loft': 'Loft',
         'direct.loft1': 'Loft 1',
         'direct.loft2': 'Loft 2',
@@ -124,6 +124,7 @@ const I18N = {
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
+        'direct.minNights': 'Minimum 2 nights',
         'paypal.item': 'Deposit · Cabañas la Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
@@ -527,6 +528,7 @@ if (contactForm && formMessage) {
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
+    minNights: 2,                        // estadía mínima (noches)
     extraGuestFee: 10,                   // $ por persona adicional por noche
     // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
@@ -565,6 +567,12 @@ const directFeeNote = $('#direct-fee-note');
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 if (directLoft && directGuests && directIn && directOut && directPay) {
+    const addDays = (iso, days) => {
+        const d = new Date(iso);
+        d.setUTCDate(d.getUTCDate() + days);
+        return d.toISOString().slice(0, 10);
+    };
+
     const updateDirect = () => {
         const label = directDepositLabel;
         label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
@@ -572,11 +580,13 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
 
-        const hasDates = directIn.value && directOut.value
-            && new Date(directOut.value) > new Date(directIn.value);
+        const nights = directIn.value && directOut.value
+            ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
+            : 0;
+        const hasDates = nights >= BOOKING.minNights;
 
         let total = 0;
-        let nights = 0;
+        let n = 0;
         const ratesSeen = [];
         const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
 
@@ -587,7 +597,7 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
                 const r = rateForDate(d) + extraFee;
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
-                nights += 1;
+                n += 1;
                 d.setDate(d.getDate() + 1);
             }
         }
@@ -607,9 +617,13 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         const deposit = total * BOOKING.depositPct / 100;
 
         if (hasDates) {
-            directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
+            directNights.textContent = `${n} ${n === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
             directTotal.textContent = fmtUSD(total);
             directDeposit.textContent = `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
+        } else if (nights > 0) {
+            directNights.textContent = String(nights);
+            directTotal.textContent = tr('direct.minNights', 'Mínimo 2 noches');
+            directDeposit.textContent = '—';
         } else {
             directNights.textContent = '—';
             directTotal.textContent = tr('direct.selectDates', 'Elige tus fechas');
@@ -631,12 +645,12 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
 
     const today = new Date().toISOString().split('T')[0];
     directIn.min = today;
-    directOut.min = today;
+    directOut.min = addDays(today, BOOKING.minNights);
 
     directLoft.addEventListener('change', updateDirect);
     directGuests.addEventListener('input', updateDirect);
     directIn.addEventListener('change', () => {
-        directOut.min = directIn.value || today;
+        directOut.min = directIn.value ? addDays(directIn.value, BOOKING.minNights) : addDays(today, BOOKING.minNights);
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
