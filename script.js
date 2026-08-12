@@ -82,7 +82,7 @@ const I18N = {
         // Reservas
         'reservar.eyebrow': 'Bookings',
         'reservar.title': 'Book your stay',
-        'reservar.sub': 'Best price guaranteed booking directly or via Booking.com.',
+        'reservar.sub': 'Best price guaranteed booking directly.',
         'reservar.booking.p': 'Secure booking, instant confirmation and free cancellation on most options.',
         'reservar.booking.go': 'Check availability <span aria-hidden="true">→</span>',
         'reservar.wa.title': 'WhatsApp',
