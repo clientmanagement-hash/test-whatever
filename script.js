@@ -124,6 +124,7 @@ const I18N = {
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
+        'paypal.item': 'Deposit · Cabañas la Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
@@ -533,7 +534,7 @@ const BOOKING = {
         { from: '01-01', to: '12-31', rate: 130 }   // tarifa fija
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
-    paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
+    paypalEmail: 'cabanaslamaite@gmail.com'   // correo de tu cuenta PayPal (recibe pagos) — CONFIRMAR
 };
 
 function rateForDate(date) {
@@ -616,13 +617,19 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
             directDeposit.textContent = '—';
         }
 
-        // El botón de PayPal solo se habilita con fechas válidas y usuario configurado
-        const paypalReady = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL';
+        // El botón de PayPal solo se habilita con fechas válidas y correo configurado
+        const paypalReady = BOOKING.paypalEmail && !String(BOOKING.paypalEmail).startsWith('TU_');
         if (!hasDates || !paypalReady) {
             directPay.removeAttribute('href');
             directPay.classList.add('disabled');
         } else {
-            directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${deposit.toFixed(2)}`);
+            const url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick'
+                + '&business=' + encodeURIComponent(BOOKING.paypalEmail)
+                + '&amount=' + deposit.toFixed(2)
+                + '&currency_code=USD'
+                + '&no_shipping=1'
+                + '&item_name=' + encodeURIComponent(tr('paypal.item', 'Seña · Cabañas la Maite'));
+            directPay.setAttribute('href', url);
             directPay.classList.remove('disabled');
         }
     };
