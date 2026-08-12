@@ -527,11 +527,11 @@ const BOOKING = {
     currency: 'CRC',                     // colones
     baseGuests: 2,                       // la tarifa incluye 2 personas
     extraGuestFee: 5000,                 // ₡ por persona adicional por noche
-    // Temporada alta: 1 nov → 31 may (TARIFA PENDIENTE — provisional = tarifa baja)
+    // Temporada alta: 1 nov → 31 may: ₡50.000/noche por 2 personas
     // Temporada baja (incluye sep–oct): ₡45.000/noche por 2 personas
     seasons: [
-        { from: '11-01', to: '05-31', rate: 45000 },   // alta — CONFIRMAR tarifa
-        { from: '06-01', to: '10-31', rate: 45000 }    // baja (sep/oct): ₡45.000
+        { from: '11-01', to: '05-31', rate: 50000 },   // alta
+        { from: '06-01', to: '10-31', rate: 45000 }    // baja
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
