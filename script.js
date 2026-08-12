@@ -123,6 +123,9 @@ const I18N = {
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
+        'direct.guests': 'Guests',
+        'direct.feeNote': 'Rate for 2 people',
+        'direct.extra': 'extra person',
 
         // Footer
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
@@ -521,10 +524,14 @@ if (contactForm && formMessage) {
    Si la estadía cruza de temporada, cada noche se cobra con su tarifa.
    ========================================================================== */
 const BOOKING = {
-    // Temporada alta: 1 nov → 31 may | Temporada baja: 1 jun → 31 oct
+    currency: 'CRC',                     // colones
+    baseGuests: 2,                       // la tarifa incluye 2 personas
+    extraGuestFee: 5000,                 // ₡ por persona adicional por noche
+    // Temporada alta: 1 nov → 31 may (TARIFA PENDIENTE — provisional = tarifa baja)
+    // Temporada baja (incluye sep–oct): ₡45.000/noche por 2 personas
     seasons: [
-        { from: '11-01', to: '05-31', rate: 120 },   // alta — CAMBIAR tarifa
-        { from: '06-01', to: '10-31', rate: 90 }     // baja — CAMBIAR tarifa
+        { from: '11-01', to: '05-31', rate: 45000 },   // alta — CONFIRMAR tarifa
+        { from: '06-01', to: '10-31', rate: 45000 }    // baja (sep/oct): ₡45.000
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
@@ -545,6 +552,7 @@ function rateForDate(date) {
 }
 
 const directLoft = $('#direct-loft');
+const directGuests = $('#direct-guests');
 const directIn = $('#direct-in');
 const directOut = $('#direct-out');
 const directRate = $('#direct-rate');
@@ -553,13 +561,17 @@ const directTotal = $('#direct-total');
 const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directPay = $('#direct-pay');
+const directFeeNote = $('#direct-fee-note');
 
-if (directLoft && directIn && directOut && directPay) {
-    const fmt = (n) => '$' + n.toFixed(2);
+const fmtColones = (n) => '₡' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
+if (directLoft && directGuests && directIn && directOut && directPay) {
     const updateDirect = () => {
         const label = directDepositLabel;
         label.textContent = `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
+
+        const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
+        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtColones(BOOKING.extraGuestFee)}`;
 
         const valid = BOOKING.paypalUser !== 'TU_USUARIO_PAYPAL'
             && BOOKING.seasons.length
@@ -576,14 +588,16 @@ if (directLoft && directIn && directOut && directPay) {
             return;
         }
 
-        // Sumar cada noche con la tarifa de su temporada
+        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
+
+        // Sumar cada noche: tarifa de temporada + cargo por persona adicional
         const d = new Date(directIn.value);
         const end = new Date(directOut.value);
         let total = 0;
         let nights = 0;
         const ratesSeen = [];
         while (d < end) {
-            const r = rateForDate(d);
+            const r = rateForDate(d) + extraFee;
             total += r;
             if (!ratesSeen.includes(r)) ratesSeen.push(r);
             nights += 1;
@@ -592,12 +606,12 @@ if (directLoft && directIn && directOut && directPay) {
         const deposit = total * BOOKING.depositPct / 100;
 
         directRate.textContent = ratesSeen.length === 1
-            ? fmt(ratesSeen[0])
-            : `${fmt(Math.min(...ratesSeen))}–${fmt(Math.max(...ratesSeen))}`;
+            ? fmtColones(ratesSeen[0])
+            : `${fmtColones(Math.min(...ratesSeen))}–${fmtColones(Math.max(...ratesSeen))}`;
         directNights.textContent = `${nights} ${nights === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
-        directTotal.textContent = fmt(total);
-        directDeposit.textContent = `${fmt(deposit)} (${BOOKING.depositPct}%)`;
-        directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${deposit.toFixed(2)}`);
+        directTotal.textContent = fmtColones(total);
+        directDeposit.textContent = `${fmtColones(deposit)} (${BOOKING.depositPct}%)`;
+        directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalUser}/${Math.round(deposit)}`);
         directPay.classList.remove('disabled');
     };
 
@@ -608,6 +622,7 @@ if (directLoft && directIn && directOut && directPay) {
     directOut.min = today;
 
     directLoft.addEventListener('change', updateDirect);
+    directGuests.addEventListener('input', updateDirect);
     directIn.addEventListener('change', () => {
         directOut.min = directIn.value || today;
         updateDirect();

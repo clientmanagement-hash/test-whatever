@@ -953,6 +953,12 @@ section { position: relative; }
     text-align: center;
 }
 
+.direct-fee {
+    margin: 12px 0 0;
+    font-size: 0.8rem;
+    color: var(--gris-600);
+}
+
 .form-message {
     margin-top: 16px;
     padding: 14px 18px;
