@@ -45,7 +45,7 @@ const I18N = {
         'loft1.title': 'Loft 1<br>Pool and garden',
         'loft2.title': 'Loft 2<br>Pool and terrace',
         'loft.desc': 'Pool, garden and terrace.',
-        'loft.price': 'From <strong>$90</strong> per night',
+        'loft.price': 'From <strong>$130</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
         'loft2.link': 'See Loft 2 <span aria-hidden="true">→</span>',
 
@@ -528,11 +528,9 @@ const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
     extraGuestFee: 10,                   // $ por persona adicional por noche
-    // Temporada alta: 1 nov → 31 may: $100/noche por 2 personas
-    // Temporada baja (incluye sep–oct): $90/noche por 2 personas
+    // Tarifa fija: $130/noche por 2 personas, todo el año
     seasons: [
-        { from: '11-01', to: '05-31', rate: 100 },   // alta
-        { from: '06-01', to: '10-31', rate: 90 }     // baja
+        { from: '01-01', to: '12-31', rate: 130 }   // tarifa fija
     ],
     depositPct: 50,                    // % de seña — CAMBIAR si lo deseas
     paypalUser: 'TU_USUARIO_PAYPAL'    // tu usuario de paypal.me — CAMBIAR
