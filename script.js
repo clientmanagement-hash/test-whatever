@@ -530,7 +530,7 @@ if (contactForm && formMessage) {
    CONFIGURACIÓN: HOSTED_BUTTON_ID = el ID del botón que creas en tu panel PayPal
    IMPORTANTE: crea el botón con MONTO LIBRE (variable), no fijo.
    ========================================================================== */
-const HOSTED_BUTTON_ID = 'TU_BUTTON_ID';   // CAMBIAR por el ID de tu botón alojado
+const HOSTED_BUTTON_ID = 'XB4WSE6T4NX58';   // botón alojado de PayPal
 
 const paypalHostedContainer = $('#paypal-hosted-container');
 if (paypalHostedContainer && window.paypal && window.paypal.HostedButtons && HOSTED_BUTTON_ID !== 'TU_BUTTON_ID') {
