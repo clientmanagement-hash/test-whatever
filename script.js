@@ -535,11 +535,23 @@ const BOOKING = {
     seasons: [
         { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
     ],
+    // Eventos puntuales con fecha completa (YYYY-MM-DD) — tienen prioridad sobre seasons
+    events: [
+        { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027: $130,50/noche
+    ],
     depositPct: 100,                     // % a pagar al reservar (100 = pago total)
     paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (pago con tarjeta sin cuenta)
 };
 
 function rateForDate(date) {
+    // 1) Eventos puntuales (fecha completa YYYY-MM-DD), ej. Semana Santa
+    const full = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    for (const ev of (BOOKING.events || [])) {
+        const f = parseInt(ev.from.replace(/-/g, ''), 10);
+        const t = parseInt(ev.to.replace(/-/g, ''), 10);
+        if (full >= f && full <= t) return ev.rate;
+    }
+    // 2) Temporadas recurrentes (MM-DD)
     const v = (date.getMonth() + 1) * 100 + date.getDate();
     for (const s of BOOKING.seasons) {
         const f = parseInt(s.from.slice(0, 2), 10) * 100 + parseInt(s.from.slice(3), 10);
@@ -611,7 +623,7 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
                 ? fmtUSD(ratesSeen[0])
                 : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
         } else {
-            const rates = BOOKING.seasons.map((s) => s.rate);
+            const rates = [...BOOKING.seasons.map((s) => s.rate), ...(BOOKING.events || []).map((e) => e.rate)];
             directRate.textContent = rates.length === 1
                 ? fmtUSD(rates[0])
                 : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
