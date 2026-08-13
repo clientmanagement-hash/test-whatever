@@ -86,7 +86,7 @@ Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con
 
 ## 7. Widget de reserva directa (script.js)
 
-Ubicado en la tarjeta "Reserva directa" de la sección Reservar (index.html). IDs: `direct-loft, direct-guests, direct-in, direct-out, direct-rate, direct-nights, direct-total, direct-deposit, direct-deposit-label, direct-fee-note, direct-amount-helper/value/copy, paypal-hosted-container, direct-pay-status`.
+Ubicado en la tarjeta "Reserva directa" de la sección Reservar (index.html). IDs: `direct-loft, direct-guests, direct-in, direct-out, direct-rate, direct-nights, direct-total, direct-deposit, direct-deposit-label, direct-fee-note, paypal-hosted-container, direct-pay-status`.
 
 **Config central (`const BOOKING`)** — valores ACTUALES:
 ```js

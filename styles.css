@@ -1007,52 +1007,6 @@ section { position: relative; }
     border: 1px solid #e5cf9f;
 }
 
-.direct-amount-helper {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 14px;
-    padding: 12px 14px;
-    background: var(--arena);
-    border: 1px solid var(--arena-2);
-    border-radius: var(--r-sm);
-    font-size: 0.9rem;
-    color: var(--gris-600);
-}
-
-.direct-amount-helper.ready {
-    display: flex;
-}
-
-.direct-amount-helper strong {
-    color: var(--tan-600);
-    font-size: 1.25rem;
-}
-
-.direct-copy {
-    border: 1px solid var(--tan-500);
-    background: transparent;
-    color: var(--tan-600);
-    font-weight: 700;
-    font-size: 0.8rem;
-    padding: 6px 14px;
-    border-radius: var(--r-pill);
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.direct-copy:hover {
-    background: var(--tan-500);
-    color: var(--verde-950);
-}
-
-.direct-copy.copied {
-    background: var(--verde-500);
-    border-color: var(--verde-500);
-    color: #fff;
-}
-
 .form-message {
     margin-top: 16px;
     padding: 14px 18px;

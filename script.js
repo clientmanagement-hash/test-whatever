@@ -126,9 +126,6 @@ const I18N = {
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
         'direct.minNights': 'Minimum 2 nights',
-        'direct.amountCopy': 'Amount to pay:',
-        'direct.copy': 'Copy',
-        'direct.copied': 'Copied!',
         'direct.smartErr': 'Choose valid dates to calculate the amount.',
         'direct.payOk': 'Payment received! Your booking is confirmed. We will contact you to arrange the details.',
         'direct.payCancel': 'Payment cancelled. You can try again anytime.',
@@ -690,10 +687,6 @@ const directTotal = $('#direct-total');
 const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directFeeNote = $('#direct-fee-note');
-const directAmountHelper = $('#direct-amount-helper');
-const directAmountValue = $('#direct-amount-value');
-const directCopyAmount = $('#direct-copy-amount');
-let currentAmount = null;
 let lastBooking = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -768,17 +761,10 @@ if (directLoft && directGuests && directIn && directOut) {
             directDeposit.textContent = '—';
         }
 
-        // Aviso del monto a pagar (referencia — el cobro lo calcula el servidor)
+        // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            currentAmount = Math.round(total * 100) / 100;
             lastBooking = { checkIn: directIn.value, checkOut: directOut.value, guests };
-            directAmountValue.textContent = fmtUSD(currentAmount);
-            directAmountHelper.classList.add('ready');
-            directCopyAmount.textContent = tr('direct.copy', 'Copiar');
-            directCopyAmount.classList.remove('copied');
         } else {
-            directAmountHelper.classList.remove('ready');
-            currentAmount = null;
             lastBooking = null;
         }
 
@@ -798,23 +784,6 @@ if (directLoft && directGuests && directIn && directOut) {
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
-
-    if (directCopyAmount) {
-        directCopyAmount.addEventListener('click', async () => {
-            if (currentAmount == null) return;
-            try {
-                await navigator.clipboard.writeText(String(currentAmount));
-                directCopyAmount.textContent = tr('direct.copied', '¡Copiado!');
-                directCopyAmount.classList.add('copied');
-            } catch (e) {
-                window.prompt(tr('direct.copy', 'Copiar') + ':', String(currentAmount));
-            }
-            setTimeout(() => {
-                directCopyAmount.textContent = tr('direct.copy', 'Copiar');
-                directCopyAmount.classList.remove('copied');
-            }, 2000);
-        });
-    }
 
     updateDirect();
 }
