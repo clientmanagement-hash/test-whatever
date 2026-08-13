@@ -184,14 +184,18 @@ EOF
 
 ## 13. Seguridad y despliegue (pago)
 - **Nunca** commitear credenciales: `.gitignore` excluye `docs/*.docx` y `.env*`. El Client Secret solo existe en env vars de Vercel. `docs/Paypal credentials.docx` **no está en git** (verificado) — no abrirlo en conversaciones de IA.
-- El monto del pago se recalcula **en el servidor** (api/paypal/pricing.js); el cliente jamás envía el monto. Errores de PayPal se devuelven como códigos fijos, sin cuerpos internos al navegador.
-- **Despliegue:** el repo debe estar importado en Vercel (proyecto "Cabañas la Maite"); `api/` se detecta solo. En GitHub Pages el botón de pago no funciona (muestra el aviso bilingüe correspondiente). Si Vercel no resuelve los `import` ESM de `api/`, añadir `package.json` con `{"type":"module"}`.
+- El monto del pago se recalcula **en el servidor** (api/paypal/_pricing.js); el cliente jamás envía el monto. Errores de PayPal se devuelven como códigos fijos, sin cuerpos internos al navegador.
+- **Despliegue:** repo importado en Vercel → **https://cabanaslamaite.vercel.app** (auto-deploy en push a main). `api/` se detecta solo.
+- **⚠️ Lección Vercel:** las funciones de `api/` deben ser **CommonJS** (`module.exports` + `require`); el ESM (`import/export`) sin `package.json` hacía que las funciones se colgaran (timeout) al arrancar. `_pricing.js` (prefijo `_`) no se expone como ruta.
+- **Estado (verificado 2026-08-13):** sandbox funcionando — `GET /api/paypal/config` 200 (client id + precios), `POST /api/paypal/create-order` crea órdenes reales en sandbox ($696 para 6 noches/2 pers; $391.50 Semana Santa 3 noches), validaciones OK. En GitHub Pages el botón de pago no funciona (muestra el aviso bilingüe correspondiente).
 
 ## 13b. Cómo probar y entregar
 
 1. `cd /Users/nikoabeachclub/Documents/dev/pagina-realestate && python3 -m http.server 8000` → http://localhost:8000
-2. Probar: cambio de idioma ES/EN (botón en menú), widget (loft/fechas/huéspedes → total → botón NCP), lightbox, menú móvil, formulario (enviar → revisar consola/red), fechas mínimas.
-3. Verificaciones §10 → commit + push a `origin/main` (convención del dueño).
+2. Probar: cambio de idioma ES/EN (botón en menú), widget (loft/fechas/huéspedes → total → botón Smart de PayPal), lightbox, menú móvil, formulario (enviar → revisar consola/red), fechas mínimas.
+3. **Probar el pago en sandbox:** en https://cabanaslamaite.vercel.app, elegir fechas → clic en el botón PayPal → entrar con la cuenta **comprador de sandbox** (PayPal Developer → Sandbox → Accounts → email + pass) → verificar que aparezca "Pagar con tarjeta de débito o crédito" y que el monto esté prefijado → completar el pago falso → debe mostrar "¡Pago recibido!...".
+4. Cuando todo funcione: en Vercel cambiar `PAYPAL_ENV=live` + credenciales LIVE (Production) y redesplegar; luego un pago real pequeño de prueba.
+5. Verificaciones §10 → commit + push a `origin/main` (convención del dueño).
 
 ---
 
