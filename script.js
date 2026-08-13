@@ -126,6 +126,9 @@ const I18N = {
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
         'direct.minNights': 'Minimum 2 nights',
+        'direct.amountCopy': 'Amount to pay:',
+        'direct.copy': 'Copy',
+        'direct.copied': 'Copied!',
         'paypal.item': 'Deposit · Cabañas la Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
@@ -576,6 +579,10 @@ const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directPay = $('#direct-pay');
 const directFeeNote = $('#direct-fee-note');
+const directAmountHelper = $('#direct-amount-helper');
+const directAmountValue = $('#direct-amount-value');
+const directCopyAmount = $('#direct-copy-amount');
+let currentAmount = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
@@ -647,6 +654,18 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
             directDeposit.textContent = '—';
         }
 
+        // Aviso del monto a pagar (para ingresarlo en el enlace NCP)
+        if (hasDates) {
+            currentAmount = Math.round(total * 100) / 100;
+            directAmountValue.textContent = fmtUSD(currentAmount);
+            directAmountHelper.classList.add('ready');
+            directCopyAmount.textContent = tr('direct.copy', 'Copiar');
+            directCopyAmount.classList.remove('copied');
+        } else {
+            directAmountHelper.classList.remove('ready');
+            currentAmount = null;
+        }
+
         // El botón de pago solo se habilita con fechas válidas y enlace NCP configurado
         const paypalReady = BOOKING.paypalNcpUrl && !String(BOOKING.paypalNcpUrl).startsWith('TU_');
         if (!hasDates || !paypalReady) {
@@ -671,6 +690,23 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
+
+    if (directCopyAmount) {
+        directCopyAmount.addEventListener('click', async () => {
+            if (currentAmount == null) return;
+            try {
+                await navigator.clipboard.writeText(String(currentAmount));
+                directCopyAmount.textContent = tr('direct.copied', '¡Copiado!');
+                directCopyAmount.classList.add('copied');
+            } catch (e) {
+                window.prompt(tr('direct.copy', 'Copiar') + ':', String(currentAmount));
+            }
+            setTimeout(() => {
+                directCopyAmount.textContent = tr('direct.copy', 'Copiar');
+                directCopyAmount.classList.remove('copied');
+            }, 2000);
+        });
+    }
 
     updateDirect();
 }
