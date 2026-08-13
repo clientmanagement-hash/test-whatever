@@ -526,6 +526,21 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
+   Botón alojado de PayPal (Hosted Buttons) — pago con tarjeta
+   CONFIGURACIÓN: HOSTED_BUTTON_ID = el ID del botón que creas en tu panel PayPal
+   IMPORTANTE: crea el botón con MONTO LIBRE (variable), no fijo.
+   ========================================================================== */
+const HOSTED_BUTTON_ID = 'TU_BUTTON_ID';   // CAMBIAR por el ID de tu botón alojado
+
+const paypalHostedContainer = $('#paypal-hosted-container');
+if (paypalHostedContainer && window.paypal && window.paypal.HostedButtons && HOSTED_BUTTON_ID !== 'TU_BUTTON_ID') {
+    window.paypal.HostedButtons({ hostedButtonId: HOSTED_BUTTON_ID }).render('#paypal-hosted-container');
+    paypalHostedContainer.classList.add('ready');
+    const legacyPay = $('#direct-pay');
+    if (legacyPay) legacyPay.classList.add('hidden-by-hosted');
+}
+
+/* ==========================================================================
    Reserva directa con PayPal (seña) — pago del total vía enlace NCP (tarjeta sin cuenta)
    CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y tu enlace NCP de PayPal
    ========================================================================== */

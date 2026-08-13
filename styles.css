@@ -970,6 +970,19 @@ section { position: relative; }
     color: var(--gris-600);
 }
 
+.paypal-hosted {
+    display: none;
+    margin-top: 16px;
+}
+
+.paypal-hosted.ready {
+    display: block;
+}
+
+.hidden-by-hosted {
+    display: none !important;
+}
+
 .direct-amount-helper {
     display: none;
     align-items: center;
