@@ -523,7 +523,7 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
-   Reserva directa con PayPal (seña) — pago del total vía paypal.me
+   Reserva directa con PayPal (seña) — pago del total vía enlace NCP (tarjeta sin cuenta)
    CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y tu enlace paypal.me
    ========================================================================== */
 const BOOKING = {
@@ -540,7 +540,7 @@ const BOOKING = {
         { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027: $130,50/noche
     ],
     depositPct: 100,                     // % a pagar al reservar (100 = pago total)
-    paypalMeUser: 'cabanaslamait'        // tu enlace: paypal.me/cabanaslamait
+    paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (tarjeta sin cuenta PayPal)
 };
 
 function rateForDate(date) {
@@ -647,13 +647,13 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
             directDeposit.textContent = '—';
         }
 
-        // El botón de pago solo se habilita con fechas válidas y paypal.me configurado
-        const paypalReady = BOOKING.paypalMeUser && !String(BOOKING.paypalMeUser).startsWith('TU_');
+        // El botón de pago solo se habilita con fechas válidas y enlace NCP configurado
+        const paypalReady = BOOKING.paypalNcpUrl && !String(BOOKING.paypalNcpUrl).startsWith('TU_');
         if (!hasDates || !paypalReady) {
             directPay.removeAttribute('href');
             directPay.classList.add('disabled');
         } else {
-            directPay.setAttribute('href', `https://www.paypal.me/${BOOKING.paypalMeUser}/${deposit.toFixed(2)}`);
+            directPay.setAttribute('href', BOOKING.paypalNcpUrl);
             directPay.classList.remove('disabled');
         }
     };
