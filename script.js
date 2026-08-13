@@ -524,7 +524,7 @@ if (contactForm && formMessage) {
 
 /* ==========================================================================
    Reserva directa con PayPal (seña) — pago del total vía enlace NCP (tarjeta sin cuenta)
-   CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y tu enlace paypal.me
+   CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y tu enlace NCP de PayPal
    ========================================================================== */
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
