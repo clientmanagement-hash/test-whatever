@@ -134,6 +134,8 @@ const I18N = {
         'direct.payCancel': 'Payment cancelled. You can try again anytime.',
         'direct.payErr': 'There was an error with the payment. Try again or message us on WhatsApp.',
         'direct.payUnavailable': 'Online payment is available on the published site.',
+        'direct.maxNights': 'Maximum stay is 60 nights.',
+        'direct.maxGuests': 'Maximum 8 guests.',
         'paypal.item': 'Deposit · Cabañas la Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
@@ -558,6 +560,17 @@ function loadPayPalSdk(clientId, currency) {
     });
 }
 
+const payErrorMsg = (code) => {
+    const map = {
+        invalid_dates: tr('direct.selectDates', 'Elige tus fechas'),
+        min_nights: tr('direct.minNights', 'Mínimo 2 noches'),
+        too_long: tr('direct.maxNights', 'La estadía máxima es de 60 noches.'),
+        too_many_guests: tr('direct.maxGuests', 'Máximo 8 huéspedes.'),
+        paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
+    };
+    return map[code] || tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.');
+};
+
 async function initPayPal() {
     if (!paypalContainer) return;
     try {
@@ -566,13 +579,20 @@ async function initPayPal() {
         const cfg = await res.json();
         if (!cfg.clientId) throw new Error('no_client_id');
 
+        // El servidor es la autoridad de precios: sobrescribe la copia local para mostrar
+        if (cfg.pricing) {
+            Object.assign(BOOKING, cfg.pricing);
+            i18nDynamicFns.forEach((fn) => fn());
+        }
+
         const paypal = await loadPayPalSdk(cfg.clientId, cfg.currency || 'USD');
 
         paypal.Buttons({
             style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
             createOrder: async () => {
                 if (!lastBooking) {
-                    throw new Error(tr('direct.smartErr', 'Elige fechas válidas para calcular el monto.'));
+                    setPayStatus(tr('direct.smartErr', 'Elige fechas válidas para calcular el monto.'), 'error');
+                    throw new Error('no_booking');
                 }
                 const r = await fetch('/api/paypal/create-order', {
                     method: 'POST',
@@ -580,7 +600,10 @@ async function initPayPal() {
                     body: JSON.stringify(lastBooking)
                 });
                 const d = await r.json();
-                if (!r.ok || !d.id) throw new Error('create_failed');
+                if (!r.ok || !d.id) {
+                    setPayStatus(payErrorMsg(d && d.error), 'error');
+                    throw new Error('create_failed');
+                }
                 return d.id;
             },
             onApprove: async (data) => {
@@ -694,7 +717,7 @@ if (directLoft && directGuests && directIn && directOut) {
         const nights = directIn.value && directOut.value
             ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
             : 0;
-        const hasDates = nights >= BOOKING.minNights;
+        const hasDates = nights >= BOOKING.minNights && nights <= 60;
 
         let total = 0;
         let n = 0;
@@ -735,7 +758,9 @@ if (directLoft && directGuests && directIn && directOut) {
                 : `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
         } else if (nights > 0) {
             directNights.textContent = String(nights);
-            directTotal.textContent = tr('direct.minNights', 'Mínimo 2 noches');
+            directTotal.textContent = nights > 60
+                ? tr('direct.maxNights', 'La estadía máxima es de 60 noches.')
+                : tr('direct.minNights', 'Mínimo 2 noches');
             directDeposit.textContent = '—';
         } else {
             directNights.textContent = '—';

@@ -8,7 +8,7 @@ Handoff para continuar el desarrollo. Última actualización: basada en el estad
 
 Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con 2 lofts en **Playa Sámara, Nicoya, Guanacaste, Costa Rica**: "Cabañas la Maite" (en Google/Facebook figura como "Cabañas Lamaite").
 
-**Propósito actual:** página de presentación + **reserva directa con pago en línea** (100% del total al reservar vía enlace NCP de PayPal, que permite pagar con tarjeta sin cuenta PayPal) + formulario de consulta que envía emails por FormSubmit + contacto WhatsApp/redes.
+**Propósito actual:** página de presentación + **reserva directa con pago en línea** (100% del total al reservar vía Smart Buttons de PayPal con backend en Vercel, tarjeta sin cuenta PayPal) + formulario de consulta que envía emails por FormSubmit + contacto WhatsApp/redes.
 
 ---
 
@@ -79,14 +79,14 @@ Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con
   - `data-i18n="clave"` → texto plano; `data-i18n-html="clave"` → innerHTML (br/span/strong); `data-i18n-attr="attr:clave;attr2:clave2"` → atributos (placeholder, alt, title, aria-label).
   - Diccionario **EN** en `I18N.en` (~180 claves). Se captura el texto original ES en `dataset` la primera vez (`dataset.esText/esHtml/esAttrs`) para poder volver.
   - Detección de idioma: `localStorage.getItem('maite-lang')` → si no, `navigator.language`. Botones `.lang-btn[data-lang=es|en]` en el menú. Persistencia en `localStorage` clave `maite-lang`.
-  - Al cambiar idioma: `applyLang()` → llama `window.updateDirect()` si existe (para re-traducir textos dinámicos del widget).
+  - Al cambiar idioma: `applyLang()` → ejecuta las funciones registradas con `registerDynamic()` (para re-traducir textos dinámicos del widget).
 - **REGLAS:** toda clave usada en HTML debe existir en el diccionario. Verificar con el script del §10. Claves sin usar actualmente (inofensivas): `hero.book` (se quitó el botón del hero), `paypal.item` (se migró a NCP).
 
 ---
 
 ## 7. Widget de reserva directa (script.js)
 
-Ubicado en la tarjeta "Reserva directa" de la sección Reservar (index.html). IDs: `direct-loft, direct-guests, direct-in, direct-out, direct-rate, direct-nights, direct-total, direct-deposit, direct-deposit-label, direct-pay, direct-fee-note`.
+Ubicado en la tarjeta "Reserva directa" de la sección Reservar (index.html). IDs: `direct-loft, direct-guests, direct-in, direct-out, direct-rate, direct-nights, direct-total, direct-deposit, direct-deposit-label, direct-fee-note, direct-amount-helper/value/copy, paypal-hosted-container, direct-pay-status`.
 
 **Config central (`const BOOKING`)** — valores ACTUALES:
 ```js
@@ -104,7 +104,7 @@ const BOOKING = {
 ```
 - **Lógica:** `rateForDate(date)` soporta temporadas (rangos `MM-DD`, incluye cruce de año nuevo) — aunque hoy hay una sola temporada fija. El widget suma cada noche + cargo por persona extra, calcula total y pago (100%).
 - **Mínimo de noches:** `minNights`. El input de salida se bloquea a `entrada + minNights` días (`addDays` con UTC). Si se teclea menos → muestra "Mínimo 2 noches" y el botón queda deshabilitado.
-- **Pago (100% al reservar):** botón **Smart Buttons de PayPal** renderizado dinámicamente. El frontend pide el client id a `GET /api/paypal/config`, carga el SDK con `components=buttons`, y en `createOrder` envía el monto del widget a `POST /api/paypal/create-order` (que crea la orden con la tarjeta/cuenta del cliente). `onApprove` → `POST /api/paypal/capture-order` cobra. Mensajes de éxito/error bilingües en `#direct-pay-status`. El monto se auto-llena (sin que el cliente lo escriba).
+- **Pago (100% al reservar):** botón **Smart Buttons de PayPal** renderizado dinámicamente. El frontend pide el client id (y los precios) a `GET /api/paypal/config`, carga el SDK con `components=buttons`, y en `createOrder` envía **solo `checkIn`/`checkOut`/`guests`** a `POST /api/paypal/create-order` — el monto lo recalcula el servidor (`api/paypal/pricing.js`, fuente de verdad del cobro y de lo mostrado; `Object.assign` sobrescribe `BOOKING` en el cliente). `onApprove` → `POST /api/paypal/capture-order` cobra (idempotente con `PayPal-Request-Id: capture-<orderID>`). Mensajes bilingües en `#direct-pay-status` (también mapea códigos de error del servidor: `min_nights`, `too_long`, `too_many_guests`...).
 
 ---
 
