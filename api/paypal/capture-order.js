@@ -1,10 +1,5 @@
-// Vercel Function — POST /api/paypal/capture-order
+// Vercel Function — POST /api/paypal/capture-order (CommonJS)
 // Captura (cobra) una orden ya aprobada por el comprador en PayPal Orders API v2.
-
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-});
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -26,8 +21,22 @@ async function getAccessToken(base, clientId, secret) {
     return cachedToken;
 }
 
-export default async function handler(request) {
-    if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+function readBody(req) {
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
+        return Promise.resolve(req.body);
+    }
+    return new Promise((resolve) => {
+        let data = '';
+        req.on('data', (c) => { data += c; });
+        req.on('end', () => {
+            try { resolve(data ? JSON.parse(data) : {}); }
+            catch (e) { resolve({}); }
+        });
+    });
+}
+
+module.exports = async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
     const env = process.env.PAYPAL_ENV === 'live' ? 'live' : 'sandbox';
     const base = env === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -35,20 +44,16 @@ export default async function handler(request) {
     const secret = process.env.PAYPAL_CLIENT_SECRET;
 
     if (!clientId || !secret) {
-        return json({ error: 'paypal_not_configured' }, 500);
+        return res.status(500).json({ error: 'paypal_not_configured' });
     }
 
-    let orderID;
-    try {
-        orderID = String((await request.json()).orderID || '');
-    } catch (e) {
-        return json({ error: 'invalid_order' }, 400);
-    }
-    if (!orderID) return json({ error: 'invalid_order' }, 400);
+    const body = await readBody(req);
+    const orderID = body.orderID ? String(body.orderID) : '';
+    if (!orderID) return res.status(400).json({ error: 'invalid_order' });
 
     try {
         const token = await getAccessToken(base, clientId, secret);
-        const res = await fetch(`${base}/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`, {
+        const r = await fetch(`${base}/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -57,10 +62,10 @@ export default async function handler(request) {
                 'PayPal-Request-Id': `capture-${orderID}`
             }
         });
-        const data = await res.json();
-        const ok = res.ok && data.status === 'COMPLETED';
-        return json({ success: ok, status: data.status || null }, ok ? 200 : 422);
+        const data = await r.json();
+        const ok = r.ok && data.status === 'COMPLETED';
+        return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });
     } catch (e) {
-        return json({ error: 'paypal_capture_failed' }, 502);
+        return res.status(502).json({ error: 'paypal_capture_failed' });
     }
-}
+};

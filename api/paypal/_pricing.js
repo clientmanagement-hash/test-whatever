@@ -1,12 +1,12 @@
-// Precios — fuente de verdad del COBRO (server-side).
-// El frontend solo MUESTRA estos precios; el servidor los recalcula al cobrar
-// para que nadie pueda enviar un monto arbitrario (ej. $0.01).
-// Mantener sincronizado con `BOOKING` en script.js si cambian tarifas.
+// Precios — fuente de verdad del COBRO (server-side). Módulo compartido (CommonJS).
+// El frontend solo MUESTRA estos precios; el servidor los recalcula al cobrar.
+// (El prefijo _ evita que Vercel lo exponga como ruta /api/...)
 
-export const PRICING = {
+const PRICING = {
     baseGuests: 2,        // la tarifa incluye 2 personas
     minNights: 2,         // estadía mínima
     maxGuests: 8,
+    maxNights: 60,
     extraGuestFee: 10,    // $ por persona adicional por noche
     seasons: [
         { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
@@ -20,7 +20,7 @@ export const PRICING = {
 
 const toInt = (s) => parseInt(String(s).replace(/-/g, ''), 10);
 
-export function rateForDate(date) {
+function rateForDate(date) {
     // 1) Eventos puntuales (fecha completa YYYY-MM-DD)
     const full = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
     for (const ev of PRICING.events) {
@@ -41,7 +41,7 @@ export function rateForDate(date) {
 }
 
 // Recibe fechas 'YYYY-MM-DD' y huéspedes; devuelve { total, nights, guests, currency } o { error }
-export function computeBooking(checkIn, checkOut, guests) {
+function computeBooking(checkIn, checkOut, guests) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
     if (!Number.isFinite(inMs) || !Number.isFinite(outMs) || outMs <= inMs) {
@@ -49,7 +49,7 @@ export function computeBooking(checkIn, checkOut, guests) {
     }
     const nights = Math.round((outMs - inMs) / 86400000);
     if (nights < PRICING.minNights) return { error: 'min_nights' };
-    if (nights > 60) return { error: 'too_long' };
+    if (nights > PRICING.maxNights) return { error: 'too_long' };
 
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;
     if (g > PRICING.maxGuests) return { error: 'too_many_guests' };
@@ -62,3 +62,5 @@ export function computeBooking(checkIn, checkOut, guests) {
     total = Math.round(total * PRICING.depositPct) / 100;
     return { total: Math.round(total * 100) / 100, nights, guests: g, currency: PRICING.currency };
 }
+
+module.exports = { PRICING, rateForDate, computeBooking };

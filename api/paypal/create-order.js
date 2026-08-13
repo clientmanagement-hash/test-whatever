@@ -1,15 +1,9 @@
-// Vercel Function — POST /api/paypal/create-order
+// Vercel Function — POST /api/paypal/create-order (CommonJS)
 // Crea una orden en PayPal Orders API v2 (intent CAPTURE).
-// El monto NO se confía al cliente: se recalcula en el servidor con los
-// parámetros de la reserva (fechas + huéspedes) usando api/paypal/pricing.js.
-// El Client Secret vive en las variables de entorno de Vercel.
+// El monto NO se confía al cliente: se recalcula en el servidor con
+// { checkIn, checkOut, guests } usando ./_pricing.js (fuente de verdad).
 
-import { computeBooking } from './pricing.js';
-
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-});
+const { computeBooking } = require('./_pricing');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -31,8 +25,23 @@ async function getAccessToken(base, clientId, secret) {
     return cachedToken;
 }
 
-export default async function handler(request) {
-    if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+// Lee el body JSON (usa req.body si Vercel ya lo parseó, si no lo lee del stream)
+function readBody(req) {
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
+        return Promise.resolve(req.body);
+    }
+    return new Promise((resolve) => {
+        let data = '';
+        req.on('data', (c) => { data += c; });
+        req.on('end', () => {
+            try { resolve(data ? JSON.parse(data) : {}); }
+            catch (e) { resolve({}); }
+        });
+    });
+}
+
+module.exports = async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
     const env = process.env.PAYPAL_ENV === 'live' ? 'live' : 'sandbox';
     const base = env === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -40,23 +49,18 @@ export default async function handler(request) {
     const secret = process.env.PAYPAL_CLIENT_SECRET;
 
     if (!clientId || !secret) {
-        return json({ error: 'paypal_not_configured' }, 500);
+        return res.status(500).json({ error: 'paypal_not_configured' });
     }
 
-    let body;
-    try {
-        body = await request.json();
-    } catch (e) {
-        return json({ error: 'invalid_body' }, 400);
-    }
+    const body = await readBody(req);
 
     // El precio se calcula en el servidor (autoridad), no se acepta del cliente
     const booking = computeBooking(body.checkIn, body.checkOut, body.guests);
-    if (booking.error) return json({ error: booking.error }, 400);
+    if (booking.error) return res.status(400).json({ error: booking.error });
 
     try {
         const token = await getAccessToken(base, clientId, secret);
-        const res = await fetch(`${base}/v2/checkout/orders`, {
+        const r = await fetch(`${base}/v2/checkout/orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -74,12 +78,12 @@ export default async function handler(request) {
                 }
             })
         });
-        const data = await res.json();
-        if (!res.ok || !data.id) {
-            return json({ error: 'paypal_create_failed' }, 502);
+        const data = await r.json();
+        if (!r.ok || !data.id) {
+            return res.status(502).json({ error: 'paypal_create_failed' });
         }
-        return json({ id: data.id, amount: booking.total, nights: booking.nights });
+        return res.status(200).json({ id: data.id, amount: booking.total, nights: booking.nights });
     } catch (e) {
-        return json({ error: 'paypal_create_failed' }, 502);
+        return res.status(502).json({ error: 'paypal_create_failed' });
     }
-}
+};

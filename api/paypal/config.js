@@ -1,20 +1,14 @@
-// Vercel Function — GET /api/paypal/config
-// Expone solo datos PÚBLICOS (client id no es secreto) para cargar el SDK de PayPal
-// y los precios vigentes (fuente de verdad del cobro y de lo mostrado).
+// Vercel Function — GET /api/paypal/config (CommonJS)
+// Expone solo datos PÚBLICOS: client id (no secreto), entorno, moneda y precios vigentes.
 // El Client Secret nunca sale del servidor.
 
-import { PRICING } from './pricing.js';
+const { PRICING } = require('./_pricing');
 
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-});
-
-export default async function handler(request) {
-    return json({
+module.exports = async function handler(req, res) {
+    res.status(200).json({
         clientId: process.env.PAYPAL_CLIENT_ID || null,
         env: process.env.PAYPAL_ENV === 'live' ? 'live' : 'sandbox',
         currency: process.env.PAYPAL_CURRENCY || 'USD',
         pricing: PRICING
     });
-}
+};
