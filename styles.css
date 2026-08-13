@@ -983,6 +983,30 @@ section { position: relative; }
     display: none !important;
 }
 
+.direct-pay-status {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.direct-pay-status.success {
+    display: block;
+    background: #e5f4ec;
+    color: var(--verde-700);
+    border: 1px solid #b7e2cc;
+}
+
+.direct-pay-status.error {
+    display: block;
+    background: #f7ead2;
+    color: var(--tan-600);
+    border: 1px solid #e5cf9f;
+}
+
 .direct-amount-helper {
     display: none;
     align-items: center;

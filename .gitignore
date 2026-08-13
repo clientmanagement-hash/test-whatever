@@ -1,5 +1,6 @@
 # Archivos de trabajo locales
 contenido/
+docs/*.docx
 
 # Herramientas / sistema
 .reasonix/
@@ -7,3 +8,7 @@ contenido/
 
 # Logs y cachés
 *.log
+
+# Secretos / variables de entorno
+.env*
+!.env.example

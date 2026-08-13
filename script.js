@@ -129,6 +129,11 @@ const I18N = {
         'direct.amountCopy': 'Amount to pay:',
         'direct.copy': 'Copy',
         'direct.copied': 'Copied!',
+        'direct.smartErr': 'Choose valid dates to calculate the amount.',
+        'direct.payOk': 'Payment received! Your booking is confirmed. We will contact you to arrange the details.',
+        'direct.payCancel': 'Payment cancelled. You can try again anytime.',
+        'direct.payErr': 'There was an error with the payment. Try again or message us on WhatsApp.',
+        'direct.payUnavailable': 'Online payment is available on the published site.',
         'paypal.item': 'Deposit · Cabañas la Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
@@ -259,9 +264,12 @@ let lang = getInitialLang();
 
 const tr = (key, es) => (lang === 'en' && I18N.en[key]) ? I18N.en[key] : es;
 
+const i18nDynamicFns = [];
+const registerDynamic = (fn) => i18nDynamicFns.push(fn);
+
 function applyLang() {
     document.documentElement.lang = lang;
-    if (typeof window.updateDirect === 'function') window.updateDirect();
+    i18nDynamicFns.forEach((fn) => fn());
     const d = I18N[lang] || null;
 
     // Texto plano
@@ -526,23 +534,90 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
-   Botón alojado de PayPal (Hosted Buttons) — pago con tarjeta
-   CONFIGURACIÓN: HOSTED_BUTTON_ID = el ID del botón que creas en tu panel PayPal
-   IMPORTANTE: crea el botón con MONTO LIBRE (variable), no fijo.
+   Pago con PayPal (Smart Buttons + Vercel Functions)
+   El SDK se carga dinámicamente con el client id del entorno (sandbox/live).
+   El monto se calcula en el widget y se envía al backend al crear la orden.
    ========================================================================== */
-const HOSTED_BUTTON_ID = 'XB4WSE6T4NX58';   // botón alojado de PayPal
+const paypalContainer = $('#paypal-hosted-container');
+const payStatus = $('#direct-pay-status');
 
-const paypalHostedContainer = $('#paypal-hosted-container');
-if (paypalHostedContainer && window.paypal && window.paypal.HostedButtons && HOSTED_BUTTON_ID !== 'TU_BUTTON_ID') {
-    window.paypal.HostedButtons({ hostedButtonId: HOSTED_BUTTON_ID }).render('#paypal-hosted-container');
-    paypalHostedContainer.classList.add('ready');
-    const legacyPay = $('#direct-pay');
-    if (legacyPay) legacyPay.classList.add('hidden-by-hosted');
+const setPayStatus = (text, type) => {
+    if (!payStatus) return;
+    payStatus.textContent = text;
+    payStatus.className = `direct-pay-status ${type}`;
+};
+
+function loadPayPalSdk(clientId, currency) {
+    return new Promise((resolve, reject) => {
+        if (window.paypal && window.paypal.Buttons) return resolve(window.paypal);
+        const s = document.createElement('script');
+        s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&components=buttons&currency=${encodeURIComponent(currency)}`;
+        s.onload = () => resolve(window.paypal);
+        s.onerror = () => reject(new Error('sdk_failed'));
+        document.head.appendChild(s);
+    });
 }
 
+async function initPayPal() {
+    if (!paypalContainer) return;
+    try {
+        const res = await fetch('/api/paypal/config');
+        if (!res.ok) throw new Error('config_failed');
+        const cfg = await res.json();
+        if (!cfg.clientId) throw new Error('no_client_id');
+
+        const paypal = await loadPayPalSdk(cfg.clientId, cfg.currency || 'USD');
+
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            createOrder: async () => {
+                if (!lastBooking) {
+                    throw new Error(tr('direct.smartErr', 'Elige fechas válidas para calcular el monto.'));
+                }
+                const r = await fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(lastBooking)
+                });
+                const d = await r.json();
+                if (!r.ok || !d.id) throw new Error('create_failed');
+                return d.id;
+            },
+            onApprove: async (data) => {
+                try {
+                    const r = await fetch('/api/paypal/capture-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: data.orderID })
+                    });
+                    const d = await r.json();
+                    if (r.ok && d.success) {
+                        setPayStatus(tr('direct.payOk', '¡Pago recibido! Tu reserva está confirmada. Te contactaremos para coordinar los detalles.'), 'success');
+                    } else {
+                        setPayStatus(tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.'), 'error');
+                    }
+                } catch (e) {
+                    setPayStatus(tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.'), 'error');
+                }
+            },
+            onCancel: () => {
+                setPayStatus(tr('direct.payCancel', 'Pago cancelado. Puedes intentarlo de nuevo cuando quieras.'), 'error');
+            },
+            onError: () => {
+                setPayStatus(tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.'), 'error');
+            }
+        }).render('#paypal-hosted-container');
+        paypalContainer.classList.add('ready');
+    } catch (e) {
+        setPayStatus(tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.'), 'error');
+    }
+}
+
+initPayPal();
+
 /* ==========================================================================
-   Reserva directa con PayPal (seña) — pago del total vía enlace NCP (tarjeta sin cuenta)
-   CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y tu enlace NCP de PayPal
+   Reserva directa con PayPal (seña) — pago del total vía Smart Buttons (Vercel + Orders API)
+   CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y credenciales PayPal en Vercel (env)
    ========================================================================== */
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
@@ -557,20 +632,19 @@ const BOOKING = {
     events: [
         { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027: $130,50/noche
     ],
-    depositPct: 100,                     // % a pagar al reservar (100 = pago total)
-    paypalNcpUrl: 'https://www.paypal.com/ncp/payment/EFL42U7N5PB8J'   // enlace NCP (tarjeta sin cuenta PayPal)
+    depositPct: 100                      // % a pagar al reservar (100 = pago total)
 };
 
 function rateForDate(date) {
     // 1) Eventos puntuales (fecha completa YYYY-MM-DD), ej. Semana Santa
-    const full = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    const full = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
     for (const ev of (BOOKING.events || [])) {
         const f = parseInt(ev.from.replace(/-/g, ''), 10);
         const t = parseInt(ev.to.replace(/-/g, ''), 10);
         if (full >= f && full <= t) return ev.rate;
     }
     // 2) Temporadas recurrentes (MM-DD)
-    const v = (date.getMonth() + 1) * 100 + date.getDate();
+    const v = (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
     for (const s of BOOKING.seasons) {
         const f = parseInt(s.from.slice(0, 2), 10) * 100 + parseInt(s.from.slice(3), 10);
         const t = parseInt(s.to.slice(0, 2), 10) * 100 + parseInt(s.to.slice(3), 10);
@@ -592,16 +666,16 @@ const directNights = $('#direct-nights');
 const directTotal = $('#direct-total');
 const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
-const directPay = $('#direct-pay');
 const directFeeNote = $('#direct-fee-note');
 const directAmountHelper = $('#direct-amount-helper');
 const directAmountValue = $('#direct-amount-value');
 const directCopyAmount = $('#direct-copy-amount');
 let currentAmount = null;
+let lastBooking = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-if (directLoft && directGuests && directIn && directOut && directPay) {
+if (directLoft && directGuests && directIn && directOut) {
     const addDays = (iso, days) => {
         const d = new Date(iso);
         d.setUTCDate(d.getUTCDate() + days);
@@ -635,7 +709,7 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
                 n += 1;
-                d.setDate(d.getDate() + 1);
+                d.setUTCDate(d.getUTCDate() + 1);
             }
         }
 
@@ -669,9 +743,10 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
             directDeposit.textContent = '—';
         }
 
-        // Aviso del monto a pagar (para ingresarlo en el enlace NCP)
+        // Aviso del monto a pagar (referencia — el cobro lo calcula el servidor)
         if (hasDates) {
             currentAmount = Math.round(total * 100) / 100;
+            lastBooking = { checkIn: directIn.value, checkOut: directOut.value, guests };
             directAmountValue.textContent = fmtUSD(currentAmount);
             directAmountHelper.classList.add('ready');
             directCopyAmount.textContent = tr('direct.copy', 'Copiar');
@@ -679,20 +754,13 @@ if (directLoft && directGuests && directIn && directOut && directPay) {
         } else {
             directAmountHelper.classList.remove('ready');
             currentAmount = null;
+            lastBooking = null;
         }
 
-        // El botón de pago solo se habilita con fechas válidas y enlace NCP configurado
-        const paypalReady = BOOKING.paypalNcpUrl && !String(BOOKING.paypalNcpUrl).startsWith('TU_');
-        if (!hasDates || !paypalReady) {
-            directPay.removeAttribute('href');
-            directPay.classList.add('disabled');
-        } else {
-            directPay.setAttribute('href', BOOKING.paypalNcpUrl);
-            directPay.classList.remove('disabled');
-        }
+        // El botón de PayPal se habilita automáticamente (Smart Buttons); el monto se valida al pagar
     };
 
-    window.updateDirect = updateDirect;
+    registerDynamic(updateDirect);
 
     const today = new Date().toISOString().split('T')[0];
     directIn.min = today;

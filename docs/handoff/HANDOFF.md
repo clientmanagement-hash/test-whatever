@@ -38,6 +38,11 @@ Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con
 │   ├── loft1/      → 15 fotos del Loft 1 (3728xxxx.jpg / 3748xxxx.jpg)
 │   └── loft2/      → 17 fotos del Loft 2 (loft2-01.jpg … loft2-17.jpg, de capturas de pantalla ~600px)
 ├── contenido/      → ⚠️ EXCLUIDO de git (fotos originales, .docx, .rtf del cliente). No tocar.
+├── api/            → Funciones serverless de Vercel (backend para el pago PayPal)
+│   └── paypal/
+│       ├── config.js         → GET /api/paypal/config (client id público + moneda)
+│       ├── create-order.js   → POST /api/paypal/create-order (Orders API v2)
+│       └── capture-order.js  → POST /api/paypal/capture-order (cobra la orden)
 ├── docs/handoff/   → este documento
 └── .gitignore
 ```
@@ -99,10 +104,7 @@ const BOOKING = {
 ```
 - **Lógica:** `rateForDate(date)` soporta temporadas (rangos `MM-DD`, incluye cruce de año nuevo) — aunque hoy hay una sola temporada fija. El widget suma cada noche + cargo por persona extra, calcula total y pago (100%).
 - **Mínimo de noches:** `minNights`. El input de salida se bloquea a `entrada + minNights` días (`addDays` con UTC). Si se teclea menos → muestra "Mínimo 2 noches" y el botón queda deshabilitado.
-- **Pago:** el botón "Pago para confirmar la reserva" es un `<a href=BOOKING.paypalNcpUrl>` — abre el enlace NCP de PayPal (pago con tarjeta sin cuenta). Se habilita solo con fechas válidas.
-- Formato moneda: `fmtUSD()` → `$348` (sin decimales si son .00).
-
-**⚠️ PENDIENTE CONFIRMAR con el dueño:** el enlace NCP parece de monto libre, pero no se confirmó. Si es monto fijo, el monto del widget no coincidirá con el cobro — preguntar/ajustar.
+- **Pago (100% al reservar):** botón **Smart Buttons de PayPal** renderizado dinámicamente. El frontend pide el client id a `GET /api/paypal/config`, carga el SDK con `components=buttons`, y en `createOrder` envía el monto del widget a `POST /api/paypal/create-order` (que crea la orden con la tarjeta/cuenta del cliente). `onApprove` → `POST /api/paypal/capture-order` cobra. Mensajes de éxito/error bilingües en `#direct-pay-status`. El monto se auto-llena (sin que el cliente lo escriba).
 
 ---
 
@@ -124,7 +126,7 @@ const BOOKING = {
 | Facebook | `https://www.facebook.com/LamaiteEcologicas` — tarjeta "Redes sociales" + footer |
 | Instagram | `https://www.instagram.com/cabanaslamaite/` — tarjeta + footer |
 | Booking.com (tarjeta, footer, CTAs de lofts) | `https://www.booking.com/hotel/cr/cabanas-lamaite-samara.es.html` — **el botón del hero fue ELIMINADO por pedido del dueño** |
-| Pago PayPal | `https://www.paypal.com/ncp/payment/EFL42U7N5PB8J` |
+| Pago PayPal | **Smart Buttons + Vercel Functions** (`/api/paypal/*`) — credenciales en env vars de Vercel (nunca en el repo) |
 | Mapa | `https://www.google.com/maps?q=9.8799882,-85.5441426&z=16&output=embed` (Cabañas Lamaite) |
 | Dirección mostrada | VFH4+X8 Sámara, Guanacaste, Costa Rica |
 | Valoración mostrada | 9.8 · "Excepcional · 155 comentarios" (según Booking, a confirmar cuando cambie) |
@@ -158,14 +160,11 @@ EOF
 
 ## 11. PENDIENTES / decisiones abiertas (contexto para el siguiente agente)
 
-1. **Monto del enlace NCP de PayPal** — confirmar si es monto libre o fijo (afecta la coherencia del widget). El dueño dijo que quiere que el cliente "solo ponga su tarjeta" — NCP lo logra; probar en incógnito.
-2. **Activación de FormSubmit** — el dueño debe cliquear el email de activación; si no llegan formularios, recordárselo.
-3. **Overbooking** — discutido, NO implementado. Opciones: iCal unidireccional (requiere URLs iCal de Booking/Airbnb/Expedia), o channel manager (Beds24/Lodgify/Tokeet/Hostaway). El dueño no dio los enlaces iCal.
-4. **Wompi (Davivienda CR)** — alternativa a PayPal para tarjeta "en la página"; requiere cuenta del dueño + llaves. Solo si PayPal/NCP no satisface.
-5. **Fotos de Loft 2** son capturas ~600px (baja resolución) — reemplazar por originales si el dueño las consigue.
-6. **"Desde $116/noche"** en las tarjetas de lofts es texto fijo (coincide con config) — si cambia la tarifa, actualizarlo a mano (o hacerlo dinámico leyendo BOOKING).
-7. **Valoración 9.8 / 155** — refrescar cuando el dueño lo pida (Booking bloquea scraping: pedir los números al dueño).
-8. **Botón Booking del hero eliminado** — la tarjeta Booking.com en Reservar y los CTAs de las páginas de loft siguen activos; el dueño no pidió quitarlos.
+1. **Credenciales PayPal en Vercel (paso del dueño, OBLIGATORIO para el pago):** en Vercel → proyecto → Settings → Environment Variables: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` (marcar *Sensitive*), `PAYPAL_ENV` (`sandbox`|`live`), `PAYPAL_CURRENCY` (`USD`). Preview/Testing = sandbox; Production = live. El dueño ya tiene las credenciales (sandbox/live) en `docs/Paypal credentials.docx` — **no leer ese archivo** (secreto); va directo a Vercel.
+2. **Verificar flujo sandbox** (pago falso) antes de pasar a live; luego canjear por live en Production y hacer un pago real pequeño de prueba.
+3. **Deploy en Vercel:** el repo debe estar importado en Vercel (el dueño tiene proyecto "Cabañas la Maite") — `api/` se detecta solo. En GitHub Pages el botón de pago NO funciona (muestra aviso).
+4. **Overbooking** — discutido, NO implementado. Opciones: iCal unidireccional (requiere URLs iCal de Booking/Airbnb/Expedia), o channel manager (Beds24/Lodgify/Tokeet/Hostaway). El dueño no dio los enlaces iCal.
+5. **Wompi (Davivienda CR)** — alternativa solo si PayPal no satisface (requiere cuenta del dueño + llaves).
 
 ---
 
@@ -183,7 +182,12 @@ EOF
 
 ---
 
-## 13. Cómo probar y entregar
+## 13. Seguridad y despliegue (pago)
+- **Nunca** commitear credenciales: `.gitignore` excluye `docs/*.docx` y `.env*`. El Client Secret solo existe en env vars de Vercel. `docs/Paypal credentials.docx` **no está en git** (verificado) — no abrirlo en conversaciones de IA.
+- El monto del pago se recalcula **en el servidor** (api/paypal/pricing.js); el cliente jamás envía el monto. Errores de PayPal se devuelven como códigos fijos, sin cuerpos internos al navegador.
+- **Despliegue:** el repo debe estar importado en Vercel (proyecto "Cabañas la Maite"); `api/` se detecta solo. En GitHub Pages el botón de pago no funciona (muestra el aviso bilingüe correspondiente). Si Vercel no resuelve los `import` ESM de `api/`, añadir `package.json` con `{"type":"module"}`.
+
+## 13b. Cómo probar y entregar
 
 1. `cd /Users/nikoabeachclub/Documents/dev/pagina-realestate && python3 -m http.server 8000` → http://localhost:8000
 2. Probar: cambio de idioma ES/EN (botón en menú), widget (loft/fechas/huéspedes → total → botón NCP), lightbox, menú móvil, formulario (enviar → revisar consola/red), fechas mínimas.
