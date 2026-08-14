@@ -23,7 +23,7 @@ const I18N = {
         'nav.menuClose': 'Close menu',
 
         // Hero
-        'hero.tagline': 'Your beach hideaway: sober, cheerful and minutes from Buena Vista and Sámara beaches. Lofts with pool, tropical garden and everything you need to unwind.',
+        'hero.tagline': 'A beach refuge: calm, cozy and minutes from Buena Vista and Sámara beaches. Lofts with pool, tropical garden and everything you need to unwind.',
         'hero.book': 'Book on Booking.com',
         'hero.seeLofts': 'See the lofts',
         'hero.rating': 'Exceptional · 155 reviews',
