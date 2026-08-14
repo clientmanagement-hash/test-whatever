@@ -43,7 +43,7 @@ const I18N = {
         'lofts.title': 'Two spaces, <span class="text-green">one calm</span>',
         'lofts.sub': 'Self-contained apartments with private entrance, air conditioning, equipped kitchen and a pool among palm trees.',
         'loft1.title': 'Loft 1<br>Pool and garden',
-        'loft2.title': 'Loft 2<br>Pool and terrace',
+        'loft2.title': 'Loft 2<br>Pool and garden',
         'loft.desc': 'Pool, garden and terrace.',
         'loft.price': 'From <strong>$116</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
