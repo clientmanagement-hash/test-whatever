@@ -1,8 +1,8 @@
 // POST /api/ical/external/refresh-all — refresca TODOS los calendarios externos.
 // Lo invoca el cron de Vercel (vercel.json) y el botón del panel de administración.
 // Si CRON_SECRET está definido en Vercel, exige el header Authorization Bearer.
-const { PROPERTIES, loadExternal, saveExternal } = require('../../_lib');
-const { parseIcs } = require('../../_ics');
+const { PROPERTIES, loadExternal, saveExternal } = require('../_lib');
+const { parseIcs } = require('../_ics');
 
 async function refreshEntry(entry) {
     entry.lastSync = new Date().toISOString();

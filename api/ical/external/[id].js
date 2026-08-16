@@ -1,8 +1,8 @@
 // POST   /api/ical/external/:id — refresca un calendario externo
 // DELETE /api/ical/external/:id — lo elimina
 // Body: { propertyId } (+ id en la URL)
-const { propId, loadExternal, saveExternal, readBody } = require('../../_lib');
-const { parseIcs } = require('../../_ics');
+const { propId, loadExternal, saveExternal, readBody } = require('../_lib');
+const { parseIcs } = require('../_ics');
 
 async function refreshExternal(entry) {
     entry.lastSync = new Date().toISOString();
