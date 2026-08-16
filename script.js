@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Cabañas la Maite — comportamiento del sitio + i18n ES/EN
+   Cabañas La Maite — comportamiento del sitio + i18n ES/EN
    ========================================================================== */
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
@@ -64,7 +64,7 @@ const I18N = {
         // Galería
         'galeria.eyebrow': 'Gallery',
         'galeria.title': 'Live the experience',
-        'galeria.sub': 'Pool, tropical gardens and the best beaches minutes away. This is what staying at Cabañas la Maite feels like.',
+        'galeria.sub': 'Pool, tropical gardens and the best beaches minutes away. This is what staying at Cabañas La Maite feels like.',
 
         // Ubicación
         'ubicacion.eyebrow': 'Location',
@@ -106,7 +106,7 @@ const I18N = {
         'reservar.form.ok': 'Thank you, {name}! We will contact you soon to confirm your request.',
         'reservar.form.errNombre': 'Please enter your name.',
         'reservar.form.errEmail': 'Please enter a valid email.',
-        'reservar.form.subject': 'New enquiry · Cabañas la Maite',
+        'reservar.form.subject': 'New enquiry · Cabañas La Maite',
         'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
         'direct.title': 'Direct booking',
         'direct.sub': 'Choose your loft and dates and pay the total for your stay. Minimum stay: 2 nights.',
@@ -133,7 +133,7 @@ const I18N = {
         'direct.payUnavailable': 'Online payment is available on the published site.',
         'direct.maxNights': 'Maximum stay is 60 nights.',
         'direct.maxGuests': 'Maximum 8 guests.',
-        'paypal.item': 'Deposit · Cabañas la Maite',
+        'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
@@ -493,7 +493,7 @@ if (contactForm && formMessage) {
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({
                     ...data,
-                    _subject: tr('reservar.form.subject', 'Nueva consulta · Cabañas la Maite'),
+                    _subject: tr('reservar.form.subject', 'Nueva consulta · Cabañas La Maite'),
                     _template: 'table',
                     _captcha: 'false'
                 })
@@ -788,4 +788,4 @@ if (directLoft && directGuests && directIn && directOut) {
     updateDirect();
 }
 
-console.log('Cabañas la Maite · sitio cargado 🌴');
+console.log('Cabañas La Maite · sitio cargado 🌴');

@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
                     amount: { currency_code: booking.currency, value: booking.total.toFixed(2) }
                 }],
                 application_context: {
-                    brand_name: 'Cabañas la Maite',
+                    brand_name: 'Cabañas La Maite',
                     user_action: 'PAY_NOW',
                     shipping_preference: 'NO_SHIPPING'
                 }

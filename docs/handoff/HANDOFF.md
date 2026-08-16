@@ -1,4 +1,4 @@
-# PROYECTO — Cabañas la Maite (pagina-realestate)
+# PROYECTO — Cabañas La Maite (pagina-realestate)
 
 Handoff para continuar el desarrollo. Última actualización: basada en el estado del repo en `main` (HEAD = `f52d013`).
 
@@ -6,7 +6,7 @@ Handoff para continuar el desarrollo. Última actualización: basada en el estad
 
 ## 1. Qué es este proyecto
 
-Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con 2 lofts en **Playa Sámara, Nicoya, Guanacaste, Costa Rica**: "Cabañas la Maite" (en Google/Facebook figura como "Cabañas Lamaite").
+Sitio web estático (sin build, sin framework, sin servidor) de un hospedaje con 2 lofts en **Playa Sámara, Nicoya, Guanacaste, Costa Rica**: "Cabañas La Maite" (en Google/Facebook figura como "Cabañas Lamaite").
 
 **Propósito actual:** página de presentación + **reserva directa con pago en línea** (100% del total al reservar vía Smart Buttons de PayPal con backend en Vercel, tarjeta sin cuenta PayPal) + formulario de consulta que envía emails por FormSubmit + contacto WhatsApp/redes.
 
@@ -162,7 +162,7 @@ EOF
 
 1. **Credenciales PayPal en Vercel (paso del dueño, OBLIGATORIO para el pago):** en Vercel → proyecto → Settings → Environment Variables: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` (marcar *Sensitive*), `PAYPAL_ENV` (`sandbox`|`live`), `PAYPAL_CURRENCY` (`USD`). Preview/Testing = sandbox; Production = live. El dueño ya tiene las credenciales (sandbox/live) en `docs/Paypal credentials.docx` — **no leer ese archivo** (secreto); va directo a Vercel.
 2. **Verificar flujo sandbox** (pago falso) antes de pasar a live; luego canjear por live en Production y hacer un pago real pequeño de prueba.
-3. **Deploy en Vercel:** el repo debe estar importado en Vercel (el dueño tiene proyecto "Cabañas la Maite") — `api/` se detecta solo. En GitHub Pages el botón de pago NO funciona (muestra aviso).
+3. **Deploy en Vercel:** el repo debe estar importado en Vercel (el dueño tiene proyecto "Cabañas La Maite") — `api/` se detecta solo. En GitHub Pages el botón de pago NO funciona (muestra aviso).
 4. **Overbooking** — discutido, NO implementado. Opciones: iCal unidireccional (requiere URLs iCal de Booking/Airbnb/Expedia), o channel manager (Beds24/Lodgify/Tokeet/Hostaway). El dueño no dio los enlaces iCal.
 5. **Wompi (Davivienda CR)** — alternativa solo si PayPal no satisface (requiere cuenta del dueño + llaves).
 
