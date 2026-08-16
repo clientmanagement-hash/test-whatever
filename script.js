@@ -225,9 +225,9 @@ const I18N = {
         'loft2.tagline': '60 m² apartment with pool, private entrance and terrace with garden views.',
         'loft2.space': 'The space',
         'loft2.h2': 'Your pool, your hideaway',
-        'loft2.lead': 'The pool is the main highlight of this apartment. With a private entrance and air conditioning, it includes a living room, a separate bedroom and a bathroom with shower.',
-        'loft2.p2': 'The kitchen is fully equipped with a refrigerator, kitchenware, microwave and toaster, so you can cook with total comfort. The loft also has a coffee maker and tea kettle, a seating area, a dining area and a terrace with garden views.',
-        'loft2.p3': 'The unit has <strong>2 double beds and 1 sofa bed</strong>, bedding and individual air conditioning.',
+        'loft2.lead': 'Enjoy a spacious and cozy space with a loft-style feel, where the pool and garden views take center stage. The unit has a private entrance, air conditioning and an open design that comfortably integrates the sleeping, living, dining and kitchen areas.',
+        'loft2.p2': 'The kitchen is fully equipped with a refrigerator, microwave, toaster and kitchen utensils, plus a coffee maker, so you can prepare and enjoy your meals during your stay. It also has a private bathroom with shower and a terrace with garden views.',
+        'loft2.p3': 'The loft has <strong>2 double beds and 1 sofa bed</strong>, bedding and individual air conditioning.',
         'loft2.galleryH2': 'This is Loft 2',
         'gallery.sub': 'Click any photo to view it full size.',
 
