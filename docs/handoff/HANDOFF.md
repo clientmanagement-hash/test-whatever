@@ -203,9 +203,9 @@ EOF
 - `api/paypal/capture-order.js` registra la reserva (`recordReservation`, source `web`) al cobrar → aparece en el feed .ics.
 - `script.js`: `loadAvailability()` descarga `/api/ical/availability`; el widget muestra "Fechas no disponibles" y no permite pagar fechas bloqueadas; `lastBooking` incluye `propertyId`; el capture envía `propertyId/checkIn/checkOut/guest`.
 
-**Panel admin:** `https://cabanaslamaite.vercel.app/admin.html` (PIN). Muestra modo de almacenamiento, URLs de export por propiedad, reservas (añadir/borrar), calendarios externos (añadir/refrescar/quitar) y botón "refrescar todos".
+**Panel admin:** `https://cabañaslamaite.com/admin.html` (PIN). Muestra modo de almacenamiento, URLs de export por propiedad, reservas (añadir/borrar), calendarios externos (añadir/refrescar/quitar) y botón "refrescar todos".
 
-**Uso (dueño):** pegar `https://cabanaslamaite.vercel.app/api/ical/property/loft1` (y `.../loft2`) en Importar calendario de Booking/Airbnb/Expedia. Las reservas hechas en la web se bloquean solas ahí. Y pegar los exports de Airbnb/Booking/Expedia en el panel admin → bloquean las fechas en la web.
+**Uso (dueño):** pegar `https://cabañaslamaite.com/api/ical/property/loft1` (y `.../loft2`) en Importar calendario de Booking/Airbnb/Expedia. Las reservas hechas en la web se bloquean solas ahí. Y pegar los exports de Airbnb/Booking/Expedia en el panel admin → bloquean las fechas en la web.
 
 **Pruebas hechas (2026-08):** feed .ics válido (`text/calendar`), import de `samples/external.ics` (2 eventos parseados, `lastCount:2`), admin 401 sin PIN / 200 con PIN, refresh-all OK, 404 para propiedad inexistente, espejo del algoritmo (generación + solapamiento) con todas las aserciones OK. El comportamiento entre requests quedará estable al configurar KV.
 
@@ -214,7 +214,7 @@ EOF
 ## 13. Seguridad y despliegue (pago)
 - **Nunca** commitear credenciales: `.gitignore` excluye `docs/*.docx` y `.env*`. El Client Secret solo existe en env vars de Vercel. `docs/Paypal credentials.docx` **no está en git** (verificado) — no abrirlo en conversaciones de IA.
 - El monto del pago se recalcula **en el servidor** (api/paypal/_pricing.js); el cliente jamás envía el monto. Errores de PayPal se devuelven como códigos fijos, sin cuerpos internos al navegador.
-- **Despliegue:** repo importado en Vercel → **https://cabanaslamaite.vercel.app** (auto-deploy en push a main). `api/` se detecta solo.
+- **Despliegue:** repo importado en Vercel → **https://cabañaslamaite.com** (dominio propio; el subdominio `cabanaslamaite.vercel.app` sigue activo como respaldo; auto-deploy en push a main). `api/` se detecta solo. UID/descripción del feed .ics usan el host desde el que se consulta.
 - **⚠️ Lección Vercel:** las funciones de `api/` deben ser **CommonJS** (`module.exports` + `require`); el ESM (`import/export`) sin `package.json` hacía que las funciones se colgaran (timeout) al arrancar. `_pricing.js` (prefijo `_`) no se expone como ruta.
 - **Estado (verificado 2026-08-13):** sandbox funcionando — `GET /api/paypal/config` 200 (client id + precios), `POST /api/paypal/create-order` crea órdenes reales en sandbox ($696 para 6 noches/2 pers; $391.50 Semana Santa 3 noches), validaciones OK. En GitHub Pages el botón de pago no funciona (muestra el aviso bilingüe correspondiente).
 
@@ -222,7 +222,7 @@ EOF
 
 1. `cd /Users/nikoabeachclub/Documents/dev/pagina-realestate && python3 -m http.server 8000` → http://localhost:8000
 2. Probar: cambio de idioma ES/EN (botón en menú), widget (loft/fechas/huéspedes → total → botón Smart de PayPal), lightbox, menú móvil, formulario (enviar → revisar consola/red), fechas mínimas.
-3. **Probar el pago en sandbox:** en https://cabanaslamaite.vercel.app, elegir fechas → clic en el botón PayPal → entrar con la cuenta **comprador de sandbox** (PayPal Developer → Sandbox → Accounts → email + pass) → verificar que aparezca "Pagar con tarjeta de débito o crédito" y que el monto esté prefijado → completar el pago falso → debe mostrar "¡Pago recibido!...".
+3. **Probar el pago en sandbox:** en https://cabañaslamaite.com, elegir fechas → clic en el botón PayPal → entrar con la cuenta **comprador de sandbox** (PayPal Developer → Sandbox → Accounts → email + pass) → verificar que aparezca "Pagar con tarjeta de débito o crédito" y que el monto esté prefijado → completar el pago falso → debe mostrar "¡Pago recibido!...".
 4. Cuando todo funcione: en Vercel cambiar `PAYPAL_ENV=live` + credenciales LIVE (Production) y redesplegar; luego un pago real pequeño de prueba.
 5. Verificaciones §10 → commit + push a `origin/main` (convención del dueño).
 

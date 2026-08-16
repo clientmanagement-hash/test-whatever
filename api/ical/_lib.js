@@ -156,7 +156,7 @@ const adminPinOk = (req) => {
     return typeof sent === 'string' && sent === pin;
 };
 
-const hostUrl = (req) => `https://${req.headers.host || 'cabanaslamaite.vercel.app'}`;
+const hostUrl = (req) => `https://${req.headers.host || 'xn--cabaaslamaite-lkb.com'}`;
 
 module.exports = {
     PROPERTIES,

@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
     if (!prop) return res.status(404).json({ error: 'property_not_found' });
 
     const reservations = await loadReservations(pid);
-    const ics = buildCalendar({ property: prop, reservations });
+    const ics = buildCalendar({ property: prop, reservations, domain: req.headers.host });
 
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', `inline; filename="${pid}.ics"`);

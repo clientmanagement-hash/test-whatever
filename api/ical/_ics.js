@@ -8,7 +8,9 @@ const nowStamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\.
 
 // Genera el feed .ics de una propiedad con sus reservas (una VEVENT por reserva,
 // DTEND = día de salida; el formato all-day lo aceptan Airbnb, Booking y Expedia).
-function buildCalendar({ property, reservations }) {
+// `domain` es el host desde el que se sirve (ej. cabañaslamaite.com) y se usa en UID/descripción.
+function buildCalendar({ property, reservations, domain }) {
+    const host = (domain || 'xn--cabaaslamaite-lkb.com').replace(/^www\./, '');
     const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -16,7 +18,7 @@ function buildCalendar({ property, reservations }) {
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         'X-WR-CALNAME:' + icsEscape(property.name + ' · Cabañas La Maite'),
-        'X-WR-CALDESC:' + icsEscape('Noches reservadas directamente en cabanaslamaite.vercel.app')
+        'X-WR-CALDESC:' + icsEscape('Noches reservadas directamente en ' + host)
     ];
     for (const r of reservations || []) {
         const inD = new Date(String(r.checkIn).slice(0, 10) + 'T00:00:00Z');
@@ -24,7 +26,7 @@ function buildCalendar({ property, reservations }) {
         if (!Number.isFinite(inD.getTime()) || !Number.isFinite(outD.getTime()) || outD <= inD) continue;
         lines.push(
             'BEGIN:VEVENT',
-            'UID:' + icsEscape(r.uid) + '@cabanaslamaite.vercel.app',
+            'UID:' + icsEscape(r.uid) + '@' + host,
             'DTSTAMP:' + nowStamp(),
             'DTSTART;VALUE=DATE:' + fmtDate(inD),
             'DTEND;VALUE=DATE:' + fmtDate(outD),
