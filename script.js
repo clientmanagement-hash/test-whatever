@@ -32,7 +32,7 @@ const I18N = {
 
         // Franja de datos
         'stat.1.label': 'from Buena Vista Beach',
-        'stat.2.strong': 'Shared pool',
+        'stat.2.strong': 'Pool',
         'stat.2.label': '',
         'stat.3.label': 'Exceptional · 155 reviews',
         'stat.4.strong': 'A 1.6 km',
@@ -42,8 +42,8 @@ const I18N = {
         'lofts.eyebrow': 'Our lofts',
         'lofts.title': 'Two spaces, <span class="text-green">one calm</span>',
         'lofts.sub': 'Self-contained apartments with private entrance, air conditioning, equipped kitchen and a pool among palm trees.',
-        'loft1.title': 'Loft 1<br>Garden and shared pool',
-        'loft2.title': 'Loft 2<br>Garden and shared pool',
+        'loft1.title': 'Loft 1<br>Garden and pool in both',
+        'loft2.title': 'Loft 2<br>Garden and pool in both',
         'loft.desc': 'Pool, garden and terrace.',
         'loft.price': 'From <strong>$116</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
