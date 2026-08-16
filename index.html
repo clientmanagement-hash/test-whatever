@@ -270,13 +270,15 @@
                                 <p class="direct-fee" id="direct-fee-note"></p>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="direct-in" data-i18n="direct.in">Entrada</label>
-                                        <input type="date" id="direct-in">
+                                        <label for="direct-in-field" data-i18n="direct.in">Entrada</label>
+                                        <button type="button" class="date-field" id="direct-in-field">Elegir fecha</button>
                                     </div>
                                     <div class="form-group">
-                                        <label for="direct-out" data-i18n="direct.out">Salida</label>
-                                        <input type="date" id="direct-out">
+                                        <label for="direct-out-field" data-i18n="direct.out">Salida</label>
+                                        <button type="button" class="date-field" id="direct-out-field">Elegir fecha</button>
                                     </div>
+                                    <input type="hidden" id="direct-in">
+                                    <input type="hidden" id="direct-out">
                                 </div>
                                 <div class="direct-summary">
                                     <div class="direct-line">

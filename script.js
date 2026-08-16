@@ -125,6 +125,8 @@ const I18N = {
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
+        'direct.selectIn': 'Select check-in date',
+        'direct.selectOut': 'Select check-out date',
         'direct.unavailable': 'Dates unavailable',
         'direct.minNights': 'Minimum 2 nights',
         'direct.smartErr': 'Choose valid dates to calculate the amount.',
@@ -833,6 +835,158 @@ if (directLoft && directGuests && directIn && directOut) {
     if (loftParam === 'loft1' || loftParam === 'loft2') {
         directLoft.value = loftParam;
         updateDirect();
+    }
+
+    // ================= Calendario personalizado (las fechas ocupadas NO se pueden elegir) =================
+    const inField = $('#direct-in-field');
+    const outField = $('#direct-out-field');
+    const directFormEl = document.querySelector('.direct-form');
+
+    if (inField && outField && directFormEl) {
+        const CAL_MONTHS = {
+            es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+            en: ['January','February','March','April','May','June','July','August','September','October','November','December']
+        };
+        const CAL_WEEK = { es: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'], en: ['Su','Mo','Tu','We','Th','Fr','Sa'] };
+
+        let calOpen = false;
+        let calPhase = 'in';
+        let calY = 0;
+        let calM = 0;
+
+        const pop = document.createElement('div');
+        pop.className = 'cal-popover';
+        pop.style.display = 'none';
+        pop.innerHTML =
+            '<div class="cal-head">' +
+                '<button type="button" class="cal-nav" data-cal="prev" aria-label="Mes anterior">‹</button>' +
+                '<span class="cal-title"></span>' +
+                '<button type="button" class="cal-nav" data-cal="next" aria-label="Mes siguiente">›</button>' +
+            '</div>' +
+            '<div class="cal-weekdays"></div>' +
+            '<div class="cal-grid"></div>';
+        directFormEl.appendChild(pop);
+
+        const iso = (d) => d.toISOString().slice(0, 10);
+        const dayBlocked = (pid, s) => {
+            if (!availability || !availability.properties || !availability.properties[pid]) return false;
+            const t = Date.parse(s);
+            for (const b of availability.properties[pid].blocked) {
+                if (t >= Date.parse(b.checkIn) && t < Date.parse(b.checkOut)) return true;
+            }
+            return false;
+        };
+        const rangeBlocked = (pid, aIn, aOut) => {
+            if (!availability || !availability.properties || !availability.properties[pid]) return false;
+            const x = Date.parse(aIn);
+            const y = Date.parse(aOut);
+            if (!Number.isFinite(x) || !Number.isFinite(y) || y <= x) return false;
+            for (const b of availability.properties[pid].blocked) {
+                const bIn = Date.parse(b.checkIn);
+                const bOut = Date.parse(b.checkOut);
+                if (x < bOut && bIn < y) return true;
+            }
+            return false;
+        };
+        const fmtDisp = (s) => {
+            if (!s) return '';
+            const p = s.split('-');
+            return lang === 'en' ? p[1] + '/' + p[2] + '/' + p[0] : p[2] + '/' + p[1] + '/' + p[0];
+        };
+        const updateFields = () => {
+            inField.textContent = directIn.value ? fmtDisp(directIn.value) : tr('direct.selectIn', 'Elegir fecha de entrada');
+            outField.textContent = directOut.value ? fmtDisp(directOut.value) : tr('direct.selectOut', 'Elegir fecha de salida');
+            inField.classList.toggle('has-value', Boolean(directIn.value));
+            outField.classList.toggle('has-value', Boolean(directOut.value));
+        };
+
+        const renderCal = () => {
+            const pid = directLoft.value;
+            const wk = CAL_WEEK[lang] || CAL_WEEK.es;
+            const months = CAL_MONTHS[lang] || CAL_MONTHS.es;
+            pop.querySelector('.cal-title').textContent = months[calM] + ' ' + calY;
+            pop.querySelector('.cal-weekdays').innerHTML = wk.map((w) => '<span>' + w + '</span>').join('');
+            const grid = pop.querySelector('.cal-grid');
+            grid.innerHTML = '';
+            const now = new Date();
+            const t0 = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
+            const firstDow = new Date(Date.UTC(calY, calM, 1)).getUTCDay();
+            const dim = new Date(Date.UTC(calY, calM + 1, 0)).getUTCDate();
+            const minOut = directIn.value ? addDays(directIn.value, BOOKING.minNights) : null;
+            for (let i = 0; i < firstDow; i++) grid.appendChild(document.createElement('span'));
+            for (let d = 1; d <= dim; d++) {
+                const s = iso(new Date(Date.UTC(calY, calM, d)));
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cal-day';
+                btn.textContent = String(d);
+                let dis = Date.parse(s) < t0 || dayBlocked(pid, s);
+                if (calPhase === 'out' && !dis) {
+                    if (minOut && Date.parse(s) < Date.parse(minOut)) dis = true;
+                    else if (rangeBlocked(pid, directIn.value, s)) dis = true;
+                }
+                if (dis) btn.classList.add('disabled');
+                if (s === directIn.value || s === directOut.value) btn.classList.add('selected');
+                if (directIn.value && directOut.value && s > directIn.value && s < directOut.value) btn.classList.add('in-range');
+                btn.addEventListener('click', () => {
+                    if (btn.classList.contains('disabled')) return; // fechas ocupadas no se pueden tocar
+                    if (calPhase === 'in') {
+                        directIn.value = s;
+                        directOut.value = '';
+                        calPhase = 'out';
+                        renderCal();
+                    } else {
+                        directOut.value = s;
+                        closeCal();
+                        updateFields();
+                        updateDirect();
+                    }
+                });
+                grid.appendChild(btn);
+            }
+        };
+
+        const openCal = (phase) => {
+            const now = new Date();
+            calY = directIn.value ? parseInt(directIn.value.slice(0, 4), 10) : now.getFullYear();
+            calM = directIn.value ? parseInt(directIn.value.slice(5, 7), 10) - 1 : now.getMonth();
+            calPhase = (phase === 'out' && !directIn.value) ? 'in' : phase;
+            calOpen = true;
+            renderCal();
+            pop.style.display = 'block';
+        };
+        const closeCal = () => {
+            calOpen = false;
+            pop.style.display = 'none';
+        };
+
+        inField.addEventListener('click', () => openCal('in'));
+        outField.addEventListener('click', () => openCal('out'));
+        pop.querySelector('[data-cal="prev"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            calM -= 1;
+            if (calM < 0) { calM = 11; calY -= 1; }
+            renderCal();
+        });
+        pop.querySelector('[data-cal="next"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            calM += 1;
+            if (calM > 11) { calM = 0; calY += 1; }
+            renderCal();
+        });
+        document.addEventListener('click', (e) => {
+            if (calOpen && !pop.contains(e.target) && e.target !== inField && e.target !== outField) closeCal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeCal();
+        });
+        directLoft.addEventListener('change', () => { if (calOpen) renderCal(); });
+        registerDynamic(() => {
+            if (calOpen) renderCal();
+            updateFields();
+        });
+
+        updateFields();
     }
 
     updateDirect();
