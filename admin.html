@@ -68,6 +68,11 @@
             font-size: 1rem; width: 220px; text-align: center;
         }
         .msg { font-size: .8rem; margin-top: 8px; min-height: 1em; color: var(--gris-600); }
+        .warn-banner {
+            display: none; margin-bottom: 14px; padding: 12px 14px; border-radius: 8px;
+            background: #fdeee0; border: 1px solid #f2cf9f; color: #8a4b13; font-size: .85rem; line-height: 1.5;
+        }
+        .warn-banner b { color: #6d3a0c; }
         .muted { color: var(--gris-400); font-size: .78rem; }
         pre { background: var(--arena); border-radius: 8px; padding: 10px; font-size: .75rem; overflow: auto; }
     </style>
@@ -89,6 +94,7 @@
 
 <main id="panel" style="display:none">
     <div class="card">
+        <div class="warn-banner" id="stg-banner"></div>
         <h2>Estado general</h2>
         <div class="status-row">
             <span class="badge" id="stg-storage">…</span>
@@ -144,6 +150,12 @@
         try {
             const data = await api('/admin');
             showPanel();
+            if (data.storage === 'vercel-kv') {
+                $('stg-banner').style.display = 'none';
+            } else {
+                $('stg-banner').innerHTML = '⚠️ <b>ALMACENAMIENTO TEMPORAL ACTIVO:</b> todo lo que añadas aquí se guarda solo unos segundos y puede desaparecer. Para que las reservas y calendarios se guarden de verdad: 1) crea una base gratis en <b>console.upstash.com</b> (Redis → + Create Database, plan Free) · 2) copia el <b>HTTPS</b> y el <b>Token</b> de la pestaña REST · 3) en Vercel añade las variables <b>KV_REST_API_URL</b> y <b>KV_REST_API_TOKEN</b> · 4) redeploy. Después de hacerlo, recarga esta página y el aviso desaparecerá.';
+                $('stg-banner').style.display = 'block';
+            }
             $('stg-storage').textContent = 'Almacenamiento: ' + (data.storage === 'vercel-kv' ? 'Vercel KV (persistente)' : 'efímero (configura Vercel KV)');
             $('stg-storage').className = 'badge ' + (data.storage === 'vercel-kv' ? 'ok' : 'warn');
             $('stg-pin').textContent = 'PIN admin: ' + (data.adminPinSet ? 'configurado (ADMIN_PIN)' : 'por defecto — cámbialo');
