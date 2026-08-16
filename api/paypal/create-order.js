@@ -4,6 +4,7 @@
 // { checkIn, checkOut, guests } usando ./_pricing.js (fuente de verdad).
 
 const { computeBooking } = require('./_pricing');
+const { propId, isBlocked } = require('../ical/_lib');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -54,9 +55,18 @@ module.exports = async function handler(req, res) {
 
     const body = await readBody(req);
 
+    // La propiedad debe existir y las fechas no pueden estar ya reservadas
+    // (anti doble reserva: reservas propias + calendarios externos importados)
+    const propertyId = body.propertyId;
+    if (!propId(propertyId)) return res.status(400).json({ error: 'invalid_property' });
+
     // El precio se calcula en el servidor (autoridad), no se acepta del cliente
     const booking = computeBooking(body.checkIn, body.checkOut, body.guests);
     if (booking.error) return res.status(400).json({ error: booking.error });
+
+    if (await isBlocked(propertyId, body.checkIn, body.checkOut)) {
+        return res.status(409).json({ error: 'dates_unavailable' });
+    }
 
     try {
         const token = await getAccessToken(base, clientId, secret);

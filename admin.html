@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Administración · Calendario iCal — Cabañas La Maite</title>
+    <style>
+        :root {
+            --verde-950: #0b1f12; --verde-900: #112a19; --verde-800: #163520; --verde-700: #1d452a;
+            --verde-600: #265a38; --verde-500: #41754f; --verde-300: #a3bfa9;
+            --tan-600: #8a6536; --tan-500: #a97d45;
+            --arena: #f6f2e9; --arena-2: #ece5d6;
+            --ink: #16231b; --gris-600: #57655c; --gris-400: #93a098;
+            --r-sm: 10px; --shadow-sm: 0 6px 18px rgba(11, 31, 18, .08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; font-family: Roboto, system-ui, -apple-system, Segoe UI, sans-serif;
+            background: var(--arena); color: var(--ink); line-height: 1.55;
+        }
+        header {
+            background: var(--verde-900); color: #fff; padding: 18px 24px;
+        }
+        header h1 { margin: 0; font-size: 1.15rem; }
+        header p { margin: 4px 0 0; color: var(--verde-300); font-size: .85rem; }
+        main { max-width: 960px; margin: 0 auto; padding: 24px; }
+        .card {
+            background: #fff; border: 1px solid var(--arena-2); border-radius: var(--r-sm);
+            box-shadow: var(--shadow-sm); padding: 18px 20px; margin-bottom: 20px;
+        }
+        .card h2 { margin: 0 0 12px; font-size: 1rem; color: var(--verde-800); }
+        .status-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; font-size: .85rem; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .75rem;
+            font-weight: 700; background: var(--arena); color: var(--verde-700); border: 1px solid var(--arena-2);
+        }
+        .badge.ok { background: #e5f4ec; color: var(--verde-700); border-color: #b7e2cc; }
+        .badge.err { background: #f7ead2; color: var(--tan-600); border-color: #e5cf9f; }
+        .badge.warn { background: #fdeee0; color: #a05a1c; border-color: #f2cf9f; }
+        .export-url {
+            display: flex; gap: 8px; align-items: center; margin: 8px 0 14px;
+        }
+        .export-url input {
+            flex: 1; padding: 8px 10px; border: 1px solid var(--arena-2); border-radius: 8px;
+            font-family: inherit; font-size: .82rem; background: var(--arena); color: var(--ink);
+        }
+        button {
+            border: none; border-radius: 8px; padding: 8px 14px; font-family: inherit;
+            font-size: .83rem; font-weight: 700; cursor: pointer; background: var(--verde-600); color: #fff;
+            transition: background .2s;
+        }
+        button:hover { background: var(--verde-700); }
+        button.sec { background: var(--arena-2); color: var(--verde-800); }
+        button.danger { background: #b4503c; }
+        button.small { padding: 4px 10px; font-size: .75rem; }
+        table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+        th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--arena-2); vertical-align: top; }
+        th { color: var(--gris-600); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+        .form-row input {
+            flex: 1; min-width: 150px; padding: 8px 10px; border: 1px solid var(--arena-2);
+            border-radius: 8px; font-family: inherit; font-size: .83rem;
+        }
+        #pin-gate { max-width: 420px; margin: 80px auto; text-align: center; }
+        #pin-gate input {
+            padding: 10px 12px; border: 1px solid var(--arena-2); border-radius: 8px;
+            font-size: 1rem; width: 220px; text-align: center;
+        }
+        .msg { font-size: .8rem; margin-top: 8px; min-height: 1em; color: var(--gris-600); }
+        .muted { color: var(--gris-400); font-size: .78rem; }
+        pre { background: var(--arena); border-radius: 8px; padding: 10px; font-size: .75rem; overflow: auto; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🗓️ Administración · Calendario iCal — Cabañas La Maite</h1>
+    <p>Exporta tus reservas a Booking/Airbnb/Expedia e importa las de ellos (sincronización estándar iCal, sin canal manager).</p>
+</header>
+
+<div id="pin-gate" class="card">
+    <h2>Acceso restringido</h2>
+    <p class="muted">Introduce el PIN de administración (variable <code>ADMIN_PIN</code> en Vercel; por defecto: <code>maite-admin-2026</code>).</p>
+    <input type="password" id="pin-input" placeholder="PIN" autocomplete="off">
+    <br><br>
+    <button id="pin-btn">Entrar</button>
+    <div class="msg" id="pin-msg"></div>
+</div>
+
+<main id="panel" style="display:none">
+    <div class="card">
+        <h2>Estado general</h2>
+        <div class="status-row">
+            <span class="badge" id="stg-storage">…</span>
+            <span class="badge" id="stg-pin">…</span>
+            <span class="badge" id="stg-cron">…</span>
+        </div>
+        <div class="msg" id="global-msg"></div>
+        <button id="btn-refresh-all">🔄 Refrescar todos los calendarios externos</button>
+        <button class="sec" id="btn-reload">Recargar datos</button>
+    </div>
+
+    <div id="props"></div>
+</main>
+
+<script>
+(function () {
+    const PIN_KEY = 'ical_admin_pin';
+    const API = '/api/ical';
+    let pin = localStorage.getItem(PIN_KEY) || '';
+
+    const $ = (id) => document.getElementById(id);
+
+    async function api(path, opts) {
+        const headers = { 'X-Admin-Pin': pin, ...(opts && opts.headers || {}) };
+        if (opts && opts.body) headers['Content-Type'] = 'application/json';
+        const r = await fetch(API + path, { ...opts, headers });
+        const data = await r.json().catch(() => ({}));
+        if (r.status === 401) { showGate(); throw new Error('PIN incorrecto'); }
+        if (!r.ok) throw new Error(data.error || 'HTTP ' + r.status);
+        return data;
+    }
+
+    function showGate() { $('pin-gate').style.display = 'block'; $('panel').style.display = 'none'; }
+    function showPanel() { $('pin-gate').style.display = 'none'; $('panel').style.display = 'block'; }
+
+    $('pin-btn').addEventListener('click', async () => {
+        pin = $('pin-input').value.trim();
+        try {
+            await api('/admin');
+            localStorage.setItem(PIN_KEY, pin);
+            $('pin-msg').textContent = '';
+            loadAll();
+        } catch (e) {
+            $('pin-msg').textContent = 'No se pudo autenticar: ' + e.message;
+        }
+    });
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function loadAll() {
+        try {
+            const data = await api('/admin');
+            showPanel();
+            $('stg-storage').textContent = 'Almacenamiento: ' + (data.storage === 'vercel-kv' ? 'Vercel KV (persistente)' : 'efímero (configura Vercel KV)');
+            $('stg-storage').className = 'badge ' + (data.storage === 'vercel-kv' ? 'ok' : 'warn');
+            $('stg-pin').textContent = 'PIN admin: ' + (data.adminPinSet ? 'configurado (ADMIN_PIN)' : 'por defecto — cámbialo');
+            $('stg-pin').className = 'badge ' + (data.adminPinSet ? 'ok' : 'warn');
+            $('stg-cron').textContent = 'Cron diario: ' + (data.cronConfigured ? 'con CRON_SECRET' : 'sin CRON_SECRET (opcional)');
+            $('stg-cron').className = 'badge ok';
+            renderProps(data.properties);
+        } catch (e) {
+            $('global-msg').textContent = 'Error cargando: ' + e.message;
+        }
+    }
+
+    function renderProps(props) {
+        $('props').innerHTML = props.map((p) => `
+            <div class="card">
+                <h2>${esc(p.name)} <span class="muted">(${esc(p.id)})</span></h2>
+                <div class="export-url">
+                    <input readonly value="${esc(p.exportUrl)}" aria-label="URL de exportación iCal">
+                    <button class="sec small" data-copy="${esc(p.exportUrl)}">Copiar</button>
+                </div>
+                <p class="muted">Pega esta URL en <b>Booking</b> (Rates &amp; Availability → Import), <b>Airbnb</b> (Calendario → Importar) y <b>Expedia</b> (Calendar sync → Import).</p>
+
+                <h3 style="font-size:.9rem;color:var(--verde-800)">Reservas (propias / web) — van al feed .ics</h3>
+                <table>
+                    <thead><tr><th>Entrada</th><th>Salida</th><th>Huésped</th><th>Origen</th><th></th></tr></thead>
+                    <tbody>
+                        ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
+                            ? '<tr><td colspan="5" class="muted">Sin reservas todavía.</td></tr>'
+                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.guest)}</td><td>${esc(r.source)}</td>
+                               <td><button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="form-row">
+                    <input type="date" data-new-in="${esc(p.id)}">
+                    <input type="date" data-new-out="${esc(p.id)}">
+                    <input placeholder="Huésped (opcional)" data-new-guest="${esc(p.id)}">
+                    <button data-add-res="${esc(p.id)}">➕ Añadir reserva</button>
+                </div>
+
+                <h3 style="font-size:.9rem;color:var(--verde-800)">Calendarios externos (importados: bloquean fechas aquí)</h3>
+                <table>
+                    <thead><tr><th>Nombre</th><th>URL</th><th>Estado</th><th>Última sync</th><th></th></tr></thead>
+                    <tbody>
+                        ${(p.external.length ? p.external : [{ empty: true }]).map((e) => e.empty
+                            ? '<tr><td colspan="5" class="muted">Sin calendarios externos. Añade el enlace de export de Airbnb/Booking/Expedia.</td></tr>'
+                            : `<tr>
+                                <td>${esc(e.name)}</td>
+                                <td class="muted" style="word-break:break-all">${esc(e.url)}</td>
+                                <td><span class="badge ${e.status === 'ok' ? 'ok' : 'err'}">${esc(e.status)}${e.lastError ? ' · ' + esc(e.lastError) : ''} (${e.lastCount || 0})</span></td>
+                                <td class="muted">${esc(e.lastSync ? e.lastSync.slice(0, 16).replace('T', ' ') : '—')}</td>
+                                <td>
+                                    <button class="small" data-ref-ext="${esc(p.id)}|${esc(e.id)}">Refrescar</button>
+                                    <button class="danger small" data-del-ext="${esc(p.id)}|${esc(e.id)}">Quitar</button>
+                                </td>
+                              </tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="form-row">
+                    <input placeholder="Nombre (ej. Airbnb)" data-ext-name="${esc(p.id)}">
+                    <input placeholder="https://... (URL de export .ics)" data-ext-url="${esc(p.id)}">
+                    <button data-add-ext="${esc(p.id)}">➕ Importar calendario</button>
+                </div>
+            </div>`).join('');
+
+        document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+            navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = '✓'; setTimeout(() => (b.textContent = 'Copiar'), 1200); });
+        }));
+        document.querySelectorAll('[data-add-res]').forEach((b) => b.addEventListener('click', async () => {
+            const pid = b.dataset.addRes;
+            const checkIn = document.querySelector(`[data-new-in="${pid}"]`).value;
+            const checkOut = document.querySelector(`[data-new-out="${pid}"]`).value;
+            const guest = document.querySelector(`[data-new-guest="${pid}"]`).value;
+            try {
+                const r = await api('/reservations', { method: 'POST', body: JSON.stringify({ propertyId: pid, checkIn, checkOut, guest }) });
+                $('global-msg').textContent = 'Reserva creada ✓';
+                loadAll();
+            } catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+        document.querySelectorAll('[data-del-res]').forEach((b) => b.addEventListener('click', async () => {
+            const [pid, uid] = b.dataset.delRes.split('|');
+            try { await api('/reservations', { method: 'DELETE', body: JSON.stringify({ propertyId: pid, uid }) }); loadAll(); }
+            catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+        document.querySelectorAll('[data-add-ext]').forEach((b) => b.addEventListener('click', async () => {
+            const pid = b.dataset.addExt;
+            const name = document.querySelector(`[data-ext-name="${pid}"]`).value;
+            const url = document.querySelector(`[data-ext-url="${pid}"]`).value;
+            try {
+                const r = await api('/external', { method: 'POST', body: JSON.stringify({ propertyId: pid, name, url }) });
+                $('global-msg').textContent = 'Importado: ' + r.status + (r.lastCount ? ' (' + r.lastCount + ' eventos)' : '');
+                loadAll();
+            } catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+        document.querySelectorAll('[data-ref-ext]').forEach((b) => b.addEventListener('click', async () => {
+            const [pid, id] = b.dataset.refExt.split('|');
+            try { await api('/external/' + encodeURIComponent(id), { method: 'POST', body: JSON.stringify({ propertyId: pid }) }); loadAll(); }
+            catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+        document.querySelectorAll('[data-del-ext]').forEach((b) => b.addEventListener('click', async () => {
+            const [pid, id] = b.dataset.delExt.split('|');
+            try { await api('/external/' + encodeURIComponent(id), { method: 'DELETE', body: JSON.stringify({ propertyId: pid }) }); loadAll(); }
+            catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+    }
+
+    $('btn-refresh-all').addEventListener('click', async () => {
+        $('global-msg').textContent = 'Refrescando…';
+        try {
+            const r = await api('/external/refresh-all', { method: 'POST' });
+            $('global-msg').textContent = 'Refresco completo: ' + r.refreshed + ' calendarios.';
+            loadAll();
+        } catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+    });
+    $('btn-reload').addEventListener('click', loadAll);
+
+    if (pin) {
+        api('/admin').then(loadAll).catch(() => showGate());
+    } else {
+        showGate();
+    }
+})();
+</script>
+</body>
+</html>

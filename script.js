@@ -125,6 +125,7 @@ const I18N = {
         'direct.night': 'night',
         'direct.nights': 'nights',
         'direct.selectDates': 'Select your dates',
+        'direct.unavailable': 'Dates unavailable',
         'direct.minNights': 'Minimum 2 nights',
         'direct.smartErr': 'Choose valid dates to calculate the amount.',
         'direct.payOk': 'Payment received! Your booking is confirmed. We will contact you to arrange the details.',
@@ -608,7 +609,7 @@ async function initPayPal() {
                     const r = await fetch('/api/paypal/capture-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID })
+                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '' })
                     });
                     const d = await r.json();
                     if (r.ok && d.success) {
@@ -634,6 +635,33 @@ async function initPayPal() {
 }
 
 initPayPal();
+
+/* ==========================================================================
+   Disponibilidad (iCal): bloquea fechas ya reservadas (propias o externas)
+   ========================================================================== */
+let availability = null;
+
+async function loadAvailability() {
+    try {
+        const r = await fetch('/api/ical/availability');
+        if (r.ok) availability = await r.json();
+    } catch (e) { /* sin backend: el widget funciona igual */ }
+}
+
+function datesBlocked(propertyId, checkIn, checkOut) {
+    if (!availability || !availability.properties || !availability.properties[propertyId]) return false;
+    const aIn = Date.parse(checkIn);
+    const aOut = Date.parse(checkOut);
+    if (!Number.isFinite(aIn) || !Number.isFinite(aOut)) return false;
+    for (const b of availability.properties[propertyId].blocked) {
+        const bIn = Date.parse(b.checkIn);
+        const bOut = Date.parse(b.checkOut);
+        if (aIn < bOut && bIn < aOut) return true; // solapamiento de noches
+    }
+    return false;
+}
+
+loadAvailability();
 
 /* ==========================================================================
    Reserva directa con PayPal (seña) — pago del total vía Smart Buttons (Vercel + Orders API)
@@ -712,6 +740,15 @@ if (directLoft && directGuests && directIn && directOut) {
             : 0;
         const hasDates = nights >= BOOKING.minNights && nights <= 60;
 
+        // Fechas ya bloqueadas (reservas propias o calendarios externos importados)
+        if (hasDates && datesBlocked(directLoft.value, directIn.value, directOut.value)) {
+            directNights.textContent = String(nights);
+            directTotal.textContent = tr('direct.unavailable', 'Fechas no disponibles');
+            directDeposit.textContent = '—';
+            lastBooking = null;
+            return;
+        }
+
         let total = 0;
         let n = 0;
         const ratesSeen = [];
@@ -763,7 +800,7 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            lastBooking = { checkIn: directIn.value, checkOut: directOut.value, guests };
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests };
         } else {
             lastBooking = null;
         }

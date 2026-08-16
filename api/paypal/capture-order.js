@@ -64,6 +64,21 @@ module.exports = async function handler(req, res) {
         });
         const data = await r.json();
         const ok = r.ok && data.status === 'COMPLETED';
+        if (ok) {
+            // Registra la reserva en el calendario iCal (bloquea las noches en el feed .ics)
+            const { recordReservation } = require('../ical/_lib');
+            try {
+                await recordReservation({
+                    propertyId: body.propertyId,
+                    checkIn: body.checkIn,
+                    checkOut: body.checkOut,
+                    guest: body.guest,
+                    source: 'web'
+                });
+            } catch (e) {
+                // si la persistencia falla, la reserva se registra a mano (no bloquear el cobro)
+            }
+        }
         return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });
     } catch (e) {
         return res.status(502).json({ error: 'paypal_capture_failed' });
