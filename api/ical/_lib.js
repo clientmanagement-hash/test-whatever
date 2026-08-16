@@ -18,9 +18,13 @@ let kv = null;
 let devStore = null;
 
 function getKv() {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN && !kv) {
+    // Acepta KV_REST_API_URL/TOKEN (Vercel) o UPSTASH_REDIS_REST_URL/TOKEN (Upstash)
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (url && token && !kv) {
         try {
-            kv = require('@vercel/kv').kv;
+            const { createClient } = require('@vercel/kv');
+            kv = createClient({ url, token });
         } catch (e) {
             kv = null;
         }
