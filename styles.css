@@ -1037,33 +1037,34 @@ section { position: relative; }
     z-index: 50;
     top: calc(100% + 8px);
     left: 0;
-    width: 300px;
+    width: 280px;
     max-width: 100%;
     background: #fff;
-    border: 1px solid var(--arena-2);
-    border-radius: var(--r-sm);
-    box-shadow: 0 14px 40px rgba(11, 31, 18, 0.18);
-    padding: 14px;
+    border: 1px solid #d7dadd;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+    padding: 12px;
+    font-size: 0.85rem;
 }
 
 .cal-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 .cal-nav {
     background: none;
     border: none;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     line-height: 1;
     cursor: pointer;
-    color: var(--verde-700);
-    padding: 2px 10px;
+    color: #5a5f66;
+    padding: 2px 8px;
     border-radius: 6px;
 }
-.cal-nav:hover { background: var(--arena); }
-.cal-title { font-weight: 700; font-size: 0.92rem; color: var(--verde-900); text-transform: capitalize; }
+.cal-nav:hover { background: #f0f1f2; }
+.cal-title { font-weight: 600; font-size: 0.9rem; color: #1f2328; text-transform: capitalize; }
 
 .cal-weekdays,
 .cal-grid {
@@ -1074,8 +1075,8 @@ section { position: relative; }
 .cal-weekdays span {
     text-align: center;
     font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--gris-400);
+    font-weight: 500;
+    color: #8e9096;
     text-transform: uppercase;
     padding: 4px 0;
 }
@@ -1086,21 +1087,21 @@ section { position: relative; }
     justify-content: center;
     border: none;
     background: none;
-    border-radius: 8px;
+    border-radius: 50%;
     font-family: inherit;
     font-size: 0.82rem;
-    color: var(--ink);
+    color: #1f2328;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.12s ease, color 0.12s ease;
 }
-.cal-day:hover:not(.disabled):not(.selected) { background: var(--arena); }
+.cal-day:hover:not(.disabled):not(.selected) { background: #f0f1f2; }
 .cal-day.disabled {
-    color: #c3c9c0;
+    color: #c7c9cc;
     cursor: not-allowed;
     text-decoration: line-through;
 }
 .cal-day.selected { background: var(--verde-600); color: #fff; font-weight: 700; }
-.cal-day.in-range { background: var(--arena-2); }
+.cal-day.in-range { background: var(--arena-2); border-radius: 8px; }
 
 .form-message {
     margin-top: 16px;
