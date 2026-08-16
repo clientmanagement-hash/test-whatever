@@ -216,7 +216,7 @@ EOF
 - El monto del pago se recalcula **en el servidor** (api/paypal/_pricing.js); el cliente jamás envía el monto. Errores de PayPal se devuelven como códigos fijos, sin cuerpos internos al navegador.
 - **Despliegue:** repo importado en Vercel → **https://www.cabanaslamaite.com** (dominio propio comprado 2026-08; el subdominio `cabanaslamaite.vercel.app` sigue como respaldo; auto-deploy en push a main). `api/` se detecta solo. UID/descripción del feed .ics usan el host desde el que se consulta (adaptativo). Antecedente: el dueño compró antes `cabañaslamaite.com` (xn--) y pidió reembolso (punycode feo al compartir).
 - **⚠️ Lección Vercel:** las funciones de `api/` deben ser **CommonJS** (`module.exports` + `require`); el ESM (`import/export`) sin `package.json` hacía que las funciones se colgaran (timeout) al arrancar. `_pricing.js` (prefijo `_`) no se expone como ruta.
-- **Estado (verificado 2026-08-13):** sandbox funcionando — `GET /api/paypal/config` 200 (client id + precios), `POST /api/paypal/create-order` crea órdenes reales en sandbox ($696 para 6 noches/2 pers; $391.50 Semana Santa 3 noches), validaciones OK. En GitHub Pages el botón de pago no funciona (muestra el aviso bilingüe correspondiente).
+- **Estado (verificado 2026-08-16):** sistema COMPLETO y funcionando en producción con persistencia — Upstash Redis conectado (`storage: vercel-kv`), calendarios de Booking importados (Loft 1: 10 eventos, Loft 2: 11), anti doble reserva verificado (create-order → 409 en fecha ocupada), reserva propia → feed .ics, todo persiste entre requests. Dominio propio: **https://www.cabanaslamaite.com**.
 
 ## 13b. Cómo probar y entregar
 
