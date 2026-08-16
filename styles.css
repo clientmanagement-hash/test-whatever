@@ -1033,12 +1033,12 @@ section { position: relative; }
 .direct-form { position: relative; }
 
 .cal-popover {
-    position: absolute;
-    z-index: 50;
-    top: calc(100% + 8px);
+    position: fixed;
+    z-index: 9999;
+    top: 0;
     left: 0;
     width: 280px;
-    max-width: 100%;
+    max-width: calc(100vw - 16px);
     background: #fff;
     border: 1px solid #d7dadd;
     border-radius: 10px;

@@ -840,9 +840,8 @@ if (directLoft && directGuests && directIn && directOut) {
     // ================= Calendario personalizado (las fechas ocupadas NO se pueden elegir) =================
     const inField = $('#direct-in-field');
     const outField = $('#direct-out-field');
-    const directFormEl = document.querySelector('.direct-form');
 
-    if (inField && outField && directFormEl) {
+    if (inField && outField) {
         const CAL_MONTHS = {
             es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
             en: ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -865,7 +864,7 @@ if (directLoft && directGuests && directIn && directOut) {
             '</div>' +
             '<div class="cal-weekdays"></div>' +
             '<div class="cal-grid"></div>';
-        directFormEl.appendChild(pop);
+        document.body.appendChild(pop);
 
         const iso = (d) => d.toISOString().slice(0, 10);
         const dayBlocked = (pid, s) => {
@@ -946,11 +945,20 @@ if (directLoft && directGuests && directIn && directOut) {
             }
         };
 
-        const openCal = (phase) => {
+        const openCal = (phase, field) => {
             const now = new Date();
             calY = directIn.value ? parseInt(directIn.value.slice(0, 4), 10) : now.getFullYear();
             calM = directIn.value ? parseInt(directIn.value.slice(5, 7), 10) - 1 : now.getMonth();
             calPhase = (phase === 'out' && !directIn.value) ? 'in' : phase;
+            // Posición fija en la ventana (evita que la tarjeta recorte el calendario)
+            const r = field.getBoundingClientRect();
+            const pw = Math.min(280, window.innerWidth - 16);
+            let left = r.left;
+            if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+            if (left < 8) left = 8;
+            pop.style.top = (r.bottom + 6) + 'px';
+            pop.style.left = left + 'px';
+            pop.style.width = pw + 'px';
             calOpen = true;
             renderCal();
             pop.style.display = 'block';
@@ -960,8 +968,8 @@ if (directLoft && directGuests && directIn && directOut) {
             pop.style.display = 'none';
         };
 
-        inField.addEventListener('click', () => openCal('in'));
-        outField.addEventListener('click', () => openCal('out'));
+        inField.addEventListener('click', () => openCal('in', inField));
+        outField.addEventListener('click', () => openCal('out', outField));
         pop.querySelector('[data-cal="prev"]').addEventListener('click', (e) => {
             e.stopPropagation();
             calM -= 1;
@@ -980,6 +988,8 @@ if (directLoft && directGuests && directIn && directOut) {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeCal();
         });
+        window.addEventListener('scroll', closeCal, true);
+        window.addEventListener('resize', closeCal);
         directLoft.addEventListener('change', () => { if (calOpen) renderCal(); });
         registerDynamic(() => {
             if (calOpen) renderCal();
