@@ -159,6 +159,7 @@ EOF
 ---
 
 ## 11. PENDIENTES / decisiones abiertas (contexto para el siguiente agente)
+0. **⚠️ OBLIGATORIO: crear Vercel KV para que el calendario iCal persista.** El sistema iCal (sección 15) está implementado y probado, pero en producción usa el modo `dev-ephemeral` (memoria + /tmp por instancia) que **NO persiste entre requests** en Vercel. Paso a paso: Vercel Dashboard → Storage → Create Database → KV (Upstash) → región cercana (iad1/sfo1) → Connect to project (Cabañas la Maite) → añade las env vars `KV_REST_API_URL` y `KV_REST_API_TOKEN` automáticamente → Redeploy. Después el panel admin muestra "Vercel KV (persistente)". (El código ya está listo; no hay que tocar nada más.)
 
 1. **Credenciales PayPal en Vercel (paso del dueño, OBLIGATORIO para el pago):** en Vercel → proyecto → Settings → Environment Variables: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` (marcar *Sensitive*), `PAYPAL_ENV` (`sandbox`|`live`), `PAYPAL_CURRENCY` (`USD`). Preview/Testing = sandbox; Production = live. El dueño ya tiene las credenciales (sandbox/live) en `docs/Paypal credentials.docx` — **no leer ese archivo** (secreto); va directo a Vercel.
 2. **Verificar flujo sandbox** (pago falso) antes de pasar a live; luego canjear por live en Production y hacer un pago real pequeño de prueba.
@@ -181,6 +182,34 @@ EOF
 - Precios y montos: el dueño cambia seguido (130→116, 50%→100%) — siempre confirmar valores actuales en `BOOKING` antes de editar y actualizar TODOS los lugares (config, tarjetas "Desde $X", textos).
 
 ---
+
+## 15. Sistema iCal (sincronización de calendarios, sin canal manager)
+**Estado:** implementado y probado (generación/parseo ICS ✓, importación externa ✓, anti doble reserva ✓, panel admin ✓, cron ✓). Falta solo Vercel KV para persistencia real (ver §11.0).
+
+**Arquitectura** (`api/ical/`, CommonJS):
+- `_lib.js` — almacenamiento (Vercel KV si `KV_REST_API_URL`/`KV_REST_API_TOKEN`, si no `dev-ephemeral`), propiedades (`loft1`, `loft2`), disponibilidad/solapamiento, registro de reservas, PIN admin, readBody.
+- `_ics.js` — `buildCalendar` (RFC 5545, VEVENT all-day por reserva) y `parseIcs` (parser mínimo: VALUE=DATE/DATE-TIME/TZID, líneas continuadas, sin EXDATE).
+- Rutas:
+  - `GET /api/ical/property/:id` → feed .ics público (lo importan Airbnb/Booking/Expedia; bloquea las noches reservadas en la web).
+  - `POST|DELETE /api/ical/reservations` → crear/borrar reserva (manual/admin).
+  - `GET /api/ical/availability` → rangos bloqueados por propiedad (lo usa el widget).
+  - `POST /api/ical/external` → importa una URL .ics externa (descarga + parsea al momento).
+  - `POST|DELETE /api/ical/external/:id` → refrescar / eliminar.
+  - `POST /api/ical/external/refresh-all` → refresca todos (cron diario 04:00 en `vercel.json`; exige `Authorization: Bearer $CRON_SECRET` solo si la env existe).
+  - `GET /api/ical/admin` → datos del panel (PIN: env `ADMIN_PIN`, por defecto `maite-admin-2026`; header `X-Admin-Pin`).
+
+**Integración con el pago/widget:**
+- `api/paypal/create-order.js` valida la propiedad y devuelve `409 dates_unavailable` si las fechas están bloqueadas (web o externas) — anti doble reserva en el servidor.
+- `api/paypal/capture-order.js` registra la reserva (`recordReservation`, source `web`) al cobrar → aparece en el feed .ics.
+- `script.js`: `loadAvailability()` descarga `/api/ical/availability`; el widget muestra "Fechas no disponibles" y no permite pagar fechas bloqueadas; `lastBooking` incluye `propertyId`; el capture envía `propertyId/checkIn/checkOut/guest`.
+
+**Panel admin:** `https://cabanaslamaite.vercel.app/admin.html` (PIN). Muestra modo de almacenamiento, URLs de export por propiedad, reservas (añadir/borrar), calendarios externos (añadir/refrescar/quitar) y botón "refrescar todos".
+
+**Uso (dueño):** pegar `https://cabanaslamaite.vercel.app/api/ical/property/loft1` (y `.../loft2`) en Importar calendario de Booking/Airbnb/Expedia. Las reservas hechas en la web se bloquean solas ahí. Y pegar los exports de Airbnb/Booking/Expedia en el panel admin → bloquean las fechas en la web.
+
+**Pruebas hechas (2026-08):** feed .ics válido (`text/calendar`), import de `samples/external.ics` (2 eventos parseados, `lastCount:2`), admin 401 sin PIN / 200 con PIN, refresh-all OK, 404 para propiedad inexistente, espejo del algoritmo (generación + solapamiento) con todas las aserciones OK. El comportamiento entre requests quedará estable al configurar KV.
+
+**Gotchas:** rutas relativas en `api/ical/external/*` usan `../_lib` (archivos en subcarpeta). `samples/external.ics` es un feed de prueba (se puede borrar). Cron diario requiere plan con cron de Vercel (Hobby: 1/día — suficiente; si no, usar el botón manual).
 
 ## 13. Seguridad y despliegue (pago)
 - **Nunca** commitear credenciales: `.gitignore` excluye `docs/*.docx` y `.env*`. El Client Secret solo existe en env vars de Vercel. `docs/Paypal credentials.docx` **no está en git** (verificado) — no abrirlo en conversaciones de IA.
