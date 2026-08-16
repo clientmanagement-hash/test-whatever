@@ -5,6 +5,18 @@ const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, a
 module.exports = async function handler(req, res) {
     if (!adminPinOk(req)) return res.status(401).json({ error: 'unauthorized' });
 
+    // Diagnóstico de almacenamiento (sin exponer valores secretos)
+    let kvDiag = { url: false, token: false, package: 'no-intentado' };
+    try {
+        const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+        const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+        kvDiag = { url: Boolean(url), token: Boolean(token), package: 'no' };
+        require('@vercel/kv');
+        kvDiag.package = 'ok';
+    } catch (e) {
+        kvDiag.package = 'error: ' + String((e && e.message) || e).slice(0, 80);
+    }
+
     const properties = [];
     for (const p of PROPERTIES) {
         properties.push({
@@ -22,6 +34,7 @@ module.exports = async function handler(req, res) {
         storage: storageMode(),
         adminPinSet: Boolean(process.env.ADMIN_PIN),
         cronConfigured: Boolean(process.env.CRON_SECRET),
+        kv: kvDiag,
         properties
     });
 };
