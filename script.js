@@ -537,6 +537,53 @@ if (contactForm && formMessage) {
 }
 
 /* ==========================================================================
+   Carrusel de fotos en las tarjetas de lofts (página principal)
+   ========================================================================== */
+document.querySelectorAll('.loft-carousel').forEach((car) => {
+    const track = car.querySelector('.carousel-track');
+    const imgs = track ? Array.from(track.children) : [];
+    const prevBtn = car.querySelector('.carousel-prev');
+    const nextBtn = car.querySelector('.carousel-next');
+    const dotsWrap = car.querySelector('.carousel-dots');
+    if (!track || imgs.length < 2 || !prevBtn || !nextBtn || !dotsWrap) return;
+
+    const total = imgs.length;
+    const dots = [];
+    let idx = 0;
+
+    const go = (i) => {
+        idx = (i + total) % total;
+        track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+        dots.forEach((d, k) => d.classList.toggle('active', k === idx));
+    };
+
+    for (let i = 0; i < total; i++) {
+        const d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'carousel-dot';
+        d.setAttribute('aria-label', 'Foto ' + (i + 1));
+        d.addEventListener('click', () => go(i));
+        dotsWrap.appendChild(d);
+        dots.push(d);
+    }
+
+    prevBtn.addEventListener('click', () => go(idx - 1));
+    nextBtn.addEventListener('click', () => go(idx + 1));
+
+    // Deslizar con el dedo (móvil)
+    let startX = null;
+    track.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', (e) => {
+        if (startX == null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1));
+        startX = null;
+    }, { passive: true });
+
+    go(0);
+});
+
+/* ==========================================================================
    Pago con PayPal (Smart Buttons + Vercel Functions)
    El SDK se carga dinámicamente con el client id del entorno (sandbox/live).
    El monto se calcula en el widget y se envía al backend al crear la orden.

@@ -1103,6 +1103,71 @@ section { position: relative; }
 .cal-day.selected { background: var(--verde-600); color: #fff; font-weight: 700; }
 .cal-day.in-range { background: var(--arena-2); border-radius: 8px; }
 
+.loft-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-lg, 18px);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.35s ease;
+}
+
+.carousel-track img {
+    width: 100%;
+    flex: none;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--verde-900);
+    font-size: 1.3rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background 0.2s ease;
+}
+.carousel-btn:hover { background: #fff; }
+.carousel-prev { left: 10px; }
+.carousel-next { right: 10px; }
+
+.carousel-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    z-index: 3;
+}
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.55);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.carousel-dot.active { background: #fff; transform: scale(1.25); }
+
 .form-message {
     margin-top: 16px;
     padding: 14px 18px;
