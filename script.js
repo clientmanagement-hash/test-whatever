@@ -564,6 +564,8 @@ const payErrorMsg = (code) => {
         min_nights: tr('direct.minNights', 'Mínimo 2 noches'),
         too_long: tr('direct.maxNights', 'La estadía máxima es de 60 noches.'),
         too_many_guests: tr('direct.maxGuests', 'Máximo 8 huéspedes.'),
+        invalid_property: tr('direct.selectDates', 'Elige tus fechas'),
+        dates_unavailable: tr('direct.unavailable', 'Fechas no disponibles'),
         paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
     };
     return map[code] || tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.');
@@ -644,7 +646,11 @@ let availability = null;
 async function loadAvailability() {
     try {
         const r = await fetch('/api/ical/availability');
-        if (r.ok) availability = await r.json();
+        if (r.ok) {
+            availability = await r.json();
+            // Recalcula el widget ahora que hay datos de disponibilidad
+            i18nDynamicFns.forEach((fn) => fn());
+        }
     } catch (e) { /* sin backend: el widget funciona igual */ }
 }
 
