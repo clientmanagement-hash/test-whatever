@@ -232,7 +232,7 @@ const I18N = {
         'cta.h2': 'Ready for your getaway?',
         'cta1.p': 'Book Loft 1 on Booking.com or message us directly for special offers.',
         'cta2.p': 'Book Loft 2 on Booking.com or message us directly for special offers.',
-        'cta.book': 'Book on Booking.com',
+        'cta.book': 'Book direct',
         'cta.fb': 'Message us on Facebook',
 
         // Alt de imágenes
@@ -821,6 +821,13 @@ if (directLoft && directGuests && directIn && directOut) {
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
+
+    // Pre-selección del loft desde las páginas de detalle (index.html?loft=loft1|loft2)
+    const loftParam = new URLSearchParams(location.search).get('loft');
+    if (loftParam === 'loft1' || loftParam === 'loft2') {
+        directLoft.value = loftParam;
+        updateDirect();
+    }
 
     updateDirect();
 }
