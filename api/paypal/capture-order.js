@@ -35,6 +35,28 @@ function readBody(req) {
     });
 }
 
+// Envía el aviso de reserva por email (FormSubmit) — solo informativo, nunca bloquea el pago
+async function notifyReservation({ propertyId, checkIn, checkOut, guest, breakfast, amount, currency, orderId }) {
+    const email = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
+    const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
+    const lines = [
+        'NUEVA RESERVA — Cabañas La Maite',
+        '',
+        'Loft: ' + propName,
+        'Entrada: ' + checkIn,
+        'Salida: ' + checkOut,
+        'Huéspedes: ' + (guest || '—'),
+        'Desayuno incluido: ' + (breakfast ? 'Sí' : 'No'),
+        'Monto cobrado: ' + (amount ? amount + ' ' + (currency || 'USD') : '—'),
+        'Orden PayPal: ' + orderId
+    ];
+    await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _subject: 'Nueva reserva · ' + propName + ' · ' + checkIn, message: lines.join('\n'), _template: 'table' })
+    });
+}
+
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
@@ -78,6 +100,23 @@ module.exports = async function handler(req, res) {
                 });
             } catch (e) {
                 // si la persistencia falla, la reserva se registra a mano (no bloquear el cobro)
+            }
+            // Aviso por email al dueño (monto real tomado de la respuesta de PayPal)
+            try {
+                const pu = (data.purchase_units && data.purchase_units[0]) || {};
+                const cap = (pu.payments && pu.payments.captures && pu.payments.captures[0]) || {};
+                await notifyReservation({
+                    propertyId: body.propertyId,
+                    checkIn: body.checkIn,
+                    checkOut: body.checkOut,
+                    guest: body.guest,
+                    breakfast: body.breakfast === true,
+                    amount: cap.amount ? cap.amount.value : null,
+                    currency: cap.amount ? cap.amount.currency_code : 'USD',
+                    orderId: orderID
+                });
+            } catch (e) {
+                // si el email falla, la reserva ya quedó registrada en el panel
             }
         }
         return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });
