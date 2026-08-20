@@ -35,25 +35,38 @@ function readBody(req) {
     });
 }
 
-// Envía el aviso de reserva por email (FormSubmit) — solo informativo, nunca bloquea el pago
-async function notifyReservation({ propertyId, checkIn, checkOut, guest, breakfast, amount, currency, orderId }) {
+// Envía el aviso de reserva por email (FormSubmit, formato tabla) — solo informativo, nunca bloquea el pago
+async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, phone, breakfast, amount, currency, orderId }) {
     const email = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
-    const lines = [
-        'NUEVA RESERVA — Cabañas La Maite',
-        '',
-        'Loft: ' + propName,
-        'Entrada: ' + checkIn,
-        'Salida: ' + checkOut,
-        'Huéspedes: ' + (guest || '—'),
-        'Desayuno incluido: ' + (breakfast ? 'Sí' : 'No'),
-        'Monto cobrado: ' + (amount ? amount + ' ' + (currency || 'USD') : '—'),
-        'Orden PayPal: ' + orderId
-    ];
+    const inMs = Date.parse(checkIn);
+    const outMs = Date.parse(checkOut);
+    const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
+    const perNight = (amount && nights) ? (Number(amount) / nights) : null;
+    const payload = {
+        _subject: 'Nueva reserva · ' + propName + ' · ' + checkIn + (breakfast ? ' · ☕ Desayuno' : ''),
+        _template: 'table',
+        'Loft': propName,
+        'Entrada': checkIn,
+        'Salida': checkOut,
+        'Noches': String(nights),
+        'Huéspedes': String(guests),
+        'Nombre': name || '—',
+        'Teléfono / WhatsApp': phone || '—',
+        'Desayuno incluido': breakfast ? 'SÍ ☕' : 'No',
+        'Precio por noche': perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—',
+        'Monto cobrado': amount ? (amount + ' ' + (currency || 'USD')) : '—',
+        'Orden PayPal': orderId
+    };
     await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: 'Nueva reserva · ' + propName + ' · ' + checkIn, message: lines.join('\n'), _template: 'table' })
+        headers: {
+            'Content-Type': 'application/json',
+            // FormSubmit exige contexto de página: se envía el origen del sitio
+            'Origin': 'https://www.cabanaslamaite.com',
+            'Referer': 'https://www.cabanaslamaite.com/'
+        },
+        body: JSON.stringify(payload)
     });
 }
 
@@ -95,6 +108,8 @@ module.exports = async function handler(req, res) {
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
                     guest: body.guest,
+                    name: body.name,
+                    phone: body.phone,
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
@@ -109,7 +124,9 @@ module.exports = async function handler(req, res) {
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
-                    guest: body.guest,
+                    guests: body.guest,
+                    name: body.name,
+                    phone: body.phone,
                     breakfast: body.breakfast === true,
                     amount: cap.amount ? cap.amount.value : null,
                     currency: cap.amount ? cap.amount.currency_code : 'USD',

@@ -138,6 +138,8 @@ const I18N = {
         'direct.maxGuests': 'Maximum 8 guests.',
         'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
+        'direct.name': 'Name (optional)',
+        'direct.phone': 'Phone / WhatsApp (optional)',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
         'direct.extraBfast': 'extra person (with breakfast)',
@@ -663,7 +665,7 @@ async function initPayPal() {
                     const r = await fetch('/api/paypal/capture-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
+                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', name: lastBooking ? lastBooking.name : '', phone: lastBooking ? lastBooking.phone : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
                     });
                     const d = await r.json();
                     if (r.ok && d.success) {
@@ -776,6 +778,8 @@ const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directFeeNote = $('#direct-fee-note');
 const directBreakfast = $('#direct-breakfast');
+const directName = $('#direct-name');
+const directPhone = $('#direct-phone');
 let lastBooking = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -864,7 +868,7 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast };
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast, name: directName ? directName.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
         } else {
             lastBooking = null;
         }
