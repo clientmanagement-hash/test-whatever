@@ -117,7 +117,7 @@ async function isBlocked(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, breakfast, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -131,6 +131,7 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, source 
         checkIn: norm(checkIn),
         checkOut: norm(checkOut),
         guest: String(guest || '').slice(0, 80),
+        breakfast: Boolean(breakfast),
         source: source === 'web' ? 'web' : 'manual',
         createdAt: new Date().toISOString()
     });

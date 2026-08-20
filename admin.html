@@ -184,7 +184,7 @@
                     <tbody>
                         ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
                             ? '<tr><td colspan="5" class="muted">Sin reservas todavía.</td></tr>'
-                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.guest)}</td><td>${esc(r.source)}</td>
+                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.guest)}${r.breakfast ? ' <span class="badge ok">desayuno</span>' : ''}</td><td>${esc(r.source)}</td>
                                <td><button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
                     </tbody>
                 </table>

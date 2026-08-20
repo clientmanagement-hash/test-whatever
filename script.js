@@ -140,6 +140,8 @@ const I18N = {
         'direct.guests': 'Guests',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
+        'direct.extraBfast': 'extra person (with breakfast)',
+        'direct.breakfast': 'Breakfast included',
 
         // Footer
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
@@ -661,7 +663,7 @@ async function initPayPal() {
                     const r = await fetch('/api/paypal/capture-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '' })
+                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
                     });
                     const d = await r.json();
                     if (r.ok && d.success) {
@@ -727,7 +729,9 @@ const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
     minNights: 2,                        // estadía mínima (noches)
-    extraGuestFee: 10,                   // $ por persona adicional por noche
+    maxNights: 60,
+    extraGuestFee: 10,                   // $ por persona adicional por noche (sin desayuno)
+    breakfast: { base: 7, extraPerGuest: 6.4 },   // recargo/noche con desayuno: 2p=$123 · 3p=$139.40 · 4p=$155.80 · 5p=$172.20
     // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
         { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
@@ -771,6 +775,7 @@ const directTotal = $('#direct-total');
 const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directFeeNote = $('#direct-fee-note');
+const directBreakfast = $('#direct-breakfast');
 let lastBooking = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -789,7 +794,10 @@ if (directLoft && directGuests && directIn && directOut) {
             : `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
 
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
-        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
+        const breakfast = directBreakfast ? directBreakfast.checked : false;
+        const extraFeePerGuest = breakfast ? BOOKING.breakfast.extraPerGuest : BOOKING.extraGuestFee;
+        const breakfastBase = breakfast ? BOOKING.breakfast.base : 0;
+        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr(breakfast ? 'direct.extraBfast' : 'direct.extra', 'persona adicional')} ${fmtUSD(extraFeePerGuest)}`;
 
         const nights = directIn.value && directOut.value
             ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
@@ -808,13 +816,13 @@ if (directLoft && directGuests && directIn && directOut) {
         let total = 0;
         let n = 0;
         const ratesSeen = [];
-        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
+        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * extraFeePerGuest;
 
         if (hasDates) {
             const d = new Date(directIn.value);
             const end = new Date(directOut.value);
             while (d < end) {
-                const r = rateForDate(d) + extraFee;
+                const r = rateForDate(d) + extraFee + breakfastBase;
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
                 n += 1;
@@ -828,7 +836,7 @@ if (directLoft && directGuests && directIn && directOut) {
                 ? fmtUSD(ratesSeen[0])
                 : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
         } else {
-            const rates = [...BOOKING.seasons.map((s) => s.rate), ...(BOOKING.events || []).map((e) => e.rate)];
+            const rates = [...BOOKING.seasons.map((s) => s.rate + breakfastBase), ...(BOOKING.events || []).map((e) => e.rate + breakfastBase)];
             directRate.textContent = rates.length === 1
                 ? fmtUSD(rates[0])
                 : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
@@ -856,7 +864,7 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests };
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast };
         } else {
             lastBooking = null;
         }
@@ -877,6 +885,7 @@ if (directLoft && directGuests && directIn && directOut) {
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
+    if (directBreakfast) directBreakfast.addEventListener('change', updateDirect);
 
     // Pre-selección del loft desde las páginas de detalle (index.html?loft=loft1|loft2)
     const loftParam = new URLSearchParams(location.search).get('loft');

@@ -15,7 +15,10 @@ const PRICING = {
         { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027
     ],
     depositPct: 100,      // 100 = pago total al reservar
-    currency: 'USD'
+    currency: 'USD',
+    // Desayuno incluido (recargo por noche): $7 por los 2 primeros + $6.40 por persona extra
+    // tarifas resultantes (base $116): 2p=$123 · 3p=$139.40 · 4p=$155.80 · 5p=$172.20
+    breakfast: { base: 7, extraPerGuest: 6.4 }
 };
 
 const toInt = (s) => parseInt(String(s).replace(/-/g, ''), 10);
@@ -40,8 +43,8 @@ function rateForDate(date) {
     return PRICING.seasons.length ? PRICING.seasons[0].rate : 0;
 }
 
-// Recibe fechas 'YYYY-MM-DD' y huéspedes; devuelve { total, nights, guests, currency } o { error }
-function computeBooking(checkIn, checkOut, guests) {
+// Recibe fechas 'YYYY-MM-DD', huéspedes y si incluye desayuno; devuelve { total, nights, guests, currency, breakfast } o { error }
+function computeBooking(checkIn, checkOut, guests, breakfast) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
     if (!Number.isFinite(inMs) || !Number.isFinite(outMs) || outMs <= inMs) {
@@ -54,13 +57,19 @@ function computeBooking(checkIn, checkOut, guests) {
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;
     if (g > PRICING.maxGuests) return { error: 'too_many_guests' };
 
+    const extraGuests = Math.max(0, g - PRICING.baseGuests);
+    const withBreakfast = breakfast === true;
     let total = 0;
     for (let i = 0; i < nights; i++) {
         const d = new Date(inMs + i * 86400000);
-        total += rateForDate(d) + Math.max(0, g - PRICING.baseGuests) * PRICING.extraGuestFee;
+        let rate = rateForDate(d) + extraGuests * PRICING.extraGuestFee;
+        if (withBreakfast) {
+            rate += PRICING.breakfast.base + extraGuests * PRICING.breakfast.extraPerGuest;
+        }
+        total += rate;
     }
     total = Math.round(total * PRICING.depositPct) / 100;
-    return { total: Math.round(total * 100) / 100, nights, guests: g, currency: PRICING.currency };
+    return { total: Math.round(total * 100) / 100, nights, guests: g, currency: PRICING.currency, breakfast: withBreakfast };
 }
 
 module.exports = { PRICING, rateForDate, computeBooking };

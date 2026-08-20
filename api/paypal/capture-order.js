@@ -73,6 +73,7 @@ module.exports = async function handler(req, res) {
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
                     guest: body.guest,
+                    breakfast: body.breakfast === true,
                     source: 'web'
                 });
             } catch (e) {

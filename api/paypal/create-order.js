@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
     if (!propId(propertyId)) return res.status(400).json({ error: 'invalid_property' });
 
     // El precio se calcula en el servidor (autoridad), no se acepta del cliente
-    const booking = computeBooking(body.checkIn, body.checkOut, body.guests);
+    const booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true);
     if (booking.error) return res.status(400).json({ error: booking.error });
 
     if (await isBlocked(propertyId, body.checkIn, body.checkOut)) {
