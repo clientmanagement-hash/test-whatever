@@ -147,7 +147,7 @@ const I18N = {
         'direct.breakfast': 'Breakfast included',
 
         // Footer
-        'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Sober, cheerful beach style in Sámara, Costa Rica.',
+        'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Relaxing, welcoming beach style in Sámara, Costa Rica.',
         'footer.explorar': 'Explore',
         'footer.contacto': 'Contact',
         'footer.made': 'Made with <span style="color:var(--tan-500)">♥</span> by the sea',
