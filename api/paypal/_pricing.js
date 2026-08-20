@@ -16,9 +16,9 @@ const PRICING = {
     ],
     depositPct: 100,      // 100 = pago total al reservar
     currency: 'USD',
-    // Desayuno incluido (recargo por noche): $7 por los 2 primeros + $6.40 por persona extra
-    // tarifas resultantes (base $116): 2p=$123 · 3p=$139.40 · 4p=$155.80 · 5p=$172.20
-    breakfast: { base: 7, extraPerGuest: 6.4 }
+    // Desayuno incluido: $11 por persona por noche
+    // (ej. 2 noches × 2 personas = +$44 sobre el total)
+    breakfast: { perPersonPerNight: 11 }
 };
 
 const toInt = (s) => parseInt(String(s).replace(/-/g, ''), 10);
@@ -63,9 +63,7 @@ function computeBooking(checkIn, checkOut, guests, breakfast) {
     for (let i = 0; i < nights; i++) {
         const d = new Date(inMs + i * 86400000);
         let rate = rateForDate(d) + extraGuests * PRICING.extraGuestFee;
-        if (withBreakfast) {
-            rate += PRICING.breakfast.base + extraGuests * PRICING.breakfast.extraPerGuest;
-        }
+        if (withBreakfast) rate += PRICING.breakfast.perPersonPerNight * g;
         total += rate;
     }
     total = Math.round(total * PRICING.depositPct) / 100;

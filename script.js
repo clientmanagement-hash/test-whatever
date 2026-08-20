@@ -142,7 +142,8 @@ const I18N = {
         'direct.phone': 'Phone / WhatsApp (optional)',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
-        'direct.extraBfast': 'extra person (with breakfast)',
+        'direct.bfast': 'Breakfast',
+        'direct.bfastPer': 'per person/night',
         'direct.breakfast': 'Breakfast included',
 
         // Footer
@@ -732,8 +733,8 @@ const BOOKING = {
     baseGuests: 2,                       // la tarifa incluye 2 personas
     minNights: 2,                        // estadía mínima (noches)
     maxNights: 60,
-    extraGuestFee: 10,                   // $ por persona adicional por noche (sin desayuno)
-    breakfast: { base: 7, extraPerGuest: 6.4 },   // recargo/noche con desayuno: 2p=$123 · 3p=$139.40 · 4p=$155.80 · 5p=$172.20
+    extraGuestFee: 10,                   // $ por persona adicional por noche
+    breakfast: { perPersonPerNight: 11 },   // desayuno: $11 por persona por noche (ej. 2 noches × 2 pers = +$44)
     // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
         { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
@@ -799,9 +800,10 @@ if (directLoft && directGuests && directIn && directOut) {
 
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         const breakfast = directBreakfast ? directBreakfast.checked : false;
-        const extraFeePerGuest = breakfast ? BOOKING.breakfast.extraPerGuest : BOOKING.extraGuestFee;
-        const breakfastBase = breakfast ? BOOKING.breakfast.base : 0;
-        directFeeNote.textContent = `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr(breakfast ? 'direct.extraBfast' : 'direct.extra', 'persona adicional')} ${fmtUSD(extraFeePerGuest)}`;
+        const breakfastPerNight = breakfast ? BOOKING.breakfast.perPersonPerNight * guests : 0;
+        directFeeNote.textContent = breakfast
+            ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`
+            : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
 
         const nights = directIn.value && directOut.value
             ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
@@ -820,13 +822,13 @@ if (directLoft && directGuests && directIn && directOut) {
         let total = 0;
         let n = 0;
         const ratesSeen = [];
-        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * extraFeePerGuest;
+        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
 
         if (hasDates) {
             const d = new Date(directIn.value);
             const end = new Date(directOut.value);
             while (d < end) {
-                const r = rateForDate(d) + extraFee + breakfastBase;
+                const r = rateForDate(d) + extraFee + breakfastPerNight;
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
                 n += 1;
@@ -840,7 +842,7 @@ if (directLoft && directGuests && directIn && directOut) {
                 ? fmtUSD(ratesSeen[0])
                 : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
         } else {
-            const rates = [...BOOKING.seasons.map((s) => s.rate + breakfastBase), ...(BOOKING.events || []).map((e) => e.rate + breakfastBase)];
+            const rates = [...BOOKING.seasons.map((s) => s.rate + breakfastPerNight), ...(BOOKING.events || []).map((e) => e.rate + breakfastPerNight)];
             directRate.textContent = rates.length === 1
                 ? fmtUSD(rates[0])
                 : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
