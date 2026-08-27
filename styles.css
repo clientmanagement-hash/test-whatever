@@ -1211,6 +1211,35 @@ section { position: relative; }
 }
 .carousel-dot.active { background: #fff; transform: scale(1.25); }
 
+.sinpe-note {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 2px dashed var(--verde-500);
+    border-radius: var(--r-sm);
+    background: #eef6f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+.sinpe-flag { font-size: 1.4rem; line-height: 1; }
+.sinpe-note p { margin: 0; font-size: 0.88rem; color: var(--verde-900); }
+.sinpe-note p strong { color: var(--verde-700); }
+.sinpe-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--r-pill);
+    background: #25d366;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+.sinpe-wa:hover { transform: translateY(-1px); filter: brightness(0.96); }
+
 .form-message {
     margin-top: 16px;
     padding: 14px 18px;

@@ -121,6 +121,8 @@ const I18N = {
         'direct.deposit': 'Deposit',
         'direct.totalPay': 'Total payment',
         'direct.pay': 'Payment to confirm your booking',
+        'direct.sinpe': 'For <strong>Costa Ricans</strong>: we accept payments via <strong>SINPE Móvil</strong> to <strong>+506 8306 3336</strong>. Make the transfer and send us the receipt on WhatsApp to confirm your booking.',
+        'direct.sinpeBtn': 'Send receipt via WhatsApp',
         'direct.note': 'The booking is confirmed once payment is received. You can pay with credit or debit card, no PayPal account needed.',
         'direct.night': 'night',
         'direct.nights': 'nights',
