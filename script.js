@@ -84,8 +84,6 @@ const I18N = {
         'reservar.eyebrow': 'Bookings',
         'reservar.title': 'Book your stay',
         'reservar.sub': 'Best price guaranteed booking directly.',
-        'reservar.booking.p': 'Secure booking, instant confirmation and free cancellation on most options.',
-        'reservar.booking.go': 'Check availability <span aria-hidden="true">→</span>',
         'reservar.wa.title': 'WhatsApp',
         'reservar.wa.p': 'Message us directly on WhatsApp at +506 8306 3336 for enquiries, special offers and personal attention.',
         'reservar.wa.go': 'Open WhatsApp chat <span aria-hidden="true">→</span>',
