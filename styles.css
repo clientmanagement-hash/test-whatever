@@ -104,6 +104,7 @@ section { position: relative; }
     color: var(--gris-600);
     font-size: 1.05rem;
     max-width: 56ch;
+    margin-inline: auto;
 }
 
 /* ---------- Botones ---------- */
