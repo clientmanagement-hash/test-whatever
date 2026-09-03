@@ -258,6 +258,7 @@ const I18N = {
         'alt.loft2.exterior': 'Loft 2 — exterior',
         'alt.interior': 'Interior space',
         'alt.garden': 'Tropical garden',
+        'alt.experience': 'The experience',
         'alt.loft2': 'Loft 2'
     }
 };
