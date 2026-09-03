@@ -24,7 +24,6 @@ const I18N = {
 
         // Hero
         'hero.tagline': 'A beach refuge: serene and cozy, just a few minutes from Buena Vista and Sámara beaches. Lofts with pool, tropical garden and everything you need to unwind.',
-        'hero.book': 'Book on Booking.com',
         'hero.seeLofts': 'See the lofts',
         'hero.rating': 'Exceptional · 155 reviews',
         'hero.scroll': 'Scroll',
@@ -237,8 +236,8 @@ const I18N = {
 
         // CTA
         'cta.h2': 'Ready for your getaway?',
-        'cta1.p': 'Book Loft 1 on Booking.com or message us directly for special offers.',
-        'cta2.p': 'Book Loft 2 on Booking.com or message us directly for special offers.',
+        'cta1.p': 'Book Loft 1 directly with us, or message us for special offers.',
+        'cta2.p': 'Book Loft 2 directly with us, or message us for special offers.',
         'cta.book': 'Book direct',
         'cta.fb': 'Message us on Facebook',
 
