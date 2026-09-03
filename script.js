@@ -209,7 +209,6 @@ const I18N = {
         'amen.gardenView': 'Garden views',
         'amen.poolView': 'Pool views',
         'amen.nosmoke': 'No smoking',
-        'amen.sanitizer': 'Hand sanitizer',
         'amen.internet': 'Satellite internet',
         'amen.parking': 'Private parking',
         'amen.breakfast': 'Breakfast in the cabin with prior reservation (not included)',
