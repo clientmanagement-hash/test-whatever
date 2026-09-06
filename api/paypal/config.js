@@ -9,6 +9,8 @@ module.exports = async function handler(req, res) {
         clientId: process.env.PAYPAL_CLIENT_ID || null,
         env: process.env.PAYPAL_ENV === 'live' ? 'live' : 'sandbox',
         currency: process.env.PAYPAL_CURRENCY || 'USD',
+        resendConfigured: Boolean(process.env.RESEND_API_KEY),
+        resendFrom: process.env.RESEND_FROM || 'Cabañas La Maite <onboarding@resend.dev>',
         pricing: PRICING
     });
 };
