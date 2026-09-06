@@ -1,5 +1,7 @@
 // Vercel Function — POST /api/paypal/capture-order (CommonJS)
 // Captura (cobra) una orden ya aprobada por el comprador en PayPal Orders API v2.
+// Tras el cobro: registra la reserva (iCal), avisa al dueño (FormSubmit) y
+// envía confirmación al cliente vía Resend (si RESEND_API_KEY está configurada).
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -35,9 +37,15 @@ function readBody(req) {
     });
 }
 
-// Envía el aviso de reserva por email (FormSubmit, formato tabla) — solo informativo, nunca bloquea el pago
-async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, phone, breakfast, amount, currency, orderId }) {
-    const email = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
+// Aviso al dueño (FormSubmit, formato tabla) — ya existente
+async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, email, phone, breakfast, amount, currency, orderId }) {
+    const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
@@ -52,13 +60,14 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
         'Noches': String(nights),
         'Huéspedes': String(guests),
         'Nombre': name || '—',
+        'Email': email || '—',
         'Teléfono / WhatsApp': phone || '—',
         'Desayuno incluido': breakfast ? 'SÍ ☕' : 'No',
         'Precio por noche': perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—',
         'Monto cobrado': amount ? (amount + ' ' + (currency || 'USD')) : '—',
         'Orden PayPal': orderId
     };
-    await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
+    await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(emailToOwner), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -68,6 +77,53 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
         },
         body: JSON.stringify(payload)
     });
+}
+
+// Confirmación al CLIENTE usando Resend (solo si RESEND_API_KEY está en Vercel)
+async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, guests, breakfast, orderId }) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey || !to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+        return; // sin key válida o email no escribible: no bloquea el cobro
+    }
+    const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
+    const inMs = Date.parse(checkIn);
+    const outMs = Date.parse(checkOut);
+    const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
+    const firstName = (name || 'Cliente').split(' ')[0];
+    let html = '<p>Hola <strong>' + escapeHtml(firstName) + '</strong>,</p>'
+        + '<p>¡Gracias por elegir <strong>Cabañas La Maite</strong>!</p>'
+        + '<p>Nos complace informarle que hemos recibido correctamente su reserva. Nuestro equipo revisará y verificará su pago. Una vez que el pago haya sido confirmado, le enviaremos su confirmación de reserva y los detalles, así como las instrucciones necesarias para su llegada.</p>'
+        + '<p>Permítanos un breve momento para completar el proceso de verificación del pago. Le contactaremos en cuanto su reserva esté totalmente confirmada.</p>'
+        + '<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;border-color:#ddd">'
+        + '<tr><th align="left">Loft</th><td>' + escapeHtml(propName) + '</td></tr>'
+        + '<tr><th align="left">Entrada</th><td>' + escapeHtml(checkIn) + '</td></tr>'
+        + '<tr><th align="left">Salida</th><td>' + escapeHtml(checkOut) + '</td></tr>'
+        + '<tr><th align="left">Noches</th><td>' + escapeHtml(String(nights)) + '</td></tr>'
+        + '<tr><th align="left">Huéspedes</th><td>' + escapeHtml(String(guests)) + '</td></tr>'
+        + (breakfast ? '<tr><th align="left">Desayuno incluido</th><td>Sí ☕</td></tr>' : '')
+        + '<tr><th align="left">Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>'
+        + '</table><br/>'
+        + '<p>Si tiene alguna pregunta mientras tanto, no dude en contactarnos. Estaremos encantados de ayudarle.</p>'
+        + '<p>Esperamos darle la bienvenida a Cabañas La Maite y desearle una estancia maravillosa.</p>'
+        + '<p>Saludos cordiales,<br/><strong>Cabañas La Maite</strong></p>';
+
+    const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + apiKey,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'Cabañas La Maite <reservas@cabanaslamaite.com>',
+            to: [to],
+            reply_to: process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com',
+            subject: 'We Have Received Your Reservation – Cabañas La Maite',
+            html: html
+        })
+    });
+    if (!res.ok) {
+        throw new Error('resend_failed_' + res.status);
+    }
 }
 
 module.exports = async function handler(req, res) {
@@ -100,7 +156,7 @@ module.exports = async function handler(req, res) {
         const data = await r.json();
         const ok = r.ok && data.status === 'COMPLETED';
         if (ok) {
-            // Registra la reserva en el calendario iCal (bloquea las noches en el feed .ics)
+            // 1) Registra la reserva en el calendario iCal
             const { recordReservation } = require('../ical/_lib');
             try {
                 await recordReservation({
@@ -113,10 +169,9 @@ module.exports = async function handler(req, res) {
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
-            } catch (e) {
-                // si la persistencia falla, la reserva se registra a mano (no bloquear el cobro)
-            }
-            // Aviso por email al dueño (monto real tomado de la respuesta de PayPal)
+            } catch (e) { /* no bloquear el cobro */ }
+
+            // 2) Aviso al dueño (monto real tomado de PayPal)
             try {
                 const pu = (data.purchase_units && data.purchase_units[0]) || {};
                 const cap = (pu.payments && pu.payments.captures && pu.payments.captures[0]) || {};
@@ -126,14 +181,29 @@ module.exports = async function handler(req, res) {
                     checkOut: body.checkOut,
                     guests: body.guest,
                     name: body.name,
+                    email: body.email,
                     phone: body.phone,
                     breakfast: body.breakfast === true,
                     amount: cap.amount ? cap.amount.value : null,
                     currency: cap.amount ? cap.amount.currency_code : 'USD',
                     orderId: orderID
                 });
-            } catch (e) {
-                // si el email falla, la reserva ya quedó registrada en el panel
+            } catch (e) { /* no bloquear el cobro */ }
+
+            // 3) Confirmación al cliente (Resend) — sólo si su email existe
+            if (body.email) {
+                try {
+                    await sendGuestConfirmation({
+                        propertyId: body.propertyId,
+                        to: body.email,
+                        name: body.name,
+                        checkIn: body.checkIn,
+                        checkOut: body.checkOut,
+                        guests: body.guest,
+                        breakfast: body.breakfast === true,
+                        orderId: orderID
+                    });
+                } catch (e) { /* no bloquear el cobro si el correo falla */ }
             }
         }
         return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });

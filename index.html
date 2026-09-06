@@ -300,11 +300,17 @@
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="direct-name" data-i18n="direct.name">Nombre (opcional)</label>
-                                        <input type="text" id="direct-name" maxlength="80">
+                                        <label for="direct-name" data-i18n="direct.name">Nombre *</label>
+                                        <input type="text" id="direct-name" maxlength="80" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="direct-phone" data-i18n="direct.phone">Teléfono / WhatsApp (opcional)</label>
+                                        <label for="direct-email" data-i18n="direct.email">Email *</label>
+                                        <input type="email" id="direct-email" maxlength="100" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="direct-phone" data-i18n="direct.phone">Teléfono / WhatsApp</label>
                                         <input type="tel" id="direct-phone" maxlength="30">
                                     </div>
                                 </div>

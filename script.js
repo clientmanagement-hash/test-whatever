@@ -129,6 +129,8 @@ const I18N = {
         'direct.unavailable': 'Dates unavailable',
         'direct.minNights': 'Minimum 2 nights',
         'direct.smartErr': 'Choose valid dates to calculate the amount.',
+        'direct.formName': 'Please enter your name to continue.',
+        'direct.formEmail': 'Please enter a valid email to receive your confirmation.',
         'direct.payOk': 'Payment received! Your booking is confirmed. We will contact you to arrange the details.',
         'direct.payCancel': 'Payment cancelled. You can try again anytime.',
         'direct.payErr': 'There was an error with the payment. Try again or message us on WhatsApp.',
@@ -137,8 +139,9 @@ const I18N = {
         'direct.maxGuests': 'Maximum 8 guests.',
         'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
-        'direct.name': 'Name (optional)',
-        'direct.phone': 'Phone / WhatsApp (optional)',
+        'direct.name': 'Name *',
+        'direct.email': 'Email *',
+        'direct.phone': 'Phone / WhatsApp',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
         'direct.bfast': 'Breakfast',
@@ -648,6 +651,16 @@ async function initPayPal() {
                     setPayStatus(tr('direct.smartErr', 'Elige fechas válidas para calcular el monto.'), 'error');
                     throw new Error('no_booking');
                 }
+                // Validar nombre y email del cliente (necesarios para confirmar la reserva)
+                const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lastBooking.email || '');
+                if (!lastBooking.name) {
+                    setPayStatus(tr('direct.formName', 'Escribe tu nombre para continuar.'), 'error');
+                    throw new Error('missing_name');
+                }
+                if (!validEmail) {
+                    setPayStatus(tr('direct.formEmail', 'Escribe un email válido para recibir tu confirmación.'), 'error');
+                    throw new Error('missing_email');
+                }
                 const r = await fetch('/api/paypal/create-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -665,7 +678,7 @@ async function initPayPal() {
                     const r = await fetch('/api/paypal/capture-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', name: lastBooking ? lastBooking.name : '', phone: lastBooking ? lastBooking.phone : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
+                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', name: lastBooking ? lastBooking.name : '', email: lastBooking ? lastBooking.email : '', phone: lastBooking ? lastBooking.phone : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
                     });
                     const d = await r.json();
                     if (r.ok && d.success) {
@@ -780,6 +793,7 @@ const directFeeNote = $('#direct-fee-note');
 const directBreakfast = $('#direct-breakfast');
 const directName = $('#direct-name');
 const directPhone = $('#direct-phone');
+const directEmail = $('#direct-email');
 let lastBooking = null;
 
 const fmtUSD = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -869,7 +883,7 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast, name: directName ? directName.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
         } else {
             lastBooking = null;
         }
