@@ -736,7 +736,7 @@ const BOOKING = {
     breakfast: { perPersonPerNight: 11 },   // desayuno: $11 por persona por noche (ej. 2 noches × 2 pers = +$44)
     // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
-        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
+        { from: '01-01', to: '12-31', rate: 3 }   // ⚠️ TEMPORAL: $3/noche prueba pago — VOLVER A 116
     ],
     // Eventos puntuales con fecha completa (YYYY-MM-DD) — tienen prioridad sobre seasons
     events: [
