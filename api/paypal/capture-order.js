@@ -43,6 +43,28 @@ function escapeHtml(s) {
     }[c]));
 }
 
+// Lee el logo (PNG) y lo devuelve como attachment cid de Resend (inline); null si no existe
+function readLogoAttachment() {
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        // desde api/paypal/ → la raíz del repo es ../..
+        const root = path.resolve(__dirname, '..', '..');
+        const logoPath = path.join(root, 'img', 'logo.png');
+        if (!fs.existsSync(logoPath)) return null;
+        const buf = fs.readFileSync(logoPath);
+        return {
+            filename: 'logo.png',
+            content: buf.toString('base64'),
+            content_type: 'image/png',
+            disposition: 'inline',
+            content_id: 'logo'
+        };
+    } catch (e) {
+        return null; // si falla, envía el correo igual sin logo
+    }
+}
+
 // Aviso al dueño (FormSubmit, formato tabla) — ya existente
 async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
@@ -100,8 +122,9 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
         + '<tr><th align="left">Reference / Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>';
 
     const html =
+        '<div style="text-align:center;margin:0 0 14px"><img src="cid:logo" alt="Cabañas La Maite" style="max-width:150px;height:auto"/></div>'
         // ---- ESPAÑOL ----
-        '<p>Hola <strong>' + escapeHtml(firstName) + '</strong> / Dear <strong>' + escapeHtml(firstName) + '</strong>,</p>'
+        + '<p>Hola <strong>' + escapeHtml(firstName) + '</strong> / Dear <strong>' + escapeHtml(firstName) + '</strong>,</p>'
         + '<div style="font-family:Arial,sans-serif">'
         // Español
         + '<h3 style="color:#265a38;margin-bottom:6px;">Hemos recibido su reserva – Cabañas La Maite</h3>'
@@ -128,6 +151,7 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
         + '<p>Warm regards,<br/>Cabañas La Maite</p>'
         + '</div>';
 
+    const logoAttachment = readLogoAttachment();
     const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -139,7 +163,8 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
             to: [to],
             reply_to: process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com',
             subject: 'Hemos recibido su reserva – Cabañas La Maite',
-            html: html
+            html: html,
+            ...(logoAttachment ? { attachments: [logoAttachment] } : {})
         })
     });
     if (!res.ok) {

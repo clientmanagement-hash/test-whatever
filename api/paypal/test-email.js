@@ -10,6 +10,27 @@ function escapeHtml(s) {
     }[c]));
 }
 
+// Lee el logo (PNG) y lo devuelve como attachment cid de Resend (inline); null si no existe
+function readLogoAttachment() {
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        const root = path.resolve(__dirname, '..', '..');
+        const logoPath = path.join(root, 'img', 'logo.png');
+        if (!fs.existsSync(logoPath)) return null;
+        const buf = fs.readFileSync(logoPath);
+        return {
+            filename: 'logo.png',
+            content: buf.toString('base64'),
+            content_type: 'image/png',
+            disposition: 'inline',
+            content_id: 'logo'
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
 function readBody(req) {
     if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
         return Promise.resolve(req.body);
@@ -51,7 +72,8 @@ module.exports = async function handler(req, res) {
             + '<tr><th align="left">Breakfast / Desayuno</th><td>No</td></tr>'
             + '<tr><th align="left">Reference / Referencia</th><td>' + escapeHtml(String(body.orderId || 'SAMPLE-123')) + '</td></tr>';
         const html =
-            '<p>Hola <strong>' + escapeHtml(firstName) + '</strong> / Dear <strong>' + escapeHtml(firstName) + '</strong>,</p>'
+            '<div style="text-align:center;margin:0 0 14px"><img src="cid:logo" alt="Cabañas La Maite" style="max-width:150px;height:auto"/></div>'
+            + '<p>Hola <strong>' + escapeHtml(firstName) + '</strong> / Dear <strong>' + escapeHtml(firstName) + '</strong>,</p>'
             + '<div style="font-family:Arial,sans-serif">'
             + '<h3 style="color:#265a38;margin-bottom:6px;">Hemos recibido su reserva – Cabañas La Maite</h3>'
             + '<p>Estimado/a huésped:</p>'
@@ -85,7 +107,8 @@ module.exports = async function handler(req, res) {
                 from: from,
                 to: [to],
                 subject: 'Hemos recibido su reserva – Cabañas La Maite',
-                html: html
+                html: html,
+                ...(() => { const a = readLogoAttachment(); return a ? { attachments: [a] } : {}; })()
             })
         });
         const text = await r.text();
