@@ -10,25 +10,14 @@ function escapeHtml(s) {
     }[c]));
 }
 
-// Lee el logo (PNG) y lo devuelve como attachment cid de Resend (inline); null si no existe
+// Attachment inline del logo: Resend descarga la URL pública (path) — robusto en serverless.
 function readLogoAttachment() {
-    try {
-        const path = require('path');
-        const fs = require('fs');
-        const root = path.resolve(__dirname, '..', '..');
-        const logoPath = path.join(root, 'img', 'logo.png');
-        if (!fs.existsSync(logoPath)) return null;
-        const buf = fs.readFileSync(logoPath);
-        return {
-            filename: 'logo.png',
-            content: buf.toString('base64'),
-            content_type: 'image/png',
-            disposition: 'inline',
-            content_id: 'logo'
-        };
-    } catch (e) {
-        return null;
-    }
+    return {
+        filename: 'logo.png',
+        path: 'https://www.cabanaslamaite.com/img/logo.png',
+        content_type: 'image/png',
+        content_id: 'logo'
+    };
 }
 
 function readBody(req) {
