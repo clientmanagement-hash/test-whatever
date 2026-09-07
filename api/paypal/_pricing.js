@@ -4,7 +4,7 @@
 
 const PRICING = {
     baseGuests: 2,        // la tarifa incluye 2 personas
-    minNights: 2,         // estadía mínima
+    minNights: 1,         // estadía mínima (1 noche)
     maxGuests: 8,
     maxNights: 60,
     extraGuestFee: 10,    // $ por persona adicional por noche
