@@ -106,7 +106,7 @@ const I18N = {
         'reservar.form.subject': 'New enquiry · Cabañas La Maite',
         'reservar.form.errSend': 'There was an error sending. Message us on WhatsApp or try again.',
         'direct.title': 'Direct booking',
-        'direct.sub': 'Choose your loft, dates and guests, and pay the total for your stay.',
+        'direct.sub': 'Choose your loft and dates and pay the total for your stay. Minimum stay: 2 nights.',
         'direct.loft': 'Loft',
         'direct.loft1': 'Loft 1',
         'direct.loft2': 'Loft 2',
@@ -743,13 +743,13 @@ loadAvailability();
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
-    minNights: 1,                        // estadía mínima (1 noche)
+    minNights: 2,                        // estadía mínima (2 noches)
     maxNights: 60,
     extraGuestFee: 10,                   // $ por persona adicional por noche
     breakfast: { perPersonPerNight: 11 },   // desayuno: $11 por persona por noche (ej. 2 noches × 2 pers = +$44)
     // Tarifa fija: $116/noche por 2 personas, todo el año
     seasons: [
-        { from: '01-01', to: '12-31', rate: 3 }   // ⚠️ TEMPORAL: $3/noche prueba pago — VOLVER A 116
+        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
     ],
     // Eventos puntuales con fecha completa (YYYY-MM-DD) — tienen prioridad sobre seasons
     events: [

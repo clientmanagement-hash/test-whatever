@@ -4,12 +4,12 @@
 
 const PRICING = {
     baseGuests: 2,        // la tarifa incluye 2 personas
-    minNights: 1,         // estadía mínima (1 noche)
+    minNights: 2,         // estadía mínima (2 noches)
     maxGuests: 8,
     maxNights: 60,
     extraGuestFee: 10,    // $ por persona adicional por noche
     seasons: [
-        { from: '01-01', to: '12-31', rate: 3 }   // ⚠️ TEMPORAL: $3/noche para prueba de pago real — VOLVER A $116 después
+        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
     ],
     events: [
         { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027
