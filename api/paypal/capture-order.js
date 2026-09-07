@@ -90,22 +90,43 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
     const outMs = Date.parse(checkOut);
     const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
     const firstName = (name || 'Cliente').split(' ')[0];
-    let html = '<p>Hola <strong>' + escapeHtml(firstName) + '</strong>,</p>'
-        + '<p>¡Gracias por elegir <strong>Cabañas La Maite</strong>!</p>'
-        + '<p>Nos complace informarle que hemos recibido correctamente su reserva. Nuestro equipo revisará y verificará su pago. Una vez que el pago haya sido confirmado, le enviaremos su confirmación de reserva y los detalles, así como las instrucciones necesarias para su llegada.</p>'
-        + '<p>Permítanos un breve momento para completar el proceso de verificación del pago. Le contactaremos en cuanto su reserva esté totalmente confirmada.</p>'
-        + '<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;border-color:#ddd">'
-        + '<tr><th align="left">Loft</th><td>' + escapeHtml(propName) + '</td></tr>'
-        + '<tr><th align="left">Entrada</th><td>' + escapeHtml(checkIn) + '</td></tr>'
-        + '<tr><th align="left">Salida</th><td>' + escapeHtml(checkOut) + '</td></tr>'
-        + '<tr><th align="left">Noches</th><td>' + escapeHtml(String(nights)) + '</td></tr>'
-        + '<tr><th align="left">Huéspedes</th><td>' + escapeHtml(String(guests)) + '</td></tr>'
-        + (breakfast ? '<tr><th align="left">Desayuno incluido</th><td>Sí ☕</td></tr>' : '')
-        + '<tr><th align="left">Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>'
-        + '</table><br/>'
+    const detailRows = ''
+        + '<tr><th align="left">Loft / Room</th><td>' + escapeHtml(propName) + '</td></tr>'
+        + '<tr><th align="left">Check-in / Entrada</th><td>' + escapeHtml(checkIn) + '</td></tr>'
+        + '<tr><th align="left">Check-out / Salida</th><td>' + escapeHtml(checkOut) + '</td></tr>'
+        + '<tr><th align="left">Nights / Noches</th><td>' + escapeHtml(String(nights)) + '</td></tr>'
+        + '<tr><th align="left">Guests / Huéspedes</th><td>' + escapeHtml(String(guests)) + '</td></tr>'
+        + (breakfast ? '<tr><th align="left">Breakfast / Desayuno</th><td>Sí ☕ / Yes ☕</td></tr>' : '')
+        + '<tr><th align="left">Reference / Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>';
+
+    const html =
+        // ---- ESPAÑOL ----
+        '<p>Hola <strong>' + escapeHtml(firstName) + '</strong> / Dear <strong>' + escapeHtml(firstName) + '</strong>,</p>'
+        + '<div style="font-family:Arial,sans-serif">'
+        // Español
+        + '<h3 style="color:#265a38;margin-bottom:6px;">Hemos recibido su reserva – Cabañas La Maite</h3>'
+        + '<p>Estimado/a huésped:</p>'
+        + '<p>¡Gracias por elegir Cabañas La Maite!</p>'
+        + '<p>Nos complace informarle que hemos recibido su reserva correctamente.</p>'
+        + '<p>Nuestro equipo procederá a revisar y verificar el pago. Una vez que el pago haya sido confirmado, le enviaremos los detalles y la confirmación de su reserva, junto con las instrucciones de check-in y toda la información necesaria para su llegada.</p>'
+        + '<p>Le agradecemos permitirnos un breve tiempo para completar el proceso de verificación. Nos pondremos en contacto con usted tan pronto como su reserva haya sido confirmada.</p>'
         + '<p>Si tiene alguna pregunta mientras tanto, no dude en contactarnos. Estaremos encantados de ayudarle.</p>'
-        + '<p>Esperamos darle la bienvenida a Cabañas La Maite y desearle una estancia maravillosa.</p>'
-        + '<p>Saludos cordiales,<br/><strong>Cabañas La Maite</strong></p>';
+        + '<p>¡Esperamos darle la bienvenida a Cabañas La Maite y deseamos que disfrute mucho de su estadía!</p>'
+        + '<p>Saludos cordiales,<br/>Cabañas La Maite<br/><em>Equipo de Reservaciones</em></p>'
+        + '<hr style="margin:22px 0;border:none;border-top:1px solid #ddd"/>'
+        + '<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;border-color:#ddd;width:100%">' + detailRows + '</table>'
+        + '<hr style="margin:22px 0;border:none;border-top:1px solid #ddd"/>'
+        // ---- ENGLISH ----
+        + '<h3 style="color:#265a38;margin-bottom:6px;">We have received your reservation – Cabañas La Maite</h3>'
+        + '<p>Dear Guest,</p>'
+        + '<p>Thank you for choosing Cabañas La Maite!</p>'
+        + '<p>We are pleased to let you know that we have successfully received your reservation.</p>'
+        + '<p>Our team will now review and verify your payment. Once the payment has been confirmed, we will send you your reservation confirmation and booking details, along with the necessary check-in instructions and information for your arrival.</p>'
+        + '<p>Please allow us a short time to complete the payment verification process. We will contact you as soon as your reservation has been fully confirmed.</p>'
+        + '<p>If you have any questions in the meantime, please feel free to contact us. We will be happy to assist you.</p>'
+        + '<p>We look forward to welcoming you to Cabañas La Maite and hope you have a wonderful stay with us!</p>'
+        + '<p>Warm regards,<br/>Cabañas La Maite</p>'
+        + '</div>';
 
     const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -117,7 +138,7 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
             from: process.env.RESEND_FROM || 'Cabañas La Maite <onboarding@resend.dev>',
             to: [to],
             reply_to: process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com',
-            subject: 'We Have Received Your Reservation – Cabañas La Maite',
+            subject: 'Hemos recibido su reserva – Cabañas La Maite',
             html: html
         })
     });
