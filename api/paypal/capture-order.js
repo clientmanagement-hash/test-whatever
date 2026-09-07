@@ -114,7 +114,7 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            from: process.env.RESEND_FROM || 'Cabañas La Maite <reservas@cabanaslamaite.com>',
+            from: process.env.RESEND_FROM || 'Cabañas La Maite <onboarding@resend.dev>',
             to: [to],
             reply_to: process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com',
             subject: 'We Have Received Your Reservation – Cabañas La Maite',
