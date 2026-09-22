@@ -11,6 +11,10 @@ module.exports = async function handler(req, res) {
             checkIn: body.checkIn,
             checkOut: body.checkOut,
             guest: body.guest,
+            name: body.name,
+            email: body.email,
+            phone: body.phone,
+            breakfast: body.breakfast === true,
             source: body.source === 'web' ? 'web' : 'manual'
         });
         if (result.error) return res.status(400).json({ error: result.error });
