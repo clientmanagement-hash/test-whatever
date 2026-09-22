@@ -905,6 +905,10 @@ if (directLoft && directGuests && directIn && directOut) {
     });
     directOut.addEventListener('change', updateDirect);
     if (directBreakfast) directBreakfast.addEventListener('change', updateDirect);
+    // Los datos del huésped deben refrescar lastBooking (si se escriben tras elegir fechas)
+    [directName, directEmail, directPhone].forEach((el) => {
+        if (el) el.addEventListener('input', updateDirect);
+    });
 
     // Pre-selección del loft desde las páginas de detalle (index.html?loft=loft1|loft2)
     const loftParam = new URLSearchParams(location.search).get('loft');

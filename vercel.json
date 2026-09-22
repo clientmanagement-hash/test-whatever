@@ -4,5 +4,13 @@
       "path": "/api/ical/external/refresh-all",
       "schedule": "0 4 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/paypal/capture-order.js": {
+      "maxDuration": 30
+    },
+    "api/paypal/create-order.js": {
+      "maxDuration": 20
+    }
+  }
 }

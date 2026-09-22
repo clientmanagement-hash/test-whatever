@@ -117,7 +117,7 @@ async function isBlocked(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, name, phone, breakfast, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, breakfast, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -132,6 +132,7 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, p
         checkOut: norm(checkOut),
         guest: String(guest || '').slice(0, 80),
         name: String(name || '').slice(0, 80),
+        email: String(email || '').slice(0, 120),
         phone: String(phone || '').slice(0, 30),
         breakfast: Boolean(breakfast),
         source: source === 'web' ? 'web' : 'manual',
@@ -139,6 +140,17 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, p
     });
     await saveReservations(propertyId, list);
     return { ok: true, uid };
+}
+
+// Guarda el resultado de los envíos de correo de una reserva (diagnóstico en el panel)
+async function markNotify(propertyId, uid, notify) {
+    if (!propId(propertyId) || !uid) return { error: 'invalid' };
+    const list = await loadReservations(propertyId);
+    const item = list.find((r) => r.uid === uid);
+    if (!item) return { error: 'not_found' };
+    item.notify = notify;
+    await saveReservations(propertyId, list);
+    return { ok: true };
 }
 
 // ---------- utilidades HTTP ----------
@@ -176,6 +188,7 @@ module.exports = {
     availability,
     isBlocked,
     recordReservation,
+    markNotify,
     readBody,
     adminPinOk,
     hostUrl,

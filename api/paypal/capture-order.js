@@ -53,6 +53,17 @@ function readLogoAttachment() {
     };
 }
 
+// fetch con timeout propio (evita que un proveedor lento corte la función)
+async function fetchWithTimeout(url, options, ms) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+        return await fetch(url, { ...options, signal: ctrl.signal });
+    } finally {
+        clearTimeout(t);
+    }
+}
+
 // Aviso al dueño (FormSubmit, formato tabla) — ya existente
 async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
@@ -77,7 +88,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
         'Monto cobrado': amount ? (amount + ' ' + (currency || 'USD')) : '—',
         'Orden PayPal': orderId
     };
-    await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(emailToOwner), {
+    await fetchWithTimeout('https://formsubmit.co/ajax/' + encodeURIComponent(emailToOwner), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -86,7 +97,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
             'Referer': 'https://www.cabanaslamaite.com/'
         },
         body: JSON.stringify(payload)
-    });
+    }, 12000);
 }
 
 // Confirmación al CLIENTE usando Resend (solo si RESEND_API_KEY está en Vercel)
@@ -140,7 +151,7 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
         + '</div>';
 
     const logoAttachment = readLogoAttachment();
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetchWithTimeout('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
             'Authorization': 'Bearer ' + apiKey,
@@ -154,7 +165,7 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
             html: html,
             ...(logoAttachment ? { attachments: [logoAttachment] } : {})
         })
-    });
+    }, 12000);
     if (!res.ok) {
         throw new Error('resend_failed_' + res.status);
     }
@@ -190,20 +201,28 @@ module.exports = async function handler(req, res) {
         const data = await r.json();
         const ok = r.ok && data.status === 'COMPLETED';
         if (ok) {
-            // 1) Registra la reserva en el calendario iCal
-            const { recordReservation } = require('../ical/_lib');
+            const { recordReservation, markNotify } = require('../ical/_lib');
+            const notify = {};
+
+            // 1) Registra la reserva en el calendario iCal (con datos del huésped)
+            let uid = null;
             try {
-                await recordReservation({
+                const rec = await recordReservation({
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
                     guest: body.guest,
                     name: body.name,
+                    email: body.email,
                     phone: body.phone,
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
-            } catch (e) { /* no bloquear el cobro */ }
+                uid = rec && rec.uid ? rec.uid : null;
+                notify.reservation = 'ok';
+            } catch (e) {
+                notify.reservation = 'error:' + String((e && e.message) || e);
+            }
 
             // 2) Aviso al dueño (monto real tomado de PayPal)
             try {
@@ -222,7 +241,10 @@ module.exports = async function handler(req, res) {
                     currency: cap.amount ? cap.amount.currency_code : 'USD',
                     orderId: orderID
                 });
-            } catch (e) { /* no bloquear el cobro */ }
+                notify.owner = 'ok';
+            } catch (e) {
+                notify.owner = 'error:' + String((e && e.message) || e);
+            }
 
             // 3) Confirmación al cliente (Resend) — sólo si su email existe
             if (body.email) {
@@ -237,8 +259,18 @@ module.exports = async function handler(req, res) {
                         breakfast: body.breakfast === true,
                         orderId: orderID
                     });
-                } catch (e) { /* no bloquear el cobro si el correo falla */ }
+                    notify.guest = 'ok:' + body.email;
+                } catch (e) {
+                    notify.guest = 'error:' + String((e && e.message) || e);
+                }
+            } else {
+                notify.guest = 'skipped:sin email';
             }
+
+            // Guarda el resultado de los correos en la reserva (visible en el panel)
+            try {
+                if (uid) await markNotify(body.propertyId, uid, notify);
+            } catch (e) { /* no bloquear el cobro */ }
         }
         return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });
     } catch (e) {

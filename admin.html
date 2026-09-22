@@ -180,11 +180,11 @@
 
                 <h3 style="font-size:.9rem;color:var(--verde-800)">Reservas (propias / web) — van al feed .ics</h3>
                 <table>
-                    <thead><tr><th>Entrada</th><th>Salida</th><th>Huésped</th><th>Origen</th><th></th></tr></thead>
+                    <thead><tr><th>Entrada</th><th>Salida</th><th>Huésped</th><th>Origen</th><th>Correos</th><th></th></tr></thead>
                     <tbody>
                         ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
-                            ? '<tr><td colspan="5" class="muted">Sin reservas todavía.</td></tr>'
-                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}</td><td>${esc(r.source)}</td>
+                            ? '<tr><td colspan="6" class="muted">Sin reservas todavía.</td></tr>'
+                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.email ? ' · ' + esc(r.email) : ''}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.75rem">${r.notify ? 'huésped: ' + esc(r.notify.guest || '—') + '<br>dueño: ' + esc(r.notify.owner || '—') : '—'}</td>
                                <td><button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
                     </tbody>
                 </table>
