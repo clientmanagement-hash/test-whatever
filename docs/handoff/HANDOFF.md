@@ -220,15 +220,20 @@ EOF
 
 ## 14. PENDIENTES / decisiones abiertas
 
-**Estado (2026-09-29):** el pago ya está en **LIVE** (verificado: `env: live`), tarifas por temporada aplicadas, correos funcionando (huésped + dueño), y **Booking + Airbnb importados** en ambos lofts. El proyecto está **operativo y cobrando de verdad**.
+**Estado (2026-09-29):** SISTEMA COMPLETO Y OPERATIVO.
+- Pago en **LIVE** (verificado `env: live`), cobrando de verdad.
+- **3 canales sincronizados en ambos lofts (bidireccional):** Booking, Airbnb y Expedia — importados al panel **y** el feed de la web ya pegado en las 3 plataformas (confirmado por el dueño).
+- Tarifas por temporada + especiales aplicadas y verificadas.
+- Correos funcionando (huésped bilingüe con logo + aviso al dueño).
+- **Noches huérfanas** detectadas y reservables (1 noche en huecos aislados).
+- Filtro de eventos pasados activo (Expedia traía 500+ históricos).
 
-1. **Pegar los 2 enlaces iCal de la web en Airbnb y Expedia** (dirección web → plataformas): así las plataformas bloquean lo reservado en la web. Enlaces: `https://www.cabanaslamaite.com/api/ical/property/loft1` y `.../loft2`. (En Booking ya puede estar hecho.)
-2. **Expedia**: falta conectar (importar su export al panel + pegar el feed de la web en Partner Central). El dueño debe darlos o pedir soporte para habilitar iCal.
-3. **`CRON_SECRET`** — OPCIONAL (decisión del dueño: dejar como está). Sin él, el cron diario 04:00 no corre y hay que pulsar **"🔄 Refrescar todos"** en el panel manualmente (recomendado 1 vez/semana; se detectó Booking 6 semanas sin refrescar). El endpoint acepta Bearer (cron) **o** el PIN del panel.
-4. **PIN admin**: el dueño decidió mantener `maite-admin-2026`. Cambiarlo es solo variable `ADMIN_PIN` en Vercel.
-5. **Fotos en alta resolución**: el dueño iba a tomar fotos nuevas (las de Loft 1 y 2 ya se reemplazaron por las "editadas"; si entrega más, integrarlas).
-6. **Desayuno**: $11 por persona por noche (validado por el dueño 2-5 personas). Aplica sobre la tarifa de la temporada.
-7. **Fechas de fin de año**: hoy los tramos 24dic-10ene están ocupados por reservas reales; las tarifas especiales ya están cargadas y se aplicarán cuando se liberen.
+1. **`CRON_SECRET`** — OPCIONAL (decisión del dueño: dejar como está). Sin él, el cron diario 04:00 no corre y hay que pulsar **"🔄 Refrescar todos"** en el panel manualmente (recomendado 1 vez/semana). El endpoint acepta Bearer (cron) **o** el PIN del panel.
+2. **PIN admin**: el dueño decidió mantener `maite-admin-2026`. Cambiarlo es solo variable `ADMIN_PIN` en Vercel.
+3. **Fotos en alta resolución**: el dueño iba a tomar fotos nuevas (las de Loft 1 y 2 ya se reemplazaron por las "editadas"; si entrega más, integrarlas).
+4. **Desayuno**: $11 por persona por noche (validado 2-5 personas). Aplica sobre la tarifa de la temporada.
+5. **Fechas de fin de año**: los tramos 24dic-10ene pueden estar ocupados por reservas reales; las tarifas especiales ya están cargadas y se aplicarán cuando se liberen.
+6. **Nota sobre Expedia**: su export trae muchas fechas cerradas como bloqueos de 1 noche consecutivos (no todas son reservas). Es esperado; el sistema las respeta como no disponibles.
 
 ---
 
