@@ -1375,6 +1375,107 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
 
 .detail-intro { background: var(--arena); }
 
+/* ============ POLÍTICAS Y CONDICIONES ============ */
+.politicas {
+    background: var(--arena);
+}
+
+.politicas-wrap {
+    max-width: 820px;
+}
+
+.politicas-block {
+    background: var(--paper);
+    border-radius: var(--r-lg);
+    padding: clamp(24px, 4vw, 44px);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 28px;
+}
+
+.politicas-block h2 {
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--verde-900);
+    margin: 0 0 8px;
+}
+
+.politicas-lead {
+    color: var(--gris-600);
+    font-size: 1rem;
+    margin: 0 0 26px;
+}
+
+.politicas-block h3 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--verde-700);
+    margin: 26px 0 8px;
+}
+
+.politicas-block h3:first-of-type {
+    margin-top: 0;
+}
+
+.politicas-block p {
+    color: var(--gris-600);
+    font-size: 0.97rem;
+    line-height: 1.7;
+    margin: 0 0 10px;
+}
+
+.politicas-block strong {
+    color: var(--verde-800);
+}
+
+.politicas-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.politicas-list li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--gris-600);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.politicas-list li::before {
+    content: '•';
+    position: absolute;
+    left: 6px;
+    color: var(--tan-500);
+    font-weight: 900;
+}
+
+.politicas-draft {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--gris-400);
+    font-style: italic;
+    margin: 0 0 24px;
+}
+
+.politicas-cta {
+    text-align: center;
+    padding: 8px 0 12px;
+}
+
+.politicas-cta p {
+    color: var(--verde-800);
+    font-weight: 600;
+    margin: 0 0 16px;
+}
+
+.page-hero--short {
+    min-height: 44vh;
+}
+
 /* ============ DESAYUNO ============ */
 .desayuno {
     background: var(--arena);
