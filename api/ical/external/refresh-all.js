@@ -1,7 +1,7 @@
 // POST /api/ical/external/refresh-all — refresca TODOS los calendarios externos.
 // Lo invoca el cron de Vercel (vercel.json) y el botón del panel de administración.
 // Si CRON_SECRET está definido en Vercel, exige el header Authorization Bearer.
-const { PROPERTIES, loadExternal, saveExternal } = require('../_lib');
+const { PROPERTIES, loadExternal, saveExternal, adminPinOk } = require('../_lib');
 const { parseIcs } = require('../_ics');
 
 async function refreshEntry(entry) {
@@ -30,11 +30,11 @@ async function refreshEntry(entry) {
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
-    if (process.env.CRON_SECRET) {
-        const auth = String(req.headers.authorization || '');
-        if (auth !== 'Bearer ' + process.env.CRON_SECRET) {
-            return res.status(401).json({ error: 'unauthorized' });
-        }
+    // Autoriza: (a) el cron de Vercel con Bearer CRON_SECRET, o (b) el panel admin con su PIN.
+    const auth = String(req.headers.authorization || '');
+    const cronOk = process.env.CRON_SECRET && auth === 'Bearer ' + process.env.CRON_SECRET;
+    if (!cronOk && !adminPinOk(req)) {
+        return res.status(401).json({ error: 'unauthorized' });
     }
 
     const results = [];
