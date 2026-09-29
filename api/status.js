@@ -1,4 +1,4 @@
-// Vercel Function — GET /api/health (CommonJS)
+// Vercel Function — GET /api/status (CommonJS)
 // Comprueba automáticamente que todo lo crítico funcione, SIN necesidad de hacer
 // una reserva ni un mensaje de prueba. Devuelve el estado de cada servicio.
 // Con ?notify=1 envía un aviso por correo al dueño si algo está fallando.

@@ -59,11 +59,11 @@ module.exports = async function handler(req, res) {
         await saveExternal(p.id, list);
     }
 
-    // 2) Revisar la salud del sistema (misma lógica que /api/health)
+    // 2) Revisar la salud del sistema (misma lógica que /api/status)
     let health = null;
     try {
         const base = 'https://' + (req.headers.host || 'www.cabanaslamaite.com');
-        const r = await fetchWithTimeout(base + '/api/health?notify=1', { method: 'GET' }, 25000);
+        const r = await fetchWithTimeout(base + '/api/status?notify=1', { method: 'GET' }, 25000);
         health = await r.json().catch(() => null);
     } catch (e) { health = null; }
 

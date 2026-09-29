@@ -192,7 +192,7 @@
         const box = document.getElementById('health-list');
         if (!badge || !box) return;
         try {
-            const h = await api('/../../api/health');
+            const h = await api('/../../api/status');
             const allOk = h.ok;
             badge.textContent = allOk ? 'Todo funciona' : (h.failures + ' problema(s)');
             badge.className = 'badge ' + (allOk ? 'ok' : 'err');
