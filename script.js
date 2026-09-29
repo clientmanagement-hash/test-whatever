@@ -67,8 +67,8 @@ const I18N = {
 
         // Desayuno
         'desayuno.eyebrow': 'Extra service',
-        'desayuno.title': 'Start your day with our breakfast',
-        'desayuno.p': 'Enjoy a breakfast prepared at the cabins, with prior reservation. The perfect way to start the day before heading to the beach.',
+        'desayuno.title': 'Start your day with a typical Costa Rican breakfast',
+        'desayuno.p': 'Enjoy an authentic typical Costa Rican breakfast, prepared at the cabins with prior reservation. Gallo pinto, eggs, fresh fruit and local coffee: the perfect way to start the day before heading to the beach.',
         'desayuno.price': '<strong>$11</strong> per person, per night · added to your booking',
         'desayuno.li1': 'With prior reservation',
         'desayuno.li2': 'Served at your cabin',
@@ -159,7 +159,7 @@ const I18N = {
         'direct.extra6': '5th person',
         'direct.bfast': 'Breakfast',
         'direct.bfastPer': 'per person/night',
-        'direct.breakfast': 'Breakfast included',
+        'direct.breakfast': 'Typical Costa Rican breakfast',
 
         // Footer
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Relaxing, welcoming beach style in Sámara, Costa Rica.',
