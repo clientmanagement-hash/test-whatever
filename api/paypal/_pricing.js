@@ -5,14 +5,21 @@
 const PRICING = {
     baseGuests: 2,        // la tarifa incluye 2 personas
     minNights: 2,         // estadía mínima (2 noches)
-    maxGuests: 8,
+    maxGuests: 5,         // máximo 5 huéspedes
     maxNights: 60,
-    extraGuestFee: 10,    // $ por persona adicional por noche
+    // Persona adicional por noche: 3ª +$10 · 4ª +$10 · 5ª +$5
+    // (equivale a un recargo acumulado de $10 por cada persona hasta la 4ª y $5 la 5ª)
+    extraGuestFee: 10,    // $ por cada persona adicional hasta la 4ª
+    extraGuestFee5: 5,    // $ por la 5ª persona
     seasons: [
-        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
+        { from: '01-01', to: '04-30', rate: 119 },  // TEMPORADA ALTA: ene, feb, mar, abr
+        { from: '05-01', to: '06-30', rate: 110 },  // TEMPORADA BAJA: may, jun
+        { from: '07-01', to: '08-31', rate: 119 },  // TEMPORADA ALTA: jul, ago
+        { from: '09-01', to: '11-30', rate: 110 },  // TEMPORADA BAJA: sep, oct, nov
+        { from: '12-01', to: '12-31', rate: 119 }   // TEMPORADA ALTA: diciembre
     ],
     events: [
-        { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027
+        { from: '2027-03-21', to: '2027-03-28', rate: 135 }   // Semana Santa 2027: $135/noche
     ],
     depositPct: 100,      // 100 = pago total al reservar
     currency: 'USD',
@@ -20,6 +27,13 @@ const PRICING = {
     // (ej. 2 noches × 2 personas = +$44 sobre el total)
     breakfast: { perPersonPerNight: 11 }
 };
+
+// Recargo por personas adicionales (misma lógica en servidor y frontend)
+function extraGuestsFee(guests) {
+    const extra = Math.max(0, guests - PRICING.baseGuests);
+    if (!extra) return 0;
+    return Math.min(extra, 2) * PRICING.extraGuestFee + Math.max(0, extra - 2) * PRICING.extraGuestFee5;
+}
 
 const toInt = (s) => parseInt(String(s).replace(/-/g, ''), 10);
 
@@ -57,12 +71,12 @@ function computeBooking(checkIn, checkOut, guests, breakfast) {
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;
     if (g > PRICING.maxGuests) return { error: 'too_many_guests' };
 
-    const extraGuests = Math.max(0, g - PRICING.baseGuests);
+    const extraFeePerNight = extraGuestsFee(g);
     const withBreakfast = breakfast === true;
     let total = 0;
     for (let i = 0; i < nights; i++) {
         const d = new Date(inMs + i * 86400000);
-        let rate = rateForDate(d) + extraGuests * PRICING.extraGuestFee;
+        let rate = rateForDate(d) + extraFeePerNight;
         if (withBreakfast) rate += PRICING.breakfast.perPersonPerNight * g;
         total += rate;
     }
@@ -70,4 +84,4 @@ function computeBooking(checkIn, checkOut, guests, breakfast) {
     return { total: Math.round(total * 100) / 100, nights, guests: g, currency: PRICING.currency, breakfast: withBreakfast };
 }
 
-module.exports = { PRICING, rateForDate, computeBooking };
+module.exports = { PRICING, rateForDate, computeBooking, extraGuestsFee };

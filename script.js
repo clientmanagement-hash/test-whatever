@@ -44,7 +44,7 @@ const I18N = {
         'loft1.title': 'Loft 1<br>Garden and pool',
         'loft2.title': 'Loft 2<br>Garden and pool',
         'loft.desc': 'Pool, garden and terrace.',
-        'loft.price': 'From <strong>$116</strong> per night',
+        'loft.price': 'From <strong>$110</strong> per night',
         'loft1.link': 'See Loft 1 <span aria-hidden="true">→</span>',
         'loft2.link': 'See Loft 2 <span aria-hidden="true">→</span>',
 
@@ -136,7 +136,7 @@ const I18N = {
         'direct.payErr': 'There was an error with the payment. Try again or message us on WhatsApp.',
         'direct.payUnavailable': 'Online payment is available on the published site.',
         'direct.maxNights': 'Maximum stay is 60 nights.',
-        'direct.maxGuests': 'Maximum 8 guests.',
+        'direct.maxGuests': 'Maximum 5 guests.',
         'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
         'direct.name': 'Name *',
@@ -144,6 +144,8 @@ const I18N = {
         'direct.phone': 'Phone / WhatsApp',
         'direct.feeNote': 'Rate for 2 people',
         'direct.extra': 'extra person',
+        'direct.extra5': '3rd-4th person',
+        'direct.extra6': '5th person',
         'direct.bfast': 'Breakfast',
         'direct.bfastPer': 'per person/night',
         'direct.breakfast': 'Breakfast included',
@@ -620,7 +622,7 @@ const payErrorMsg = (code) => {
         invalid_dates: tr('direct.selectDates', 'Elige tus fechas'),
         min_nights: tr('direct.minNights', 'Mínimo 2 noches'),
         too_long: tr('direct.maxNights', 'La estadía máxima es de 60 noches.'),
-        too_many_guests: tr('direct.maxGuests', 'Máximo 8 huéspedes.'),
+        too_many_guests: tr('direct.maxGuests', 'Máximo 5 huéspedes.'),
         invalid_property: tr('direct.selectDates', 'Elige tus fechas'),
         dates_unavailable: tr('direct.unavailable', 'Fechas no disponibles'),
         paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
@@ -738,25 +740,39 @@ loadAvailability();
 
 /* ==========================================================================
    Reserva directa con PayPal (seña) — pago del total vía Smart Buttons (Vercel + Orders API)
-   CONFIGURACIÓN: tarifa fija $116/noche, % a pagar y credenciales PayPal en Vercel (env)
+   CONFIGURACIÓN: tarifas por temporada (alta $119 / baja $110), % a pagar y credenciales PayPal en Vercel (env)
    ========================================================================== */
 const BOOKING = {
     currency: 'USD',                     // dólares (cuenta PayPal en $)
     baseGuests: 2,                       // la tarifa incluye 2 personas
     minNights: 2,                        // estadía mínima (2 noches)
     maxNights: 60,
-    extraGuestFee: 10,                   // $ por persona adicional por noche
+    maxGuests: 5,                        // máximo 5 personas
+    // Persona adicional por noche: 3ª +$10 · 4ª +$10 · 5ª +$5
+    extraGuestFee: 10,                   // $ por cada persona adicional hasta la 4ª
+    extraGuestFee5: 5,                   // $ por la 5ª persona
     breakfast: { perPersonPerNight: 11 },   // desayuno: $11 por persona por noche (ej. 2 noches × 2 pers = +$44)
-    // Tarifa fija: $116/noche por 2 personas, todo el año
+    // Temporadas (se usa la primera que coincida)
     seasons: [
-        { from: '01-01', to: '12-31', rate: 116 }   // tarifa fija
+        { from: '01-01', to: '04-30', rate: 119 },  // ALTA: ene, feb, mar, abr
+        { from: '05-01', to: '06-30', rate: 110 },  // BAJA: may, jun
+        { from: '07-01', to: '08-31', rate: 119 },  // ALTA: jul, ago
+        { from: '09-01', to: '11-30', rate: 110 },  // BAJA: sep, oct, nov
+        { from: '12-01', to: '12-31', rate: 119 }   // ALTA: diciembre
     ],
     // Eventos puntuales con fecha completa (YYYY-MM-DD) — tienen prioridad sobre seasons
     events: [
-        { from: '2027-03-21', to: '2027-03-28', rate: 130.5 }   // Semana Santa 2027: $130,50/noche
+        { from: '2027-03-21', to: '2027-03-28', rate: 135 }   // Semana Santa 2027: $135/noche
     ],
     depositPct: 100                      // % a pagar al reservar (100 = pago total)
 };
+
+// Recargo por personas adicionales (3ª +10, 4ª +10, 5ª +5)
+function extraGuestsFee(guests) {
+    const extra = Math.max(0, guests - BOOKING.baseGuests);
+    if (!extra) return 0;
+    return Math.min(extra, 2) * BOOKING.extraGuestFee + Math.max(0, extra - 2) * (BOOKING.extraGuestFee5 || 5);
+}
 
 function rateForDate(date) {
     // 1) Eventos puntuales (fecha completa YYYY-MM-DD), ej. Semana Santa
@@ -815,8 +831,8 @@ if (directLoft && directGuests && directIn && directOut) {
         const breakfast = directBreakfast ? directBreakfast.checked : false;
         const breakfastPerNight = breakfast ? BOOKING.breakfast.perPersonPerNight * guests : 0;
         directFeeNote.textContent = breakfast
-            ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`
-            : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra', 'persona adicional')} ${fmtUSD(BOOKING.extraGuestFee)}`;
+            ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`
+            : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`;
 
         const nights = directIn.value && directOut.value
             ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
@@ -835,7 +851,7 @@ if (directLoft && directGuests && directIn && directOut) {
         let total = 0;
         let n = 0;
         const ratesSeen = [];
-        const extraFee = Math.max(0, guests - BOOKING.baseGuests) * BOOKING.extraGuestFee;
+        const extraFee = extraGuestsFee(guests);
 
         if (hasDates) {
             const d = new Date(directIn.value);
