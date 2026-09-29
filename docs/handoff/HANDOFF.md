@@ -205,16 +205,20 @@ EOF
 
 ## 13. Lecciones / gotchas
 
-- **api/ debe ser CommonJS** (`module.exports` + `require`). ESM (`import/export`) sin package.json hace que las funciones se cuelguen (timeout) en Vercel. Archivos con prefijo `_` no se exponen como ruta.
-- El verificador de equilibrio (§12.2) da **falsos positivos** con regex que contienen `//` y con templates anidados en admin.html — si marca raro, revisar a mano esa línea.
+- **⚠️ LÍMITE DE FUNCIONES VERCEL (plan Hobby = 12 funciones serverless).** Al superarlo, Vercel **despliega el sitio pero IGNORA las funciones nuevas** (devuelven 404 sin avisar). Pasó al añadir `api/health.js`: daba 404 aunque el código era correcto. **Antes de crear un endpoint nuevo, contar:** `find api -name "*.js" ! -name "_*" | wc -l`. Si hay que añadir, **consolidar** (fusionar en una función con ?action=/?task=) o pasar a plan Pro.
+- **`api/` debe ser CommonJS** (`module.exports` + `require`). ESM sin package.json hace que las funciones se cuelguen (timeout).
+- **FormSubmit endureció sus reglas:** exige cabeceras `Origin`/`Referer`, que el navegador **no permite** fijar desde JS. Por eso TODO envío de correo debe hacerse **desde el servidor** (Vercel) con esas cabeceras.
+- **Resend es el servicio principal de correo** (dominio `cabanaslamaite.com` verificado); FormSubmit quedó solo como respaldo en el formulario de consulta.
+- Los archivos con prefijo `_` en `api/` NO se exponen como ruta (módulos compartidos).
+- El verificador de equilibrio inline da **falsos positivos** con regex que contienen `//` y con templates anidados — usar `node --check`.
 - Secciones `.reveal` empiezan invisibles; si el JS falla la página se ve "vacía" → síntoma de error de JS.
-- `multi_edit` es atómico: si una edición falla, ninguna se aplica (cuidar espaciado exacto).
-- La tarjeta de reserva tiene `overflow:hidden` — el calendario propio usa `position:fixed` para no recortarse.
+- `multi_edit` es atómico: si una edición falla, ninguna se aplica.
+- La tarjeta de reserva tiene `overflow:hidden` — el calendario propio usa `position:fixed`.
 - No commitear `contenido/` ni `.DS_Store`. No borrar originales.
 - El dueño escribe mezclado español/inglés → responder en el idioma de su último mensaje; commits en español.
-- Los precios cambian seguido (130→116, 50%→100%, desayuno $11) — confirmar valores en `_pricing.js` y `BOOKING` antes de editar, y actualizar textos fijos ("Desde $X/noche").
-- Fotos: **resolución baja en origen** (Loft 1: 576-1024px; Loft 2: capturas ~600px). No se puede "crear" resolución. El dueño dijo que tomará fotos nuevas → cuando las ponga en `contenido/imagenes/alta-resolucion/` (o donde indique), copiar a `img/` y re-exportar con `sips` (~1600-2000px, calidad ~82), reemplazando en tarjetas/galería/páginas.
-- El botón "Reservar en Booking" de las páginas de loft se eliminó (llevan a la reserva directa). Quedan enlaces a Booking en footer y tarjeta "Booking.com" de la sección Reservar (el dueño no pidió quitarlos).
+- Los precios cambian seguido — confirmar en `_pricing.js` y `BOOKING`, y actualizar el texto fijo "Desde $X/noche".
+- Fotos: las de Loft 1/Loft 2 ya se reemplazaron por las "editadas" (1448px).
+- El botón "Reservar en Booking" de las páginas de loft se eliminó (reserva directa).
 
 ---
 
@@ -237,8 +241,27 @@ EOF
 
 ---
 
-## 15. Datos del negocio (verificados, útiles para textos)
+## 14b. Funcionalidades añadidas (resumen operativo)
 
+**Páginas del sitio:** `index.html` (portada), `loft-1.html`, `loft-2.html`, `politicas.html` (políticas y condiciones), `admin.html` (panel interno).
+
+**Secciones de la portada (en orden):** hero · franja de datos · lofts · galería "Vive la experiencia" · **desayuno** (foto + $11/persona/noche + CTA a reservar) · **paella** (4 tipos, $18/persona, mín. 2, incluye pan, **solo reserva por WhatsApp**) · ubicación · reservar · footer.
+
+**Noches huérfanas:** el sistema detecta automáticamente 1 noche libre entre dos periodos ocupados y **permite reservarla (1 noche)** saltando el mínimo de 2. El calendario del widget permite marcar la salida aunque coincida con el check-in de otra reserva. Función: `isOrphanStay` (servidor) / `isOrphanNight` (frontend).
+
+**Excepciones de mínimo/stay:** mínimo general 2 noches; **excepción automática** para noches huérfanas.
+
+**Políticas:** página `politicas.html` (cancelación "Flexible – 5 días" + condiciones del alojamiento oficiales) + **modal** en el widget de reserva (enlace "Al reservar aceptas..."), que carga el contenido de politicas.html con fetch. Enlace también en el footer de las 3 páginas.
+
+**Consultas del formulario:** el endpoint `/api/contact` las **guarda siempre** (visibles en el panel, sección "📩 Consultas del formulario") y las envía por **Resend** (FormSubmit como respaldo).
+
+**🩺 Estado del sistema:** `/api/status` (con PIN o cron) comprueba almacenamiento, Resend, PayPal y calendarios; el panel lo muestra con semáforo + botón "Enviar correo de prueba". Cron diario 04:00 (`?task=daily`) refresca calendarios y **avisa por correo al dueño si algo falla** (requiere `CRON_SECRET`).
+
+**Endpoints actuales (12 funciones, límite Hobby):** `api/contact.js`, `api/status.js`, `api/paypal/{config,create-order,capture-order,test-email}.js`, `api/ical/{admin,reservations,external}.js`, `api/ical/external/{[id],refresh-all}.js`, `api/ical/property/[propertyId].js`.
+
+---
+
+## 15. Datos del negocio (verificados, útiles para textos)
 - Dirección: **VFH4+X8 Sámara, Guanacaste, Costa Rica** · Coordenadas: 9.8799882, -85.5441426
 - Distancias: **A 900 m de Playa Buena Vista · A 1,6 km de Playa Sámara** (no "50 m").
 - WhatsApp: **+506 8306 3336** (`wa.me/50683063336`) — también número SINPE Móvil.
