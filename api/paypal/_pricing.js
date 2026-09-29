@@ -19,7 +19,12 @@ const PRICING = {
         { from: '12-01', to: '12-31', rate: 119 }   // TEMPORADA ALTA: diciembre
     ],
     events: [
-        { from: '2027-03-21', to: '2027-03-28', rate: 135 }   // Semana Santa 2027: $135/noche
+        // Fin de año 2026-2027 (tienen prioridad sobre las temporadas)
+        { from: '2026-12-24', to: '2026-12-28', rate: 170 },   // Navidad
+        { from: '2026-12-29', to: '2027-01-01', rate: 210 },   // Fin de año
+        { from: '2027-01-02', to: '2027-01-04', rate: 170 },   // Año nuevo
+        { from: '2027-01-05', to: '2027-01-10', rate: 140 },   // Post año nuevo
+        { from: '2027-03-21', to: '2027-03-28', rate: 135 }    // Semana Santa 2027
     ],
     depositPct: 100,      // 100 = pago total al reservar
     currency: 'USD',
