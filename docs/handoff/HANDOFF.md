@@ -94,17 +94,23 @@ Sitio web estático + funciones serverless (Vercel) de un hospedaje con **2 loft
 ## 7. Tarifas (ESTADO ACTUAL — el dueño cambia seguido, confirmar siempre)
 
 ```
-Base:            $116/noche para 2 personas, todo el año (tarifa fija)
-Persona extra:   +$10/persona/noche
-Mínimo:          2 noches · Máximo: 60 noches · Máx 8 huéspedes
+TEMPORADA ALTA $119/noche (2 pers): ene, feb, mar, abr, jul, ago, dic
+TEMPORADA BAJA $110/noche (2 pers): may, jun, sep, oct, nov
+Persona adicional: 3ª +$10 · 4ª +$10 · 5ª +$5  (5ª = total $144 alta / $135 baja)
+Mínimo:          2 noches · Máximo: 60 noches · MÁX 5 huéspedes
 Pago:            100% del total al reservar (depositPct: 100)
-Semana Santa:    2027-03-21 → 2027-03-28: $130,50/noche (evento único en BOOKING.events)
+Eventos especiales (prioridad sobre temporadas):
+   2026-12-24 → 2026-12-28: $170   (Navidad)
+   2026-12-29 → 2027-01-01: $210   (Fin de año)
+   2027-01-02 → 2027-01-04: $170   (Año nuevo)
+   2027-01-05 → 2027-01-10: $140   (Post año nuevo)
+   2027-03-21 → 2027-03-28: $135   (Semana Santa 2027)
 Desayuno:        $11 por persona por noche (interruptor en el widget)
-                 Ej.: 2 noches × 2 personas = +$44 → total $276
 ```
 - **FUENTE DE VERDAD del cobro:** `api/paypal/_pricing.js` (`PRICING`). El cliente NUNCA envía el monto — solo `checkIn/checkOut/guests/breakfast`; el servidor recalcula.
 - **Espejo de display en el frontend:** `const BOOKING` en `script.js` (se sobrescribe con los precios del servidor vía `/api/paypal/config`). Si cambias tarifas, actualiza AMBOS (servidor es autoridad; si difieren, gana el servidor).
-- Tarjetas de lofts: texto "Desde $116/noche" es fijo en index.html (actualizar a mano si cambia).
+- Tarjetas de lofts: texto "Desde $110/noche" es fijo en index.html (actualizar a mano si cambia la tarifa mínima).
+- Las temporadas se evalúan **en orden** y gana la primera que coincida; los `events` (fecha completa YYYY-MM-DD) tienen prioridad sobre `seasons`.
 
 ---
 
@@ -214,13 +220,15 @@ EOF
 
 ## 14. PENDIENTES / decisiones abiertas
 
-1. **Pasar el pago a LIVE** (hoy sandbox): el dueño debe poner credenciales live + `PAYPAL_ENV=live` en Vercel y probar un pago real. Este es EL paso para cobrar de verdad.
-2. **Cambiar el PIN admin** (`ADMIN_PIN` en Vercel) — el por defecto `maite-admin-2026` es público en este doc.
-3. **Fotos en alta resolución** — el dueño tomará fotos nuevas; integrarlas cuando las entregue.
-4. **Pegar los 2 enlaces iCal de export en Booking/Airbnb/Expedia** (importar) para que bloqueen las reservas de la web — pasos dados al dueño; y él debe pegar los exports de Airbnb/Expedia en el panel (Booking ya está importado).
-5. **Cron**: Vercel Hobby permite 1 cron/día (suficiente); si no funcionara, el botón "refrescar todos" del panel hace lo mismo manualmente.
-6. **6-8 huéspedes / 1 huésped**: el desayuno se calcula $11 × personas × noches sin tope (regla única); el dueño validó 2-5 personas.
-7. **Regla de desayuno confirmada por el dueño:** $11/persona/noche (ej. 2 noches × 2 personas = +$44 → total $276). No usar la tabla vieja ($123/$139.40/…) que quedó descartada.
+**Estado (2026-09-29):** el pago ya está en **LIVE** (verificado: `env: live`), tarifas por temporada aplicadas, correos funcionando (huésped + dueño), y **Booking + Airbnb importados** en ambos lofts. El proyecto está **operativo y cobrando de verdad**.
+
+1. **Pegar los 2 enlaces iCal de la web en Airbnb y Expedia** (dirección web → plataformas): así las plataformas bloquean lo reservado en la web. Enlaces: `https://www.cabanaslamaite.com/api/ical/property/loft1` y `.../loft2`. (En Booking ya puede estar hecho.)
+2. **Expedia**: falta conectar (importar su export al panel + pegar el feed de la web en Partner Central). El dueño debe darlos o pedir soporte para habilitar iCal.
+3. **`CRON_SECRET`** — OPCIONAL (decisión del dueño: dejar como está). Sin él, el cron diario 04:00 no corre y hay que pulsar **"🔄 Refrescar todos"** en el panel manualmente (recomendado 1 vez/semana; se detectó Booking 6 semanas sin refrescar). El endpoint acepta Bearer (cron) **o** el PIN del panel.
+4. **PIN admin**: el dueño decidió mantener `maite-admin-2026`. Cambiarlo es solo variable `ADMIN_PIN` en Vercel.
+5. **Fotos en alta resolución**: el dueño iba a tomar fotos nuevas (las de Loft 1 y 2 ya se reemplazaron por las "editadas"; si entrega más, integrarlas).
+6. **Desayuno**: $11 por persona por noche (validado por el dueño 2-5 personas). Aplica sobre la tarifa de la temporada.
+7. **Fechas de fin de año**: hoy los tramos 24dic-10ene están ocupados por reservas reales; las tarifas especiales ya están cargadas y se aplicarán cuando se liberen.
 
 ---
 
