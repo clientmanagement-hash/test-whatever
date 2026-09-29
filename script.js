@@ -794,7 +794,7 @@ let availability = null;
 
 async function loadAvailability() {
     try {
-        const r = await fetch('/api/ical/availability');
+        const r = await fetch('/api/ical/admin?public=1');
         if (r.ok) {
             availability = await r.json();
             // Recalcula el widget ahora que hay datos de disponibilidad

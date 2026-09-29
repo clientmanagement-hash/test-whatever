@@ -192,7 +192,9 @@
         const box = document.getElementById('health-list');
         if (!badge || !box) return;
         try {
-            const h = await api('/../../api/status');
+            const r = await fetch('/api/status', { headers: { 'X-Admin-Pin': pin } });
+            if (r.status === 401) { showGate(); throw new Error('PIN incorrecto'); }
+            const h = await r.json();
             const allOk = h.ok;
             badge.textContent = allOk ? 'Todo funciona' : (h.failures + ' problema(s)');
             badge.className = 'badge ' + (allOk ? 'ok' : 'err');
