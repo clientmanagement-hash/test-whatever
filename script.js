@@ -128,6 +128,7 @@ const I18N = {
         'direct.selectOut': 'Select check-out date',
         'direct.unavailable': 'Dates unavailable',
         'direct.minNights': 'Minimum 2 nights',
+        'direct.orphanOk': 'Last available night — 1-night stay allowed',
         'direct.smartErr': 'Choose valid dates to calculate the amount.',
         'direct.formName': 'Please enter your name to continue.',
         'direct.formEmail': 'Please enter a valid email to receive your confirmation.',
@@ -736,6 +737,25 @@ function datesBlocked(propertyId, checkIn, checkOut) {
     return false;
 }
 
+// ¿La noche `nightIso` es huérfana? (1 sola noche libre entre dos periodos ocupados)
+// Solo estas se pueden reservar por 1 noche aunque el mínimo general sea 2.
+function isOrphanNight(propertyId, nightIso) {
+    if (!availability || !availability.properties || !availability.properties[propertyId]) return false;
+    const list = availability.properties[propertyId].orphanNights;
+    if (!list || !list.length) return false;
+    const s = String(nightIso).slice(0, 10);
+    return list.indexOf(s) !== -1;
+}
+
+// ¿El rango es exactamente una noche huérfana?
+function isOrphanStay(propertyId, checkIn, checkOut) {
+    const aIn = Date.parse(checkIn);
+    const aOut = Date.parse(checkOut);
+    if (!Number.isFinite(aIn) || !Number.isFinite(aOut)) return false;
+    if (Math.round((aOut - aIn) / 86400000) !== 1) return false;
+    return isOrphanNight(propertyId, checkIn);
+}
+
 loadAvailability();
 
 /* ==========================================================================
@@ -835,14 +855,20 @@ if (directLoft && directGuests && directIn && directOut) {
         const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         const breakfast = directBreakfast ? directBreakfast.checked : false;
         const breakfastPerNight = breakfast ? BOOKING.breakfast.perPersonPerNight * guests : 0;
-        directFeeNote.textContent = breakfast
-            ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`
-            : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`;
 
         const nights = directIn.value && directOut.value
             ? Math.round((new Date(directOut.value) - new Date(directIn.value)) / 86400000)
             : 0;
-        const hasDates = nights >= BOOKING.minNights && nights <= 60;
+        // Fechas válidas: se cumple el mínimo general, O es una sola noche huérfana
+        // (1 noche libre entre dos periodos ocupados) que sí se puede reservar.
+        const isOrphan = isOrphanStay(directLoft.value, directIn.value, directOut.value);
+        const hasDates = (nights >= BOOKING.minNights || isOrphan) && nights >= 1 && nights <= 60;
+
+        directFeeNote.textContent = (isOrphan && nights === 1)
+            ? tr('direct.orphanOk', 'Última noche disponible — se permite 1 noche')
+            : (breakfast
+                ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`
+                : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`);
 
         // Fechas ya bloqueadas (reservas propias o calendarios externos importados)
         if (hasDates && datesBlocked(directLoft.value, directIn.value, directOut.value)) {
@@ -921,7 +947,9 @@ if (directLoft && directGuests && directIn && directOut) {
     directLoft.addEventListener('change', updateDirect);
     directGuests.addEventListener('input', updateDirect);
     directIn.addEventListener('change', () => {
-        directOut.min = directIn.value ? addDays(directIn.value, BOOKING.minNights) : addDays(today, BOOKING.minNights);
+        // Si la noche elegida es huérfana, basta 1 noche; si no, se respeta el mínimo
+        const minN = isOrphanNight(directLoft.value, directIn.value) ? 1 : BOOKING.minNights;
+        directOut.min = directIn.value ? addDays(directIn.value, minN) : addDays(today, BOOKING.minNights);
         updateDirect();
     });
     directOut.addEventListener('change', updateDirect);
@@ -1013,6 +1041,8 @@ if (directLoft && directGuests && directIn && directOut) {
             const firstDow = new Date(Date.UTC(calY, calM, 1)).getUTCDay();
             const dim = new Date(Date.UTC(calY, calM + 1, 0)).getUTCDate();
             const minOut = directIn.value ? addDays(directIn.value, BOOKING.minNights) : null;
+            // Si la noche de entrada es huérfana, se puede salir al día siguiente (1 noche)
+            const orphanIn = directIn.value ? isOrphanNight(pid, directIn.value) : false;
             for (let i = 0; i < firstDow; i++) grid.appendChild(document.createElement('span'));
             for (let d = 1; d <= dim; d++) {
                 const s = iso(new Date(Date.UTC(calY, calM, d)));
@@ -1022,7 +1052,8 @@ if (directLoft && directGuests && directIn && directOut) {
                 btn.textContent = String(d);
                 let dis = Date.parse(s) < t0 || dayBlocked(pid, s);
                 if (calPhase === 'out' && !dis) {
-                    if (minOut && Date.parse(s) < Date.parse(minOut)) dis = true;
+                    const isOrphanCheckout = orphanIn && s === addDays(directIn.value, 1);
+                    if (!isOrphanCheckout && minOut && Date.parse(s) < Date.parse(minOut)) dis = true;
                     else if (rangeBlocked(pid, directIn.value, s)) dis = true;
                 }
                 if (dis) btn.classList.add('disabled');

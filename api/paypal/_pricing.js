@@ -63,14 +63,16 @@ function rateForDate(date) {
 }
 
 // Recibe fechas 'YYYY-MM-DD', huéspedes y si incluye desayuno; devuelve { total, nights, guests, currency, breakfast } o { error }
-function computeBooking(checkIn, checkOut, guests, breakfast) {
+// `opts.allowOneNight` permite 1 noche (se usa solo para noches huérfanas validadas por el calendario)
+function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
     if (!Number.isFinite(inMs) || !Number.isFinite(outMs) || outMs <= inMs) {
         return { error: 'invalid_dates' };
     }
     const nights = Math.round((outMs - inMs) / 86400000);
-    if (nights < PRICING.minNights) return { error: 'min_nights' };
+    const minNights = (opts && opts.allowOneNight) ? 1 : PRICING.minNights;
+    if (nights < minNights) return { error: 'min_nights' };
     if (nights > PRICING.maxNights) return { error: 'too_long' };
 
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;

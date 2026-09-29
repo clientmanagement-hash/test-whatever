@@ -4,7 +4,7 @@
 // { checkIn, checkOut, guests } usando ./_pricing.js (fuente de verdad).
 
 const { computeBooking } = require('./_pricing');
-const { propId, isBlocked } = require('../ical/_lib');
+const { propId, isBlocked, isOrphanStay } = require('../ical/_lib');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -60,8 +60,13 @@ module.exports = async function handler(req, res) {
     const propertyId = body.propertyId;
     if (!propId(propertyId)) return res.status(400).json({ error: 'invalid_property' });
 
-    // El precio se calcula en el servidor (autoridad), no se acepta del cliente
-    const booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true);
+    // El precio se calcula en el servidor (autoridad), no se acepta del cliente.
+    // Excepción: una noche huérfana (1 noche libre entre dos periodos ocupados)
+    // se puede reservar con 1 noche aunque el mínimo general sea mayor.
+    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true);
+    if (booking.error === 'min_nights' && (await isOrphanStay(propertyId, body.checkIn, body.checkOut))) {
+        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true });
+    }
     if (booking.error) return res.status(400).json({ error: booking.error });
 
     if (await isBlocked(propertyId, body.checkIn, body.checkOut)) {

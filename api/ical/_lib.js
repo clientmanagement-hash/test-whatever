@@ -116,6 +116,65 @@ async function isBlocked(pid, checkIn, checkOut) {
     return false;
 }
 
+// ---- Noches huérfanas ------------------------------------------------------
+// Una noche huérfana es UNA sola noche disponible entre dos periodos ocupados
+// (la noche anterior y la siguiente están bloqueadas). Solo esas se pueden
+// reservar 1 noche aunque el mínimo general sea mayor.
+const dayIso = (t) => new Date(t).toISOString().slice(0, 10);
+
+// ¿La noche que empieza en `nightIso` está libre en esa propiedad?
+function nightFree(ranges, nightIso) {
+    const t = Date.parse(nightIso + 'T00:00:00Z');
+    for (const r of ranges) {
+        const bIn = Date.parse(r.checkIn + 'T00:00:00Z');
+        const bOut = Date.parse(r.checkOut + 'T00:00:00Z');
+        if (t >= bIn && t < bOut) return false; // dentro de un bloqueo
+    }
+    return true;
+}
+
+// Lista de noches huérfanas de una propiedad (una noche libre con ambas vecinas ocupadas)
+function orphanNightsFromRanges(ranges, fromIso, toIso) {
+    const result = [];
+    if (!ranges || !ranges.length) return result;
+    // Rango de fechas a explorar: desde la primera a la última fecha bloqueada (+/- 1 día)
+    let min = Infinity;
+    let max = -Infinity;
+    for (const r of ranges) {
+        min = Math.min(min, Date.parse(r.checkIn + 'T00:00:00Z'));
+        max = Math.max(max, Date.parse(r.checkOut + 'T00:00:00Z'));
+    }
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return result;
+    const start = Math.max(min - dayMs, fromIso ? Date.parse(fromIso + 'T00:00:00Z') : min - dayMs);
+    const end = Math.min(max + dayMs, toIso ? Date.parse(toIso + 'T00:00:00Z') : max + dayMs);
+    for (let t = start; t <= end; t += dayMs) {
+        const s = dayIso(t);
+        const prev = dayIso(t - dayMs);
+        const next = dayIso(t + dayMs);
+        if (nightFree(ranges, s) && !nightFree(ranges, prev) && !nightFree(ranges, next)) {
+            result.push(s);
+        }
+    }
+    return result;
+}
+
+// Noches huérfanas de una propiedad (consultando su disponibilidad real)
+async function orphanNights(pid) {
+    const ranges = await availability(pid);
+    return orphanNightsFromRanges(ranges);
+}
+
+// ¿El rango pedido es exactamente una noche huérfana? (1 noche, y es huérfana)
+async function isOrphanStay(pid, checkIn, checkOut) {
+    const aIn = Date.parse(checkIn);
+    const aOut = Date.parse(checkOut);
+    if (!Number.isFinite(aIn) || !Number.isFinite(aOut)) return false;
+    if (Math.round((aOut - aIn) / dayMs) !== 1) return false; // debe ser exactamente 1 noche
+    const ranges = await availability(pid);
+    const s = norm(checkIn);
+    return nightFree(ranges, s) && !nightFree(ranges, dayIso(aIn - dayMs)) && !nightFree(ranges, dayIso(aIn + dayMs));
+}
+
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
 async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, breakfast, source }) {
     const prop = propId(propertyId);
@@ -187,6 +246,9 @@ module.exports = {
     saveExternal,
     availability,
     isBlocked,
+    orphanNights,
+    orphanNightsFromRanges,
+    isOrphanStay,
     recordReservation,
     markNotify,
     readBody,
