@@ -106,6 +106,17 @@
         <button class="sec" id="btn-reload">Recargar datos</button>
     </div>
 
+    <div class="card" id="health-card">
+        <h2>🩺 Estado del sistema <span class="badge" id="health-badge">…</span></h2>
+        <p class="muted">Revisión automática: pagos, correos, almacenamiento y calendarios. Sin necesidad de hacer una reserva.</p>
+        <div id="health-list"></div>
+        <div class="form-row" style="margin-top:14px">
+            <button id="btn-health">🔄 Revisar ahora</button>
+            <button class="sec" id="btn-test-mail">✉️ Enviarme un correo de prueba</button>
+        </div>
+        <div class="msg" id="health-msg"></div>
+    </div>
+
     <div class="card" id="inquiries-card">
         <h2>📩 Consultas del formulario <span class="badge" id="inq-count">0</span></h2>
         <p class="muted">Mensajes recibidos desde el formulario «Déjanos tu consulta» de la página.</p>
@@ -170,10 +181,62 @@
             $('stg-cron').className = 'badge ok';
             renderProps(data.properties);
             renderInquiries(data.inquiries || []);
+            loadHealth();
         } catch (e) {
             $('global-msg').textContent = 'Error cargando: ' + e.message;
         }
     }
+
+    async function loadHealth() {
+        const badge = document.getElementById('health-badge');
+        const box = document.getElementById('health-list');
+        if (!badge || !box) return;
+        try {
+            const h = await api('/../../api/health');
+            const allOk = h.ok;
+            badge.textContent = allOk ? 'Todo funciona' : (h.failures + ' problema(s)');
+            badge.className = 'badge ' + (allOk ? 'ok' : 'err');
+            box.innerHTML = '<table><thead><tr><th>Servicio</th><th>Estado</th></tr></thead><tbody>'
+                + h.checks.map((c) => '<tr><td><b>' + esc(c.label) + '</b></td><td>'
+                    + '<span class="badge ' + (c.ok ? 'ok' : 'err') + '">' + (c.ok ? 'OK' : 'FALLA')
+                    + '</span> <span class="muted">' + esc(c.detail) + '</span></td></tr>').join('')
+                + '</tbody></table>'
+                + '<p class="muted">Última revisión: ' + esc((h.checkedAt || '').slice(0, 16).replace('T', ' ')) + '</p>';
+        } catch (e) {
+            badge.textContent = 'no se pudo revisar';
+            badge.className = 'badge warn';
+            box.innerHTML = '<p class="muted">' + esc(e.message) + '</p>';
+        }
+    }
+
+    (function bindHealth() {
+        const b = document.getElementById('btn-health');
+        const t = document.getElementById('btn-test-mail');
+        const msg = document.getElementById('health-msg');
+        if (b) b.addEventListener('click', async () => {
+            msg.textContent = 'Revisando…';
+            await loadHealth();
+            msg.textContent = '';
+        });
+        if (t) t.addEventListener('click', async () => {
+            const to = window.prompt('¿A qué correo envío la prueba?', 'cabanaslamaite@gmail.com');
+            if (!to) return;
+            msg.textContent = 'Enviando correo de prueba…';
+            try {
+                const r = await fetch('/api/paypal/test-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
+                    body: JSON.stringify({ to: to })
+                });
+                const d = await r.json().catch(() => ({}));
+                msg.textContent = d.ok
+                    ? '✅ Correo de prueba enviado a ' + to + ' — revisa la bandeja (y spam).'
+                    : '❌ Falló el envío: ' + (d.body || d.reason || 'error');
+            } catch (e) {
+                msg.textContent = '❌ Error: ' + e.message;
+            }
+        });
+    })();
 
     function renderInquiries(list) {
         const count = document.getElementById('inq-count');
