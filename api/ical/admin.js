@@ -1,6 +1,6 @@
 // GET /api/ical/admin — datos del panel de administración (requiere PIN)
 // Header: X-Admin-Pin (o ?pin=). PIN = env ADMIN_PIN o el valor por defecto.
-const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, adminPinOk, hostUrl } = require('./_lib');
+const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl } = require('./_lib');
 
 module.exports = async function handler(req, res) {
     if (!adminPinOk(req)) return res.status(401).json({ error: 'unauthorized' });
@@ -33,11 +33,18 @@ module.exports = async function handler(req, res) {
     }
 
     res.setHeader('Cache-Control', 'no-store');
+    // Consultas del formulario de contacto (las más recientes primero)
+    let inquiries = [];
+    try {
+        inquiries = await loadInquiries();
+    } catch (e) { /* si falla, el panel sigue funcionando */ }
+
     res.status(200).json({
         storage: storageMode(),
         adminPinSet: Boolean(process.env.ADMIN_PIN),
         cronConfigured: Boolean(process.env.CRON_SECRET),
         kv: kvDiag,
+        inquiries,
         properties
     });
 };

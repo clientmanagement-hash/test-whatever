@@ -12,6 +12,7 @@ const propId = (id) => PROPERTIES.find((p) => p.id === id);
 
 const K_RES = (pid) => `ical:res:${pid}`;
 const K_EXT = (pid) => `ical:ext:${pid}`;
+const K_INQ = 'inquiries';   // consultas del formulario de contacto
 
 // ---------- almacenamiento ----------
 let kv = null;
@@ -84,6 +85,46 @@ async function saveExternal(pid, list) {
     try {
         require('fs').writeFileSync('/tmp/ical-store.json', JSON.stringify(ds.data));
     } catch (e) { /* ignorar */ }
+}
+
+// ---------- consultas del formulario de contacto ----------
+// Se guardan siempre (nunca se pierden) y el panel admin las muestra.
+async function loadInquiries() {
+    const k = getKv();
+    if (k) {
+        const raw = await k.get(K_INQ);
+        return Array.isArray(raw) ? raw : [];
+    }
+    return getDevStore().data.inquiries || [];
+}
+
+async function saveInquiries(list) {
+    const k = getKv();
+    if (k) return k.set(K_INQ, list);
+    const ds = getDevStore();
+    ds.data.inquiries = list;
+    try {
+        require('fs').writeFileSync('/tmp/ical-store.json', JSON.stringify(ds.data));
+    } catch (e) { /* ignorar */ }
+}
+
+// Guarda una consulta (máx. 300, las más recientes primero)
+async function addInquiry(fields) {
+    const list = await loadInquiries();
+    const item = {
+        id: 'q' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        createdAt: new Date().toISOString(),
+        sentBy: fields.sentBy || null,   // 'resend' | 'formsubmit' | null (no se pudo enviar)
+        nombre: String(fields.nombre || '').slice(0, 120),
+        email: String(fields.email || '').slice(0, 120),
+        telefono: String(fields.telefono || '').slice(0, 40),
+        fechas: String(fields.fechas || '').slice(0, 120),
+        huespedes: String(fields.huespedes || '').slice(0, 20),
+        mensaje: String(fields.mensaje || '').slice(0, 2000)
+    };
+    list.unshift(item);
+    await saveInquiries(list.slice(0, 300));
+    return item;
 }
 
 // ---------- fechas y disponibilidad ----------
@@ -246,6 +287,8 @@ module.exports = {
     saveExternal,
     availability,
     isBlocked,
+    loadInquiries,
+    addInquiry,
     orphanNights,
     orphanNightsFromRanges,
     isOrphanStay,
