@@ -65,6 +65,16 @@ const I18N = {
         'galeria.title': 'Live the experience',
         'galeria.sub': 'Pool, tropical gardens and the best beaches minutes away. This is what staying at Cabañas La Maite feels like.',
 
+        // Desayuno
+        'desayuno.eyebrow': 'Extra service',
+        'desayuno.title': 'Start your day with our breakfast',
+        'desayuno.p': 'Enjoy a breakfast prepared at the cabins, with prior reservation. The perfect way to start the day before heading to the beach.',
+        'desayuno.price': '<strong>$11</strong> per person, per night · added to your booking',
+        'desayuno.li1': 'With prior reservation',
+        'desayuno.li2': 'Served at your cabin',
+        'desayuno.li3': 'You can add it when booking',
+        'desayuno.cta': 'Book with breakfast',
+
         // Ubicación
         'ubicacion.eyebrow': 'Location',
         'ubicacion.title': 'Sámara Beach, <span class="text-green">one of the best in the Pacific</span>',
