@@ -583,19 +583,15 @@ if (contactForm && formMessage) {
         submitBtn.textContent = tr('reservar.form.sending', 'Enviando...');
         submitBtn.disabled = true;
 
-        // Envío real por FormSubmit → llega a cabanaslamaite@gmail.com
+        // Envío a través del servidor (/api/contact), que reenvía por FormSubmit
+        // (FormSubmit exige las cabeceras Origin/Referer, que el navegador no puede fijar)
         try {
-            const res = await fetch('https://formsubmit.co/ajax/cabanaslamaite@gmail.com', {
+            const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({
-                    ...data,
-                    _subject: tr('reservar.form.subject', 'Nueva consulta · Cabañas La Maite'),
-                    _template: 'table',
-                    _captcha: 'false'
-                })
+                body: JSON.stringify(data)
             });
-            if (!res.ok) throw new Error('formsubmit_error');
+            if (!res.ok) throw new Error('contact_error');
             setMessage(
                 tr('reservar.form.ok', '¡Gracias {name}! Te contactaremos pronto para confirmar tu consulta.').replace('{name}', data.nombre.trim()),
                 'success'
