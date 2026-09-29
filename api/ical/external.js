@@ -3,6 +3,16 @@
 const { propId, loadExternal, saveExternal, readBody } = require('./_lib');
 const { parseIcs } = require('./_ics');
 
+// Conserva solo eventos que terminan hoy o después (los pasados inflan el calendario).
+// Se incluye 1 día de margen para no perder reservas en curso.
+function filterUpcoming(events) {
+    const cutoff = Date.now() - 86400000;
+    return (events || []).filter((e) => {
+        const out = Date.parse(e.checkOut);
+        return !Number.isFinite(out) || out >= cutoff;
+    });
+}
+
 async function refreshExternal(pid, entry) {
     entry.lastSync = new Date().toISOString();
     entry.status = 'pending';
@@ -16,7 +26,7 @@ async function refreshExternal(pid, entry) {
         clearTimeout(t);
         if (!r.ok) throw new Error('http_' + r.status);
         const text = await r.text();
-        entry.events = parseIcs(text);
+        entry.events = filterUpcoming(parseIcs(text));
         entry.status = 'ok';
         entry.lastCount = entry.events.length;
         delete entry.lastError;
