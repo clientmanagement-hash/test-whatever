@@ -1050,11 +1050,17 @@ if (directLoft && directGuests && directIn && directOut) {
                 btn.type = 'button';
                 btn.className = 'cal-day';
                 btn.textContent = String(d);
-                let dis = Date.parse(s) < t0 || dayBlocked(pid, s);
-                if (calPhase === 'out' && !dis) {
+                // Un día es seleccionable si: para ENTRADA → la noche está libre;
+                // para SALIDA → el rango entrada→salida no invade ningún bloqueo
+                // (el día de salida puede coincidir con el check-in de otra reserva).
+                let dis;
+                if (calPhase === 'out') {
                     const isOrphanCheckout = orphanIn && s === addDays(directIn.value, 1);
-                    if (!isOrphanCheckout && minOut && Date.parse(s) < Date.parse(minOut)) dis = true;
-                    else if (rangeBlocked(pid, directIn.value, s)) dis = true;
+                    dis = Date.parse(s) < t0
+                        || rangeBlocked(pid, directIn.value, s)
+                        || (!isOrphanCheckout && minOut && Date.parse(s) < Date.parse(minOut));
+                } else {
+                    dis = Date.parse(s) < t0 || dayBlocked(pid, s);
                 }
                 if (dis) btn.classList.add('disabled');
                 if (s === directIn.value || s === directOut.value) btn.classList.add('selected');
