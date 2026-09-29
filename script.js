@@ -75,6 +75,20 @@ const I18N = {
         'desayuno.li3': 'You can add it when booking',
         'desayuno.cta': 'Book with breakfast',
 
+        // Paella
+        'paella.eyebrow': 'Extra service',
+        'paella.title': 'Paella for lunch or dinner',
+        'paella.sub': 'We prepare paella to order, to enjoy at your cabin. Choose your favourite and we cook it for you.',
+        'paella.t1': '🥗 Vegetarian',
+        'paella.t2': '🦐 Seafood',
+        'paella.t3': '🥩 Meat',
+        'paella.t4': '🍤 Mixed',
+        'paella.price': '<strong>$18</strong> per person · minimum 2 people · includes bread',
+        'paella.note': 'With prior reservation. Arrange it on WhatsApp when confirming your booking.',
+        'paella.cta': 'Order paella on WhatsApp',
+        'alt.paellaSeafood': 'Seafood paella',
+        'alt.paellaMeat': 'Meat paella',
+
         // Ubicación
         'ubicacion.eyebrow': 'Location',
         'ubicacion.title': 'Sámara Beach, <span class="text-green">one of the best in the Pacific</span>',
@@ -224,7 +238,8 @@ const I18N = {
         'amen.nosmoke': 'No smoking',
         'amen.internet': 'Satellite internet',
         'amen.parking': 'Private parking',
-        'amen.breakfast': 'Breakfast in the cabin with prior reservation (not included)',
+        'amen.breakfast': 'Typical Costa Rican breakfast with prior reservation (not included)',
+        'amen.paella': 'Paella (vegetarian, seafood, meat or mixed) with prior reservation',
         'amen.cleaning': 'Cleaning service (5 nights or more)',
         'amen.crib': 'Baby crib',
 
