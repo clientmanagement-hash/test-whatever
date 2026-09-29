@@ -1,6 +1,6 @@
 // GET /api/ical/admin — datos del panel de administración (requiere PIN)
 // Header: X-Admin-Pin (o ?pin=). PIN = env ADMIN_PIN o el valor por defecto.
-const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, adminPinOk, hostUrl } = require('./_lib');
+const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, adminPinOk, hostUrl } = require('./_lib');
 
 module.exports = async function handler(req, res) {
     if (!adminPinOk(req)) return res.status(401).json({ error: 'unauthorized' });
@@ -19,13 +19,16 @@ module.exports = async function handler(req, res) {
 
     const properties = [];
     for (const p of PROPERTIES) {
+        const blocked = await availability(p.id);
         properties.push({
             id: p.id,
             name: p.name,
             exportUrl: `${hostUrl(req)}/api/ical/property/${p.id}`,
             reservations: await loadReservations(p.id),
             external: await loadExternal(p.id),
-            blocked: await availability(p.id)
+            blocked,
+            // Noches huérfanas: 1 noche libre entre dos periodos ocupados (reservables 1 noche)
+            orphanNights: orphanNightsFromRanges(blocked)
         });
     }
 
