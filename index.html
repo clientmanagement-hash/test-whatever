@@ -407,6 +407,9 @@
                                 <div id="paypal-hosted-container" class="paypal-hosted"></div>
                                 <div id="direct-pay-status" class="direct-pay-status" role="status" aria-live="polite"></div>
                                 <p class="direct-note" data-i18n="direct.note">La reserva se confirma al recibir el pago. Puedes pagar con tarjeta de crédito o débito, sin necesidad de cuenta PayPal.</p>
+                                <p class="direct-policies">
+                                    <button type="button" class="link-btn" id="open-policies" data-i18n="direct.policies">Al reservar aceptas nuestras políticas de cancelación y condiciones de estancia</button>
+                                </p>
                                 <div class="sinpe-note">
                                     <span class="sinpe-flag">🇨🇷</span>
                                     <p data-i18n-html="direct.sinpe">Para <strong>costarricenses</strong>: aceptamos pagos por <strong>SINPE Móvil</strong> al <strong>+506 8306 3336</strong>. Haz la transferencia y envíanos el comprobante por WhatsApp para confirmar tu reserva.</p>
@@ -517,6 +520,21 @@
             </div>
         </div>
     </footer>
+
+    <div class="pol-modal" id="pol-modal" role="dialog" aria-modal="true" aria-labelledby="pol-modal-title" aria-hidden="true">
+        <div class="pol-modal-box">
+            <div class="pol-modal-head">
+                <h2 id="pol-modal-title" data-i18n="pol.modalTitle">Políticas y condiciones</h2>
+                <button type="button" class="pol-modal-close" id="pol-modal-close" aria-label="Cerrar">×</button>
+            </div>
+            <div class="pol-modal-body" id="pol-modal-body">
+                <p class="pol-modal-loading" data-i18n="pol.loading">Cargando…</p>
+            </div>
+            <div class="pol-modal-foot">
+                <a href="politicas.html" data-i18n="pol.openFull">Abrir en una página completa</a>
+            </div>
+        </div>
+    </div>
 
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visor de fotos">
         <button class="lb-close" aria-label="Cerrar" data-i18n-attr="aria-label:lb.close">✕</button>

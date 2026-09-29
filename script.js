@@ -140,6 +140,11 @@ const I18N = {
         'pol.cta.p': 'Do you have questions about these policies?',
         'pol.cta.btn': 'Message us on WhatsApp',
         'footer.politicas': 'Policies and conditions',
+        'direct.policies': 'By booking you accept our cancellation policy and stay conditions',
+        'pol.modalTitle': 'Policies and conditions',
+        'pol.loading': 'Loading…',
+        'pol.loadErr': 'Could not load the policies.',
+        'pol.openFull': 'Open in a full page',
 
         // Ubicación
         'ubicacion.eyebrow': 'Location',
@@ -835,6 +840,61 @@ function isOrphanStay(propertyId, checkIn, checkOut) {
 }
 
 loadAvailability();
+
+/* ==========================================================================
+   Modal de políticas y condiciones (se carga desde politicas.html)
+   ========================================================================== */
+const polModal = $('#pol-modal');
+const polBody = $('#pol-modal-body');
+const polOpen = $('#open-policies');
+const polClose = $('#pol-modal-close');
+let polLoaded = false;
+
+async function loadPolicies() {
+    if (!polBody) return;
+    if (polLoaded) return;
+    try {
+        const r = await fetch('politicas.html');
+        if (!r.ok) throw new Error('http');
+        const html = await r.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const blocks = doc.querySelectorAll('.politicas-block');
+        if (!blocks.length) throw new Error('empty');
+        polBody.innerHTML = Array.prototype.map.call(blocks, (b) => b.outerHTML).join('');
+        polLoaded = true;
+        applyLang(); // traduce el contenido recién insertado
+    } catch (e) {
+        // si falla la carga, se ofrece el enlace a la página completa
+        polBody.innerHTML = '<p data-i18n="pol.loadErr">No se pudieron cargar las políticas.</p>';
+        applyLang();
+    }
+}
+
+function openPolicies() {
+    if (!polModal) return;
+    polModal.classList.add('open');
+    polModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    loadPolicies();
+}
+
+function closePolicies() {
+    if (!polModal) return;
+    polModal.classList.remove('open');
+    polModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+if (polModal && polOpen) {
+    polOpen.addEventListener('click', openPolicies);
+    if (polClose) polClose.addEventListener('click', closePolicies);
+    polModal.addEventListener('click', (e) => {
+        if (e.target === polModal) closePolicies();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && polModal.classList.contains('open')) closePolicies();
+    });
+}
 
 /* ==========================================================================
    Reserva directa con PayPal (seña) — pago del total vía Smart Buttons (Vercel + Orders API)
