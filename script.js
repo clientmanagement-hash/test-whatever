@@ -261,6 +261,7 @@ const I18N = {
         'alt.interior': 'Interior space',
         'alt.garden': 'Tropical garden',
         'alt.experience': 'The experience',
+        'alt.breakfast': 'Breakfast',
         'alt.loft2': 'Loft 2'
     }
 };
