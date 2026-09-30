@@ -24,6 +24,7 @@ const I18N = {
 
         // Hero
         'hero.tagline': 'A beach refuge: serene and cozy, just a few minutes from Buena Vista and Sámara beaches. Lofts with pool, tropical garden and everything you need to unwind.',
+        'oficial.text': '<strong>cabanaslamaite.com is the official website of Cabañas La Maite</strong> (also written <strong>Cabañas Lamaite</strong> or <strong>Cabañas La Maite Sámara</strong>), an accommodation of two lofts with a pool in Playa Sámara, Guanacaste, Costa Rica. Here you can check real availability, up-to-date rates and <strong>book directly with us</strong>, with no middleman fees.',
         'hero.seeLofts': 'See the lofts',
         'hero.rating': 'Exceptional · 155 reviews',
         'hero.scroll': 'Scroll',
@@ -282,6 +283,9 @@ const I18N = {
         'footer.brand': 'Lofts with pool, 900 m from Buena Vista Beach and 1.6 km from Sámara Beach. Relaxing, welcoming beach style in Sámara, Costa Rica.',
         'footer.explorar': 'Explore',
         'footer.contacto': 'Contact',
+        'footer.oficiales': 'Official site',
+        'footer.esteSitio': 'This is our official website',
+        'footer.mejorPrecio': 'Best price, book direct',
         'footer.made': 'Made with <span style="color:var(--tan-500)">♥</span> by the sea',
 
         // Lightbox

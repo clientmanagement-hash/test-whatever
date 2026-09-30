@@ -1607,6 +1607,25 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     }
 }
 
+/* ============ SITIO OFICIAL ============ */
+.oficial {
+    background: var(--verde-900, #1f3d2b);
+    padding: 20px 0;
+}
+
+.oficial-text {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+.oficial-text strong {
+    color: #fff;
+}
+
 /* ============ PREGUNTAS FRECUENTES ============ */
 .faq {
     background: var(--paper);
