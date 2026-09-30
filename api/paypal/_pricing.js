@@ -71,6 +71,8 @@ function rateForDate(date) {
 //   - Edad >= 3 años: se cobra como una persona (ocupa cupo y suma la persona adicional).
 // `opts.promoRate` = tarifa especial por noche (código promocional). Si viene, SUSTITUYE
 //   el precio de temporada, pero se mantienen el recargo por persona adicional y el desayuno.
+// `opts.promoFlat` = true cuando el código fija una TARIFA PLANA: el precio por noche es
+//   exactamente promoRate, sin recargo por persona adicional (el desayuno sí se suma aparte).
 function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
@@ -108,11 +110,15 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const promoRate = (opts && Number.isFinite(Number(opts.promoRate)) && Number(opts.promoRate) > 0)
         ? Number(opts.promoRate)
         : null;
+    // Tarifa PLANA: el precio por noche es exactamente promoRate, sin recargo por personas.
+    // El desayuno se sigue cobrando aparte (es un servicio adicional, no hospedaje).
+    const promoFlat = Boolean(promoRate !== null && opts && opts.promoFlat);
+    const extraAplicable = promoFlat ? 0 : extraFeePerNight;
     let total = 0;
     for (let i = 0; i < nights; i++) {
         const d = new Date(inMs + i * 86400000);
         const base = promoRate !== null ? promoRate : rateForDate(d);
-        let rate = base + extraFeePerNight;
+        let rate = base + extraAplicable;
         // El desayuno se cobra solo a quienes pagan (adultos + niños de 3+)
         if (withBreakfast) rate += PRICING.breakfast.perPersonPerNight * totalPayingGuests;
         total += rate;
@@ -127,7 +133,8 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
         childAges: ages,
         currency: PRICING.currency,
         breakfast: withBreakfast,
-        promoRate: promoRate
+        promoRate: promoRate,
+        promoFlat: promoFlat
     };
 }
 

@@ -70,18 +70,27 @@ module.exports = async function handler(req, res) {
     // un precio especial sin un código válido.
     let promoRate = null;
     let promoCode = null;
+    let promoFlat = false;
+    let promoMaxGuests = null;
     if (body.promo) {
         const v = await validatePromo(String(body.promo));
         if (!v.ok) return res.status(400).json({ error: 'promo_' + v.error });
         promoRate = v.promo.rate;
         promoCode = v.promo.code;
+        promoFlat = v.promo.flat !== false;
+        promoMaxGuests = v.promo.maxGuests || null;
     }
 
-    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges, promoRate });
+    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges, promoRate, promoFlat });
     if (booking.error === 'min_nights' && (await isOrphanStay(propertyId, body.checkIn, body.checkOut))) {
-        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges, promoRate });
+        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges, promoRate, promoFlat });
     }
     if (booking.error) return res.status(400).json({ error: booking.error });
+
+    // El código puede limitar cuántas personas aplican la tarifa especial
+    if (promoMaxGuests && booking.guests > promoMaxGuests) {
+        return res.status(400).json({ error: 'promo_max_guests' });
+    }
 
     if (await isBlocked(propertyId, body.checkIn, body.checkOut)) {
         return res.status(409).json({ error: 'dates_unavailable' });

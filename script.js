@@ -303,6 +303,11 @@ const I18N = {
         'direct.promoExpired': 'This code has expired.',
         'direct.promoBad': 'Invalid code.',
         'direct.promoErr': 'Could not check the code. Please try again.',
+        'direct.promoFlat': 'flat rate',
+        'direct.promoPlusExtras': 'plus per-person extras',
+        'direct.promoMaxShort': 'max.',
+        'direct.promoOverGuests': 'This code is for a maximum of',
+        'direct.promoMaxGuests': 'El código es para máximo 4 personas.',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -791,6 +796,7 @@ const payErrorMsg = (code) => {
         promo_not_found: tr('direct.promoBad', 'Código no válido.'),
         promo_used: tr('direct.promoUsed', 'Este código ya fue utilizado.'),
         promo_expired: tr('direct.promoExpired', 'Este código ha caducado.'),
+        promo_max_guests: tr('direct.promoMaxGuests', 'El código es para máximo 4 personas.'),
         invalid_property: tr('direct.selectDates', 'Elige tus fechas'),
         dates_unavailable: tr('direct.unavailable', 'Fechas no disponibles'),
         paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
@@ -1238,18 +1244,30 @@ if (directLoft && directGuests && directIn && directOut) {
             return;
         }
 
+        // El código puede limitar cuántas personas aplican la tarifa especial
+        if (directPromoActivo && directPromoActivo.maxGuests && guests > directPromoActivo.maxGuests) {
+            directNights.textContent = nights > 0 ? String(nights) : '—';
+            directTotal.textContent = tr('direct.promoOverGuests', 'El código es para máximo')
+                + ' ' + directPromoActivo.maxGuests + ' ' + tr('direct.persons', 'personas');
+            directDeposit.textContent = '—';
+            lastBooking = null;
+            return;
+        }
+
         let total = 0;
         let n = 0;
         const ratesSeen = [];
         const extraFee = extraGuestsFee(guests);
-        // Si hay un código aplicado, su tarifa sustituye a la de temporada
+        // Si hay un código aplicado, su tarifa sustituye a la de temporada.
+        // Con tarifa plana NO se suma el recargo por persona adicional.
         const baseRate = directPromoActivo ? directPromoActivo.rate : null;
+        const extraAplicable = (directPromoActivo && directPromoActivo.flat) ? 0 : extraFee;
 
         if (hasDates) {
             const d = new Date(directIn.value);
             const end = new Date(directOut.value);
             while (d < end) {
-                const r = (baseRate !== null ? baseRate : rateForDate(d)) + extraFee + breakfastPerNight;
+                const r = (baseRate !== null ? baseRate : rateForDate(d)) + extraAplicable + breakfastPerNight;
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
                 n += 1;
@@ -1353,9 +1371,15 @@ if (directLoft && directGuests && directIn && directOut) {
             const r = await fetch('/api/ical/admin?promo=' + encodeURIComponent(code));
             const d = await r.json();
             if (d && d.valid) {
-                directPromoActivo = { code: d.code, rate: d.rate };
+                directPromoActivo = { code: d.code, rate: d.rate, flat: d.flat !== false, maxGuests: d.maxGuests || null };
+                const ambito = directPromoActivo.flat
+                    ? tr('direct.promoFlat', 'tarifa plana')
+                    : tr('direct.promoPlusExtras', 'más extras por persona');
+                const tope = directPromoActivo.maxGuests
+                    ? ' · ' + tr('direct.promoMaxShort', 'máx.') + ' ' + directPromoActivo.maxGuests + ' ' + tr('direct.persons', 'personas')
+                    : '';
                 promoMsg(
-                    tr('direct.promoOk', 'Código aplicado') + ': ' + fmtUSD(d.rate) + ' ' + tr('direct.perNight', 'por noche'),
+                    tr('direct.promoOk', 'Código aplicado') + ': ' + fmtUSD(d.rate) + ' ' + tr('direct.perNight', 'por noche') + ' (' + ambito + tope + ')',
                     'ok'
                 );
             } else {

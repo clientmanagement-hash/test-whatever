@@ -12,7 +12,14 @@ module.exports = async function handler(req, res) {
         const v = await validatePromo(String(req.query.promo));
         res.setHeader('Cache-Control', 'no-store');
         if (!v.ok) return res.status(200).json({ valid: false, error: v.error });
-        return res.status(200).json({ valid: true, code: v.promo.code, rate: v.promo.rate, note: v.promo.note || '' });
+        return res.status(200).json({
+            valid: true,
+            code: v.promo.code,
+            rate: v.promo.rate,
+            flat: v.promo.flat !== false,
+            maxGuests: v.promo.maxGuests || null,
+            note: v.promo.note || ''
+        });
     }
 
     // Modo público: solo disponibilidad (lo consume el widget de reserva)
@@ -44,6 +51,8 @@ module.exports = async function handler(req, res) {
             const r = await addPromo({
                 code: body.code,
                 rate: body.rate,
+                flat: body.flat,
+                maxGuests: body.maxGuests,
                 note: body.note,
                 guestName: body.guestName,
                 guestEmail: body.guestEmail,

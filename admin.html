@@ -170,11 +170,23 @@
                 <label>Nota interna (opcional)
                     <input type="text" id="p-note" placeholder="Ej: tarifa acordada por WhatsApp" maxlength="160">
                 </label>
+            </div>
+            <div class="promo-form-row">
                 <label class="promo-check">
                     <input type="checkbox" id="p-single" checked>
                     <span>Un solo uso</span>
                 </label>
+                <label class="promo-check">
+                    <input type="checkbox" id="p-flat" checked>
+                    <span>Tarifa plana (sin recargo por persona adicional)</span>
+                </label>
+                <label>Máximo de personas (opcional)
+                    <input type="number" id="p-max" min="1" max="5" placeholder="4">
+                </label>
             </div>
+            <p class="muted" style="margin:0 0 12px;font-size:.76rem">
+                <b>Tarifa plana:</b> el precio por noche es exactamente el indicado, sin sumar el recargo de 3ª, 4ª o 5ª persona. El desayuno, si lo activan, se cobra aparte.
+            </p>
             <button class="btn" id="p-create">Crear código</button>
             <span class="muted" id="promo-msg"></span>
         </div>
@@ -340,6 +352,8 @@
                     : (p.expiresAt && p.expiresAt < new Date().toISOString().slice(0, 10)) ? '<span class="badge warn">caducado</span>'
                         : '<span class="badge ok">disponible</span>';
             const detalle = [
+                p.flat !== false ? 'tarifa plana' : 'tarifa + extras',
+                p.maxGuests ? 'máx. ' + esc(p.maxGuests) + ' personas' : null,
                 p.singleUse !== false ? 'un solo uso' : 'multi-uso',
                 p.expiresAt ? 'vence ' + esc(p.expiresAt) : null,
                 p.guestName ? 'para ' + esc(p.guestName) : null,
@@ -491,6 +505,8 @@
         await promoAction({
             code: code,
             rate: rate,
+            flat: $('p-flat').checked,
+            maxGuests: $('p-max').value ? parseInt($('p-max').value, 10) : null,
             note: $('p-note').value.trim(),
             guestName: $('p-guest').value.trim(),
             singleUse: $('p-single').checked,
@@ -502,6 +518,7 @@
             $('p-note').value = '';
             $('p-guest').value = '';
             $('p-expires').value = '';
+            $('p-max').value = '';
             msg.textContent = 'Código creado.';
         }
     });

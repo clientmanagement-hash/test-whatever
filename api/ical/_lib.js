@@ -200,6 +200,11 @@ async function addPromo(fields) {
     const item = {
         code,
         rate: Math.round(rate * 100) / 100,     // precio por noche, en USD
+        flat: fields.flat !== false,            // tarifa plana: sin recargo por persona adicional
+        maxGuests: (() => {
+            const m = Number(fields.maxGuests);
+            return Number.isFinite(m) && m >= 1 && m <= 5 ? Math.floor(m) : null;
+        })(),
         note: String(fields.note || '').slice(0, 160),  // a quién se le ofreció
         guestName: String(fields.guestName || '').slice(0, 80),
         guestEmail: String(fields.guestEmail || '').slice(0, 120),
