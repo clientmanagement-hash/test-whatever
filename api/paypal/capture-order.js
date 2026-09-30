@@ -64,7 +64,8 @@ async function fetchWithTimeout(url, options, ms) {
     }
 }
 
-// Aviso al dueño (FormSubmit, formato tabla) — ya existente
+// Aviso al dueño de una nueva reserva.
+// Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
 async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
@@ -72,32 +73,65 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
     const outMs = Date.parse(checkOut);
     const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
     const perNight = (amount && nights) ? (Number(amount) / nights) : null;
-    const payload = {
-        _subject: 'Nueva reserva · ' + propName + ' · ' + checkIn + (breakfast ? ' · ☕ Desayuno' : ''),
-        _template: 'table',
-        'Loft': propName,
-        'Entrada': checkIn,
-        'Salida': checkOut,
-        'Noches': String(nights),
-        'Huéspedes': String(guests),
-        'Nombre': name || '—',
-        'Email': email || '—',
-        'Teléfono / WhatsApp': phone || '—',
-        'Desayuno incluido': breakfast ? 'SÍ ☕' : 'No',
-        'Precio por noche': perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—',
-        'Monto cobrado': amount ? (amount + ' ' + (currency || 'USD')) : '—',
-        'Orden PayPal': orderId
-    };
-    await fetchWithTimeout('https://formsubmit.co/ajax/' + encodeURIComponent(emailToOwner), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            // FormSubmit exige contexto de página: se envía el origen del sitio
-            'Origin': 'https://www.cabanaslamaite.com',
-            'Referer': 'https://www.cabanaslamaite.com/'
-        },
-        body: JSON.stringify(payload)
-    }, 12000);
+    const total = amount ? (amount + ' ' + (currency || 'USD')) : '—';
+
+    const filas = [
+        ['Loft', propName],
+        ['Entrada', checkIn],
+        ['Salida', checkOut],
+        ['Noches', String(nights)],
+        ['Huéspedes', String(guests)],
+        ['Nombre', name || '—'],
+        ['Email', email || '—'],
+        ['Teléfono / WhatsApp', phone || '—'],
+        ['Desayuno incluido', breakfast ? 'SÍ ☕' : 'No'],
+        ['Precio por noche', perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—'],
+        ['Monto cobrado', total],
+        ['Orden PayPal', orderId]
+    ];
+
+    // 1) Resend (canal principal)
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+        try {
+            const rows = filas.map(([k, v]) =>
+                '<tr><th align="left" style="padding:6px;border:1px solid #ddd">' + escapeHtml(k)
+                + '</th><td style="padding:6px;border:1px solid #ddd">' + escapeHtml(v) + '</td></tr>').join('');
+            const r = await fetchWithTimeout('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    from: process.env.RESEND_FROM || 'Cabañas La Maite <onboarding@resend.dev>',
+                    to: [emailToOwner],
+                    reply_to: email || undefined,
+                    subject: 'Nueva reserva · ' + propName + ' · ' + checkIn + (breakfast ? ' · ☕ Desayuno' : ''),
+                    html: '<h2 style="color:#265a38">Nueva reserva confirmada</h2>'
+                        + '<p>Se recibió el pago de <b>' + escapeHtml(total) + '</b>.</p>'
+                        + '<table cellpadding="0" cellspacing="0" style="border-collapse:collapse">' + rows + '</table>'
+                })
+            }, 12000);
+            if (r.ok) return 'resend';
+        } catch (e) { /* si falla, se intenta el respaldo */ }
+    }
+
+    // 2) Respaldo: FormSubmit
+    try {
+        const payload = { _subject: 'Nueva reserva · ' + propName + ' · ' + checkIn, _template: 'table', _captcha: 'false' };
+        for (const [k, v] of filas) payload[k] = v;
+        const r2 = await fetchWithTimeout('https://formsubmit.co/ajax/' + encodeURIComponent(emailToOwner), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://www.cabanaslamaite.com',
+                'Referer': 'https://www.cabanaslamaite.com/'
+            },
+            body: JSON.stringify(payload)
+        }, 12000);
+        const d = await r2.json().catch(() => ({}));
+        if (r2.ok && d && d.success !== 'false') return 'formsubmit';
+    } catch (e) { /* sin canales disponibles */ }
+
+    return null;
 }
 
 // Confirmación al CLIENTE usando Resend (solo si RESEND_API_KEY está en Vercel)
@@ -228,7 +262,7 @@ module.exports = async function handler(req, res) {
             try {
                 const pu = (data.purchase_units && data.purchase_units[0]) || {};
                 const cap = (pu.payments && pu.payments.captures && pu.payments.captures[0]) || {};
-                await notifyReservation({
+                const canal = await notifyReservation({
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
@@ -241,7 +275,7 @@ module.exports = async function handler(req, res) {
                     currency: cap.amount ? cap.amount.currency_code : 'USD',
                     orderId: orderID
                 });
-                notify.owner = 'ok';
+                notify.owner = canal ? 'ok:' + canal : 'error:sin_canal';
             } catch (e) {
                 notify.owner = 'error:' + String((e && e.message) || e);
             }
