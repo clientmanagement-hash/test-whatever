@@ -29,6 +29,11 @@
         </image:image>
     </url>
     <url>
+        <loc>https://www.cabanaslamaite.com/preguntas-frecuentes.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>https://www.cabanaslamaite.com/politicas.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>

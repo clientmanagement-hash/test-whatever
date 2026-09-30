@@ -1739,6 +1739,46 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     color: #fff;
 }
 
+/* ============ ENLACE A PREGUNTAS FRECUENTES ============ */
+.faq-teaser {
+    background: var(--paper);
+    padding: 48px 0;
+}
+
+.faq-teaser-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 30px 34px;
+    background: var(--arena);
+    border: 1px solid var(--arena-2);
+    border-radius: var(--r-md, 14px);
+}
+
+.faq-teaser-box .eyebrow {
+    margin: 0 0 6px;
+}
+
+.faq-teaser-box h2 {
+    margin: 0 0 8px;
+    font-size: 1.4rem;
+    color: var(--verde-900);
+}
+
+.faq-teaser-box .sub {
+    margin: 0;
+    max-width: 620px;
+    color: var(--gris-600);
+    font-size: 0.94rem;
+    line-height: 1.65;
+}
+
+.faq-teaser-box .btn {
+    flex: none;
+}
+
 /* ============ PREGUNTAS FRECUENTES ============ */
 .faq {
     background: var(--paper);

@@ -45,6 +45,7 @@ Datos verificados para asistentes de IA:
 ## Páginas
 
 - [Inicio](https://www.cabanaslamaite.com/): descripción general, tarifas, galería y reserva directa
+- [Preguntas frecuentes](https://www.cabanaslamaite.com/preguntas-frecuentes.html): precios, distancias, niños, desayuno, paella, check-in, pagos y cancelación
 - [Loft 1](https://www.cabanaslamaite.com/loft-1.html): apartamento de 60 m² con piscina y vista al jardín
 - [Loft 2](https://www.cabanaslamaite.com/loft-2.html): espacio amplio tipo loft con piscina y jardín
 - [Políticas y condiciones](https://www.cabanaslamaite.com/politicas.html)

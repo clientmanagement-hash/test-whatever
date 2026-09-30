@@ -18,6 +18,7 @@ const I18N = {
         'nav.lofts': 'Lofts',
         'nav.galeria': 'Gallery',
         'nav.ubicacion': 'Location',
+        'nav.faq': 'FAQ',
         'nav.reservar': 'Book',
         'nav.menu': 'Open menu',
         'nav.menuClose': 'Close menu',
@@ -193,6 +194,11 @@ const I18N = {
         'faq.q20': 'How do I book directly with you?',
         'faq.a20': 'You can book right here on the page: choose loft, dates, number of guests and pay by card. You can also message us on <strong>WhatsApp at +506 8306 3336</strong> or email <strong>cabanaslamaite@gmail.com</strong>.',
         'faq.policies': 'See all policies and conditions',
+        'faq.teaserTitle': 'Any questions before booking?',
+        'faq.teaserSub': 'Seasonal rates, distances to the beaches, children, breakfast, paella package, check-in, payment methods and cancellation policy.',
+        'faq.verTodas': 'See all the answers',
+        'faq.ctaReservar': 'Book now',
+        'faqp.back': '← Back to home',
 
         // Ubicación
         'ubicacion.eyebrow': 'Location',
