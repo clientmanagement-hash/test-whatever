@@ -527,6 +527,14 @@
                                     <span class="breakfast-track" aria-hidden="true"></span>
                                     <span data-i18n="direct.breakfast">Desayuno típico costarricense</span>
                                 </label>
+                                <div class="form-group promo-field">
+                                    <label for="direct-promo" data-i18n="direct.promo">¿Tienes un código promocional?</label>
+                                    <div class="promo-row">
+                                        <input type="text" id="direct-promo" maxlength="24" autocomplete="off" placeholder="CÓDIGO">
+                                        <button type="button" class="btn btn-ghost promo-apply" id="direct-promo-apply" data-i18n="direct.promoApply">Aplicar</button>
+                                    </div>
+                                    <small class="promo-msg" id="direct-promo-msg" role="status" aria-live="polite"></small>
+                                </div>
                                 <div class="direct-summary">
                                     <div class="direct-line">
                                         <span data-i18n="direct.rate">Precio por noche</span>

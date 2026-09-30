@@ -1628,6 +1628,59 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     color: #a05a1c;
 }
 
+/* ============ CÓDIGO PROMOCIONAL ============ */
+.promo-field {
+    margin: 4px 0 14px;
+}
+
+.promo-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.promo-row input {
+    flex: 1;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+}
+
+.promo-apply {
+    flex: none;
+    padding: 0 18px;
+    white-space: nowrap;
+}
+
+.promo-msg {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    min-height: 1em;
+}
+
+.promo-msg.ok {
+    color: var(--verde-700, #2f6b45);
+}
+
+.promo-msg.err {
+    color: #a05a1c;
+}
+
+.promo-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #e5f4ec;
+    color: var(--verde-700, #2f6b45);
+    vertical-align: middle;
+}
+
 /* ============ CONTADORES ADULTOS / NIÑOS ============ */
 .stepper {
     display: flex;

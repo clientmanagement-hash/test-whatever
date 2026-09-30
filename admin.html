@@ -38,6 +38,28 @@
         .badge.ok { background: #e5f4ec; color: var(--verde-700); border-color: #b7e2cc; }
         .badge.err { background: #f7ead2; color: var(--tan-600); border-color: #e5cf9f; }
         .badge.warn { background: #fdeee0; color: #a05a1c; border-color: #f2cf9f; }
+        .promo-form { margin: 14px 0 18px; padding: 16px; background: var(--arena); border-radius: 10px; }
+        .promo-form-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+        .promo-form-row label { flex: 1 1 200px; font-size: .82rem; font-weight: 700; color: var(--verde-800); display: flex; flex-direction: column; gap: 4px; }
+        .promo-form-row input[type="text"], .promo-form-row input[type="number"], .promo-form-row input[type="date"] {
+            padding: 8px 10px; border: 1px solid var(--arena-2); border-radius: 7px; font-size: .88rem; font-weight: 400; background: #fff;
+        }
+        #p-code { text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+        .promo-check { flex-direction: row !important; align-items: center; gap: 8px; }
+        .promo-check input { flex: none; }
+        .promo-item {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            padding: 12px 14px; border: 1px solid var(--arena-2); border-radius: 9px; margin-bottom: 8px; background: #fff;
+        }
+        .promo-code { font-weight: 900; letter-spacing: .08em; color: var(--verde-900); font-size: .95rem; }
+        .promo-rate { font-weight: 700; color: var(--verde-700); }
+        .promo-meta { font-size: .78rem; color: var(--gris-600); flex: 1 1 200px; }
+        .promo-actions { display: flex; gap: 6px; margin-left: auto; }
+        .promo-actions button {
+            padding: 5px 12px; font-size: .78rem; font-weight: 700; border-radius: 999px; cursor: pointer;
+            border: 1px solid var(--arena-2); background: var(--arena); color: var(--verde-800);
+        }
+        .promo-actions button:hover { background: var(--verde-700); color: #fff; border-color: var(--verde-700); }
         .export-url {
             display: flex; gap: 8px; align-items: center; margin: 8px 0 14px;
         }
@@ -123,6 +145,43 @@
         <div id="inquiries-list"></div>
     </div>
 
+    <div class="card" id="promos-card">
+        <h2>🎟️ Códigos promocionales <span class="badge" id="promo-count">0</span></h2>
+        <p class="muted">Tarifas especiales que puedes enviar a un huésped concreto. El código aplica un <b>precio fijo por noche</b> en la web. Los de un solo uso se desactivan solos al usarse.</p>
+
+        <div class="promo-form">
+            <div class="promo-form-row">
+                <label>Código
+                    <input type="text" id="p-code" placeholder="MAITE95" maxlength="24" autocomplete="off">
+                </label>
+                <label>Precio por noche (USD)
+                    <input type="number" id="p-rate" min="1" step="1" placeholder="95">
+                </label>
+            </div>
+            <div class="promo-form-row">
+                <label>Huésped (opcional)
+                    <input type="text" id="p-guest" placeholder="Nombre del huésped" maxlength="80">
+                </label>
+                <label>Vence el (opcional)
+                    <input type="date" id="p-expires">
+                </label>
+            </div>
+            <div class="promo-form-row">
+                <label>Nota interna (opcional)
+                    <input type="text" id="p-note" placeholder="Ej: tarifa acordada por WhatsApp" maxlength="160">
+                </label>
+                <label class="promo-check">
+                    <input type="checkbox" id="p-single" checked>
+                    <span>Un solo uso</span>
+                </label>
+            </div>
+            <button class="btn" id="p-create">Crear código</button>
+            <span class="muted" id="promo-msg"></span>
+        </div>
+
+        <div id="promos-list"></div>
+    </div>
+
     <div id="props"></div>
 </main>
 
@@ -181,6 +240,7 @@
             $('stg-cron').className = 'badge ok';
             renderProps(data.properties);
             renderInquiries(data.inquiries || []);
+            renderPromos(data.promos || []);
             loadHealth();
         } catch (e) {
             $('global-msg').textContent = 'Error cargando: ' + e.message;
@@ -266,6 +326,68 @@
             + '</tbody></table>';
     }
 
+    function renderPromos(list) {
+        $('promo-count').textContent = list.length;
+        if (!list.length) {
+            $('promos-list').innerHTML = '<p class="muted">Todavía no hay códigos creados.</p>';
+            return;
+        }
+        $('promos-list').innerHTML = list.map((p) => {
+            const usado = p.usedAt ? new Date(p.usedAt).toLocaleDateString('es-CR') : null;
+            const inactivo = p.active === false;
+            const estado = inactivo ? '<span class="badge err">desactivado</span>'
+                : (p.singleUse !== false && p.usedAt) ? '<span class="badge warn">usado ' + esc(usado) + '</span>'
+                    : (p.expiresAt && p.expiresAt < new Date().toISOString().slice(0, 10)) ? '<span class="badge warn">caducado</span>'
+                        : '<span class="badge ok">disponible</span>';
+            const detalle = [
+                p.singleUse !== false ? 'un solo uso' : 'multi-uso',
+                p.expiresAt ? 'vence ' + esc(p.expiresAt) : null,
+                p.guestName ? 'para ' + esc(p.guestName) : null,
+                p.note ? esc(p.note) : null
+            ].filter(Boolean).join(' · ');
+            return '<div class="promo-item">'
+                + '<span class="promo-code">' + esc(p.code) + '</span>'
+                + '<span class="promo-rate">$' + esc(p.rate) + '/noche</span>'
+                + estado
+                + '<span class="promo-meta">' + detalle + '</span>'
+                + '<span class="promo-actions">'
+                + '<button data-promo-toggle="' + esc(p.code) + '" data-active="' + (!inactivo) + '">' + (inactivo ? 'Activar' : 'Desactivar') + '</button>'
+                + '<button data-promo-del="' + esc(p.code) + '">Borrar</button>'
+                + '</span>'
+                + '</div>';
+        }).join('');
+
+        $('promos-list').querySelectorAll('[data-promo-toggle]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                await promoAction({ code: btn.getAttribute('data-promo-toggle'), active: btn.getAttribute('data-active') !== 'true' }, 'toggle');
+            });
+        });
+        $('promos-list').querySelectorAll('[data-promo-del]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const code = btn.getAttribute('data-promo-del');
+                if (!confirm('¿Borrar el código ' + code + '? No se puede deshacer.')) return;
+                await promoAction({ code: code }, 'delete');
+            });
+        });
+    }
+
+    async function promoAction(body, action) {
+        const msg = $('promo-msg');
+        try {
+            const r = await fetch(API + '/admin?action=' + action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
+                body: JSON.stringify(body)
+            });
+            const d = await r.json();
+            if (!r.ok) { msg.textContent = 'Error: ' + (d.error || r.status); return; }
+            msg.textContent = '';
+            await loadAll();
+        } catch (e) {
+            msg.textContent = 'Error: ' + e.message;
+        }
+    }
+
     function renderProps(props) {
         $('props').innerHTML = props.map((p) => `
             <div class="card">
@@ -282,7 +404,7 @@
                     <tbody>
                         ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
                             ? '<tr><td colspan="6" class="muted">Sin reservas todavía.</td></tr>'
-                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.email ? ' · ' + esc(r.email) : ''}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${Array.isArray(r.childAges) && r.childAges.length ? ' <span class="badge">👶 niños: ' + esc(r.childAges.join(', ')) + ' años' + (r.freeChildren > 0 ? ' · ' + esc(r.freeChildren) + ' gratis' : '') + '</span>' : ''}${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.75rem">${r.notify ? 'huésped: ' + esc(r.notify.guest || '—') + '<br>dueño: ' + esc(r.notify.owner || '—') : '—'}</td>
+                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.email ? ' · ' + esc(r.email) : ''}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${Array.isArray(r.childAges) && r.childAges.length ? ' <span class="badge">👶 niños: ' + esc(r.childAges.join(', ')) + ' años' + (r.freeChildren > 0 ? ' · ' + esc(r.freeChildren) + ' gratis' : '') + '</span>' : ''}${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}${r.promo ? ' <span class="badge">🎟️ ' + esc(r.promo) + '</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.75rem">${r.notify ? 'huésped: ' + esc(r.notify.guest || '—') + '<br>dueño: ' + esc(r.notify.owner || '—') : '—'}</td>
                                <td><button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
                     </tbody>
                 </table>
@@ -358,6 +480,31 @@
             catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
         }));
     }
+
+    $('p-create').addEventListener('click', async () => {
+        const msg = $('promo-msg');
+        const code = $('p-code').value.trim();
+        const rate = parseFloat($('p-rate').value);
+        if (!code) { msg.textContent = 'Escribe un código.'; return; }
+        if (!rate || rate <= 0) { msg.textContent = 'Escribe un precio por noche válido.'; return; }
+        msg.textContent = 'Creando…';
+        await promoAction({
+            code: code,
+            rate: rate,
+            note: $('p-note').value.trim(),
+            guestName: $('p-guest').value.trim(),
+            singleUse: $('p-single').checked,
+            expiresAt: $('p-expires').value || null
+        }, 'create');
+        if (!$('promo-msg').textContent) {
+            $('p-code').value = '';
+            $('p-rate').value = '';
+            $('p-note').value = '';
+            $('p-guest').value = '';
+            $('p-expires').value = '';
+            msg.textContent = 'Código creado.';
+        }
+    });
 
     $('btn-refresh-all').addEventListener('click', async () => {
         $('global-msg').textContent = 'Refrescando…';

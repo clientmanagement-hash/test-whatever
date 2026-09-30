@@ -4,7 +4,7 @@
 // { checkIn, checkOut, guests } usando ./_pricing.js (fuente de verdad).
 
 const { computeBooking } = require('./_pricing');
-const { propId, isBlocked, isOrphanStay } = require('../ical/_lib');
+const { propId, isBlocked, isOrphanStay, validatePromo } = require('../ical/_lib');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -64,9 +64,22 @@ module.exports = async function handler(req, res) {
     // Excepción: una noche huérfana (1 noche libre entre dos periodos ocupados)
     // se puede reservar con 1 noche aunque el mínimo general sea mayor.
     const childAges = Array.isArray(body.childAges) ? body.childAges : [];
-    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges });
+
+    // Código promocional (opcional): si es válido, fija la tarifa por noche.
+    // Se revalida aquí en el servidor para que no pueda enviarse desde el cliente
+    // un precio especial sin un código válido.
+    let promoRate = null;
+    let promoCode = null;
+    if (body.promo) {
+        const v = await validatePromo(String(body.promo));
+        if (!v.ok) return res.status(400).json({ error: 'promo_' + v.error });
+        promoRate = v.promo.rate;
+        promoCode = v.promo.code;
+    }
+
+    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges, promoRate });
     if (booking.error === 'min_nights' && (await isOrphanStay(propertyId, body.checkIn, body.checkOut))) {
-        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges });
+        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges, promoRate });
     }
     if (booking.error) return res.status(400).json({ error: booking.error });
 
@@ -85,7 +98,11 @@ module.exports = async function handler(req, res) {
             body: JSON.stringify({
                 intent: 'CAPTURE',
                 purchase_units: [{
-                    amount: { currency_code: booking.currency, value: booking.total.toFixed(2) }
+                    amount: { currency_code: booking.currency, value: booking.total.toFixed(2) },
+                    // El código promocional viaja con la orden para que el capture
+                    // sepa cuál consumir tras un pago correcto.
+                    custom_id: promoCode ? ('promo:' + promoCode).slice(0, 127) : undefined,
+                    description: promoCode ? ('Tarifa especial ' + promoCode).slice(0, 127) : undefined
                 }],
                 application_context: {
                     brand_name: 'Cabañas La Maite',
@@ -98,7 +115,7 @@ module.exports = async function handler(req, res) {
         if (!r.ok || !data.id) {
             return res.status(502).json({ error: 'paypal_create_failed' });
         }
-        return res.status(200).json({ id: data.id, amount: booking.total, nights: booking.nights });
+        return res.status(200).json({ id: data.id, amount: booking.total, nights: booking.nights, promoRate: booking.promoRate });
     } catch (e) {
         return res.status(502).json({ error: 'paypal_create_failed' });
     }

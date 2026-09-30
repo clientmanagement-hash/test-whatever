@@ -66,7 +66,7 @@ async function fetchWithTimeout(url, options, ms) {
 
 // Aviso al dueño de una nueva reserva.
 // Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
-async function notifyReservation({ propertyId, checkIn, checkOut, guests, childAges, name, email, phone, breakfast, amount, currency, orderId }) {
+async function notifyReservation({ propertyId, checkIn, checkOut, guests, childAges, promo, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -95,6 +95,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, childA
         ['Teléfono / WhatsApp', phone || '—'],
         ['Desayuno incluido', breakfast ? 'SÍ ☕' : 'No'],
         ['Precio por noche', perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—'],
+        ...(promo ? [['🎟️ Código promocional', promo + ' (tarifa especial aplicada)']] : []),
         ['Monto cobrado', total],
         ['Orden PayPal', orderId]
     ];
@@ -244,7 +245,7 @@ module.exports = async function handler(req, res) {
         const data = await r.json();
         const ok = r.ok && data.status === 'COMPLETED';
         if (ok) {
-            const { recordReservation, markNotify } = require('../ical/_lib');
+            const { recordReservation, markNotify, consumePromo } = require('../ical/_lib');
             const notify = {};
 
             // 1) Registra la reserva en el calendario iCal (con datos del huésped)
@@ -261,6 +262,11 @@ module.exports = async function handler(req, res) {
                     children: Number(body.payingChildren) || 0,
                     freeChildren: Number(body.freeChildren) || 0,
                     childAges: Array.isArray(body.childAges) ? body.childAges : [],
+                    promo: (() => {
+                        const puP = (data.purchase_units && data.purchase_units[0]) || {};
+                        const cid = String(puP.custom_id || '');
+                        return cid.indexOf('promo:') === 0 ? cid.slice(6) : '';
+                    })(),
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
@@ -268,6 +274,25 @@ module.exports = async function handler(req, res) {
                 notify.reservation = 'ok';
             } catch (e) {
                 notify.reservation = 'error:' + String((e && e.message) || e);
+            }
+
+            // 1b) Si la orden llevaba un código promocional, se marca como usado.
+            // El código se lee de custom_id (lo fijó el servidor al crear la orden),
+            // no del cuerpo del cliente, para que no pueda falsearse.
+            try {
+                const pu0 = (data.purchase_units && data.purchase_units[0]) || {};
+                const raw = String(pu0.custom_id || '');
+                if (raw.indexOf('promo:') === 0) {
+                    const usado = await consumePromo(raw.slice(6), {
+                        propertyId: body.propertyId,
+                        checkIn: body.checkIn,
+                        checkOut: body.checkOut,
+                        orderId: orderID
+                    });
+                    notify.promo = usado ? 'ok:' + usado.code : 'no_encontrado';
+                }
+            } catch (e) {
+                notify.promo = 'error:' + String((e && e.message) || e);
             }
 
             // 2) Aviso al dueño (monto real tomado de PayPal)
@@ -278,12 +303,15 @@ module.exports = async function handler(req, res) {
                 const edades = Array.isArray(body.childAges) ? body.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a)) : [];
                 const adultos = Number.isFinite(Number(body.guests)) ? Math.max(1, Math.floor(Number(body.guests))) : 2;
                 const pagan = edades.filter((a) => a > 2).length;
+                const puPromo = (data.purchase_units && data.purchase_units[0]) || {};
+                const promoUsado = String(puPromo.custom_id || '').indexOf('promo:') === 0 ? String(puPromo.custom_id).slice(6) : null;
                 const canal = await notifyReservation({
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
                     guests: adultos + pagan,
                     childAges: edades,
+                    promo: promoUsado,
                     name: body.name,
                     email: body.email,
                     phone: body.phone,

@@ -294,6 +294,15 @@ const I18N = {
         'direct.kidsFreeLower': 'child(ren) aged 2 and under (free)',
         'direct.guestPaying': 'Charged for',
         'direct.overCap': 'Exceeds the maximum of 5',
+        'direct.promo': 'Do you have a promo code?',
+        'direct.promoApply': 'Apply',
+        'direct.promoChecking': 'Checking…',
+        'direct.promoOk': 'Code applied',
+        'direct.perNight': 'per night',
+        'direct.promoUsed': 'This code has already been used.',
+        'direct.promoExpired': 'This code has expired.',
+        'direct.promoBad': 'Invalid code.',
+        'direct.promoErr': 'Could not check the code. Please try again.',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -779,6 +788,9 @@ const payErrorMsg = (code) => {
         min_nights: tr('direct.minNights', 'Mínimo 2 noches'),
         too_long: tr('direct.maxNights', 'La estadía máxima es de 60 noches.'),
         too_many_guests: tr('direct.maxGuests', 'Máximo 5 huéspedes.'),
+        promo_not_found: tr('direct.promoBad', 'Código no válido.'),
+        promo_used: tr('direct.promoUsed', 'Este código ya fue utilizado.'),
+        promo_expired: tr('direct.promoExpired', 'Este código ha caducado.'),
         invalid_property: tr('direct.selectDates', 'Elige tus fechas'),
         dates_unavailable: tr('direct.unavailable', 'Fechas no disponibles'),
         paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
@@ -1054,6 +1066,11 @@ const directDeposit = $('#direct-deposit');
 const directDepositLabel = $('#direct-deposit-label');
 const directFeeNote = $('#direct-fee-note');
 const directBreakfast = $('#direct-breakfast');
+const directPromo = $('#direct-promo');
+const directPromoApply = $('#direct-promo-apply');
+const directPromoMsg = $('#direct-promo-msg');
+// Código promocional aplicado: { code, rate } o null
+let directPromoActivo = null;
 const directName = $('#direct-name');
 const directPhone = $('#direct-phone');
 const directEmail = $('#direct-email');
@@ -1225,12 +1242,14 @@ if (directLoft && directGuests && directIn && directOut) {
         let n = 0;
         const ratesSeen = [];
         const extraFee = extraGuestsFee(guests);
+        // Si hay un código aplicado, su tarifa sustituye a la de temporada
+        const baseRate = directPromoActivo ? directPromoActivo.rate : null;
 
         if (hasDates) {
             const d = new Date(directIn.value);
             const end = new Date(directOut.value);
             while (d < end) {
-                const r = rateForDate(d) + extraFee + breakfastPerNight;
+                const r = (baseRate !== null ? baseRate : rateForDate(d)) + extraFee + breakfastPerNight;
                 total += r;
                 if (!ratesSeen.includes(r)) ratesSeen.push(r);
                 n += 1;
@@ -1244,13 +1263,30 @@ if (directLoft && directGuests && directIn && directOut) {
                 ? fmtUSD(ratesSeen[0])
                 : `${fmtUSD(Math.min(...ratesSeen))}–${fmtUSD(Math.max(...ratesSeen))}`;
         } else {
-            const rates = [...BOOKING.seasons.map((s) => s.rate + breakfastPerNight), ...(BOOKING.events || []).map((e) => e.rate + breakfastPerNight)];
+            const rates = directPromoActivo
+                ? [directPromoActivo.rate + breakfastPerNight]
+                : [...BOOKING.seasons.map((s) => s.rate + breakfastPerNight), ...(BOOKING.events || []).map((e) => e.rate + breakfastPerNight)];
             directRate.textContent = rates.length === 1
                 ? fmtUSD(rates[0])
                 : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
         }
 
         const deposit = total * BOOKING.depositPct / 100;
+
+        // Marca visual cuando la tarifa especial está aplicada
+        if (directRate && directPromoActivo) {
+            if (!directRate.querySelector('.promo-badge')) {
+                const b = document.createElement('span');
+                b.className = 'promo-badge';
+                b.textContent = directPromoActivo.code;
+                directRate.appendChild(b);
+            } else {
+                directRate.querySelector('.promo-badge').textContent = directPromoActivo.code;
+            }
+        } else if (directRate) {
+            const b = directRate.querySelector('.promo-badge');
+            if (b) b.remove();
+        }
 
         if (hasDates) {
             directNights.textContent = `${n} ${n === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
@@ -1274,7 +1310,7 @@ if (directLoft && directGuests && directIn && directOut) {
         if (hasDates) {
             syncCounters();
             const childAges = readKidAges();
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests: directAdultsCount, childAges, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests: directAdultsCount, childAges, promo: directPromoActivo ? directPromoActivo.code : '', breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
         } else {
             lastBooking = null;
         }
@@ -1297,6 +1333,63 @@ if (directLoft && directGuests && directIn && directOut) {
     });
     directOut.addEventListener('change', updateDirect);
     if (directBreakfast) directBreakfast.addEventListener('change', updateDirect);
+
+    // --- Código promocional ---
+    const promoMsg = (texto, tipo) => {
+        if (!directPromoMsg) return;
+        directPromoMsg.textContent = texto || '';
+        directPromoMsg.className = 'promo-msg' + (tipo ? ' ' + tipo : '');
+    };
+    const aplicarPromo = async () => {
+        const code = directPromo ? directPromo.value.trim() : '';
+        if (!code) {
+            directPromoActivo = null;
+            promoMsg('');
+            updateDirect();
+            return;
+        }
+        promoMsg(tr('direct.promoChecking', 'Comprobando…'), '');
+        try {
+            const r = await fetch('/api/ical/admin?promo=' + encodeURIComponent(code));
+            const d = await r.json();
+            if (d && d.valid) {
+                directPromoActivo = { code: d.code, rate: d.rate };
+                promoMsg(
+                    tr('direct.promoOk', 'Código aplicado') + ': ' + fmtUSD(d.rate) + ' ' + tr('direct.perNight', 'por noche'),
+                    'ok'
+                );
+            } else {
+                directPromoActivo = null;
+                const err = d && d.error;
+                promoMsg(
+                    err === 'used' ? tr('direct.promoUsed', 'Este código ya fue utilizado.')
+                        : err === 'expired' ? tr('direct.promoExpired', 'Este código ha caducado.')
+                            : tr('direct.promoBad', 'Código no válido.'),
+                    'err'
+                );
+            }
+        } catch (e) {
+            directPromoActivo = null;
+            promoMsg(tr('direct.promoErr', 'No se pudo comprobar el código. Inténtalo de nuevo.'), 'err');
+        }
+        updateDirect();
+    };
+
+    if (directPromoApply) directPromoApply.addEventListener('click', aplicarPromo);
+    if (directPromo) {
+        directPromo.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); aplicarPromo(); }
+        });
+        // Si el huésped cambia el código escrito, se quita el aplicado anterior
+        directPromo.addEventListener('input', () => {
+            if (directPromoActivo && directPromo.value.trim().toUpperCase().replace(/[\s-]+/g, '') !== directPromoActivo.code) {
+                directPromoActivo = null;
+                promoMsg('');
+                updateDirect();
+            }
+        });
+    }
+
     // Los datos del huésped deben refrescar lastBooking (si se escriben tras elegir fechas)
     [directName, directEmail, directPhone].forEach((el) => {
         if (el) el.addEventListener('input', updateDirect);

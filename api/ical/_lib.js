@@ -13,6 +13,7 @@ const propId = (id) => PROPERTIES.find((p) => p.id === id);
 const K_RES = (pid) => `ical:res:${pid}`;
 const K_EXT = (pid) => `ical:ext:${pid}`;
 const K_INQ = 'inquiries';   // consultas del formulario de contacto
+const K_PROMO = 'promos';    // códigos de descuento / tarifas especiales
 
 // ---------- almacenamiento ----------
 let kv = null;
@@ -43,6 +44,8 @@ function getDevStore() {
             }
         } catch (e) { /* ignorar */ }
         if (!devStore.data) devStore.data = { reservations: {}, external: {} };
+        if (!devStore.data.promos) devStore.data.promos = [];
+        if (!devStore.data.inquiries) devStore.data.inquiries = [];
     }
     return devStore;
 }
@@ -125,6 +128,112 @@ async function addInquiry(fields) {
     list.unshift(item);
     await saveInquiries(list.slice(0, 300));
     return item;
+}
+
+// ---------- códigos de descuento / tarifas especiales ----------
+// Un código fija un PRECIO POR NOCHE (más bajo que la tarifa pública) para una
+// reserva concreta. Puede ser de un solo uso y/o tener fecha de vencimiento.
+
+async function loadPromos() {
+    const k = getKv();
+    if (k) {
+        const raw = await k.get(K_PROMO);
+        return Array.isArray(raw) ? raw : [];
+    }
+    return getDevStore().data.promos || [];
+}
+
+async function savePromos(list) {
+    const k = getKv();
+    if (k) return k.set(K_PROMO, list);
+    const ds = getDevStore();
+    ds.data.promos = list;
+    try {
+        require('fs').writeFileSync('/tmp/ical-store.json', JSON.stringify(ds.data));
+    } catch (e) { /* ignorar */ }
+}
+
+// Normaliza el código: sin espacios, en mayúsculas (para que el huésped pueda
+// escribirlo de cualquier forma: "maite10", "Maite 10" o "MAITE10").
+const normCode = (c) => String(c || '').trim().toUpperCase().replace(/[\s-]+/g, '').slice(0, 24);
+
+// Valida un código contra la fecha de hoy.
+// Devuelve { ok: true, promo } o { ok: false, error: 'not_found'|'used'|'expired' }
+async function validatePromo(code) {
+    const wanted = normCode(code);
+    if (!wanted) return { ok: false, error: 'not_found' };
+    const list = await loadPromos();
+    const promo = list.find((p) => normCode(p.code) === wanted);
+    if (!promo) return { ok: false, error: 'not_found' };
+    if (promo.active === false) return { ok: false, error: 'not_found' };
+    if (promo.singleUse !== false && promo.usedAt) return { ok: false, error: 'used' };
+    if (promo.expiresAt) {
+        const hoy = new Date().toISOString().slice(0, 10);
+        if (norm(promo.expiresAt) < hoy) return { ok: false, error: 'expired' };
+    }
+    return { ok: true, promo };
+}
+
+// Marca un código como usado (para los de un solo uso).
+async function consumePromo(code, reservation) {
+    const wanted = normCode(code);
+    const list = await loadPromos();
+    let tocado = null;
+    for (const p of list) {
+        if (normCode(p.code) === wanted) {
+            p.usedAt = new Date().toISOString();
+            p.usedIn = reservation || null;
+            tocado = p;
+        }
+    }
+    if (tocado) await savePromos(list);
+    return tocado;
+}
+
+async function addPromo(fields) {
+    const list = await loadPromos();
+    const code = normCode(fields.code);
+    if (!code) return { error: 'invalid_code' };
+    if (list.some((p) => normCode(p.code) === code)) return { error: 'duplicate' };
+    const rate = Number(fields.rate);
+    if (!Number.isFinite(rate) || rate <= 0) return { error: 'invalid_rate' };
+    const item = {
+        code,
+        rate: Math.round(rate * 100) / 100,     // precio por noche, en USD
+        note: String(fields.note || '').slice(0, 160),  // a quién se le ofreció
+        guestName: String(fields.guestName || '').slice(0, 80),
+        guestEmail: String(fields.guestEmail || '').slice(0, 120),
+        singleUse: fields.singleUse !== false,
+        expiresAt: fields.expiresAt ? norm(fields.expiresAt) : null,
+        active: true,
+        createdAt: new Date().toISOString(),
+        usedAt: null,
+        usedIn: null
+    };
+    list.unshift(item);
+    await savePromos(list);
+    return { ok: true, promo: item };
+}
+
+async function deletePromo(code) {
+    const wanted = normCode(code);
+    const list = await loadPromos();
+    const queda = list.filter((p) => normCode(p.code) !== wanted);
+    if (queda.length === list.length) return { error: 'not_found' };
+    await savePromos(queda);
+    return { ok: true };
+}
+
+// Activa o desactiva un código sin borrarlo
+async function togglePromo(code, active) {
+    const wanted = normCode(code);
+    const list = await loadPromos();
+    let tocado = null;
+    for (const p of list) {
+        if (normCode(p.code) === wanted) { p.active = active !== false; tocado = p; }
+    }
+    if (tocado) await savePromos(list);
+    return tocado ? { ok: true, promo: tocado } : { error: 'not_found' };
 }
 
 // ---------- fechas y disponibilidad ----------
@@ -217,7 +326,7 @@ async function isOrphanStay(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, children, freeChildren, childAges, breakfast, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, children, freeChildren, childAges, promo, breakfast, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -243,6 +352,7 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, e
         children: kids,           // niños de 3+ años (pagan como una persona)
         freeChildren: kidsFree,   // niños de 2 años o menos (gratis)
         childAges: ages,          // edades declaradas
+        promo: String(promo || '').slice(0, 24),   // código promocional usado, si lo hubo
         breakfast: Boolean(breakfast),
         source: source === 'web' ? 'web' : 'manual',
         createdAt: new Date().toISOString()
@@ -298,6 +408,13 @@ module.exports = {
     isBlocked,
     loadInquiries,
     addInquiry,
+    loadPromos,
+    addPromo,
+    validatePromo,
+    consumePromo,
+    deletePromo,
+    togglePromo,
+    normCode,
     orphanNights,
     orphanNightsFromRanges,
     isOrphanStay,
