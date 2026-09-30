@@ -280,6 +280,14 @@ const I18N = {
         'direct.pays': 'Pays',
         'direct.kidsFreeShort': 'child(ren) free',
         'direct.kidsPaidShort': 'child(ren) as a person',
+        'direct.guestTotal': 'Total',
+        'direct.persons': 'people',
+        'direct.person1': 'person',
+        'direct.adultsLower': 'adult(s)',
+        'direct.kidsPayingLower': 'child(ren) aged 3+ who pay',
+        'direct.kidsFreeLower': 'child(ren) aged 2 and under (free)',
+        'direct.guestPaying': 'Charged for',
+        'direct.overCap': 'Exceeds the maximum of 5',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -1025,6 +1033,7 @@ const directAdultsVal = $('#direct-adults-val');
 const directKidsVal = $('#direct-kids-val');
 const directKidsAgesWrap = $('#direct-kids-ages-wrap');
 const directKidsAges = $('#direct-kids-ages');
+const directGuestTotal = $('#direct-guest-total');
 const directSteppers = document.querySelectorAll('.stepper');
 let directAdultsCount = 2;
 const MAX_ADULTS = 5;
@@ -1103,6 +1112,26 @@ if (directLoft && directGuests && directIn && directOut) {
         }
     };
 
+    // Resumen visible: cuántos huéspedes son en total y cuántos pagan
+    const renderGuestTotal = () => {
+        if (!directGuestTotal) return;
+        const pagando = totalPaying();
+        const gratis = freeKids();
+        const totalPersonas = directAdultsCount + kidsCount();
+        const excede = pagando > MAX_ADULTS;
+
+        let txt = `${tr('direct.guestTotal', 'Total')}: <strong>${totalPersonas} ${totalPersonas === 1 ? tr('direct.person1', 'persona') : tr('direct.persons', 'personas')}</strong>`;
+        txt += ` — ${directAdultsCount} ${tr('direct.adultsLower', 'adulto(s)')}`;
+        const pagandoNinos = payingKids();
+        if (pagandoNinos > 0) txt += ` + ${pagandoNinos} ${tr('direct.kidsPayingLower', 'niño(s) de 3+ años que paga(n)')}`;
+        if (gratis > 0) txt += ` + ${gratis} ${tr('direct.kidsFreeLower', 'niño(s) de 2 años o menos (gratis)')}`;
+        txt += `<br>${tr('direct.guestPaying', 'Se cobra por')}: <strong>${pagando}</strong> ${pagando === 1 ? tr('direct.person1', 'persona') : tr('direct.persons', 'personas')}`;
+        if (excede) txt += ` · <strong>${tr('direct.overCap', 'Excede el máximo de 5')}</strong>`;
+
+        directGuestTotal.innerHTML = txt;
+        directGuestTotal.classList.toggle('warn', excede);
+    };
+
     const syncCounters = () => {
         const kids = kidsCount();
         if (directAdultsVal) directAdultsVal.textContent = String(directAdultsCount);
@@ -1110,6 +1139,7 @@ if (directLoft && directGuests && directIn && directOut) {
         if (directGuests) directGuests.value = String(directAdultsCount);
         if (directChildren) directChildren.value = String(kids);
         if (directChildAges) directChildAges.value = JSON.stringify(readKidAges());
+        renderGuestTotal();
         // Un niño se puede añadir si quedan plazas libres en el cupo de 5
         directSteppers.forEach((st) => {
             const tipo = st.getAttribute('data-stepper');

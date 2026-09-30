@@ -1607,6 +1607,27 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     }
 }
 
+.guest-total {
+    margin: 10px 0 0;
+    padding: 10px 14px;
+    background: var(--arena);
+    border-left: 3px solid var(--verde-700, #2f6b45);
+    border-radius: var(--r-sm);
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--verde-800);
+    line-height: 1.5;
+}
+
+.guest-total strong {
+    color: var(--verde-900);
+}
+
+.guest-total.warn {
+    border-left-color: var(--tan-500);
+    color: #a05a1c;
+}
+
 /* ============ CONTADORES ADULTOS / NIÑOS ============ */
 .stepper {
     display: flex;

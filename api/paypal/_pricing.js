@@ -80,7 +80,11 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     if (nights < minNights) return { error: 'min_nights' };
     if (nights > PRICING.maxNights) return { error: 'too_long' };
 
+    // Adultos: el cliente envía cuántos adultos hay (la tarifa base cubre 2).
+    // Los niños de 3+ años se suman aparte desde sus edades, así que este valor
+    // no puede usarse para "colar" niños como adultos ni al revés.
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;
+    if (g > PRICING.maxGuests) return { error: 'too_many_guests' };
 
     // Clasifica las edades de los niños: gratis (<=2) y de pago (>=3)
     const rawAges = (opts && Array.isArray(opts.childAges)) ? opts.childAges : [];
