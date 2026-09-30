@@ -73,6 +73,8 @@ function rateForDate(date) {
 //   el precio de temporada, pero se mantienen el recargo por persona adicional y el desayuno.
 // `opts.promoFlat` = true cuando el código fija una TARIFA PLANA: el precio por noche es
 //   exactamente promoRate, sin recargo por persona adicional (el desayuno sí se suma aparte).
+// `opts.promoDiscount` = monto en USD que se RESTA UNA SOLA VEZ del total de la reserva
+//   (cupón de descuento). Nunca deja el total por debajo de 0.
 function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
@@ -124,6 +126,15 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
         total += rate;
     }
     total = Math.round(total * PRICING.depositPct) / 100;
+    // Cupón de descuento: se resta una sola vez al total de la reserva, sin bajar de 0
+    const descuentoPedido = (opts && Number.isFinite(Number(opts.promoDiscount)) && Number(opts.promoDiscount) > 0)
+        ? Number(opts.promoDiscount)
+        : null;
+    let descuentoAplicado = 0;
+    if (descuentoPedido !== null) {
+        descuentoAplicado = Math.min(descuentoPedido, Math.round(total * 100) / 100);
+        total = Math.round((total - descuentoAplicado) * 100) / 100;
+    }
     return {
         total: Math.round(total * 100) / 100,
         nights,
@@ -134,7 +145,9 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
         currency: PRICING.currency,
         breakfast: withBreakfast,
         promoRate: promoRate,
-        promoFlat: promoFlat
+        promoFlat: promoFlat,
+        discount: descuentoAplicado,
+        discountRequested: descuentoPedido
     };
 }
 

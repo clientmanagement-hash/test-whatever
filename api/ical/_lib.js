@@ -197,10 +197,12 @@ async function addPromo(fields) {
     if (list.some((p) => normCode(p.code) === code)) return { error: 'duplicate' };
     const rate = Number(fields.rate);
     if (!Number.isFinite(rate) || rate <= 0) return { error: 'invalid_rate' };
+    const esDescuento = fields.kind === 'discount';
     const item = {
         code,
-        rate: Math.round(rate * 100) / 100,     // precio por noche, en USD
-        flat: fields.flat !== false,            // tarifa plana: sin recargo por persona adicional
+        kind: esDescuento ? 'discount' : 'rate',  // 'rate' = precio por noche · 'discount' = cupón en $
+        rate: Math.round(rate * 100) / 100,     // precio por noche o monto del descuento, en USD
+        flat: esDescuento ? false : fields.flat !== false,   // solo aplica al tipo 'rate'
         maxGuests: (() => {
             const m = Number(fields.maxGuests);
             return Number.isFinite(m) && m >= 1 && m <= 5 ? Math.floor(m) : null;

@@ -154,7 +154,13 @@
                 <label>Código
                     <input type="text" id="p-code" placeholder="MAITE95" maxlength="24" autocomplete="off">
                 </label>
-                <label>Precio por noche (USD)
+                <label>Tipo de código
+                    <select id="p-kind">
+                        <option value="rate">Precio fijo por noche</option>
+                        <option value="discount">Cupón de descuento ($)</option>
+                    </select>
+                </label>
+                <label id="p-rate-label">Precio por noche (USD)
                     <input type="number" id="p-rate" min="1" step="1" placeholder="95">
                 </label>
             </div>
@@ -171,7 +177,7 @@
                     <input type="text" id="p-note" placeholder="Ej: tarifa acordada por WhatsApp" maxlength="160">
                 </label>
             </div>
-            <div class="promo-form-row">
+            <div class="promo-form-row" id="p-row-rate">
                 <label class="promo-check">
                     <input type="checkbox" id="p-single" checked>
                     <span>Un solo uso</span>
@@ -184,8 +190,17 @@
                     <input type="number" id="p-max" min="1" max="5" placeholder="4">
                 </label>
             </div>
-            <p class="muted" style="margin:0 0 12px;font-size:.76rem">
-                <b>Tarifa plana:</b> el precio por noche es exactamente el indicado, sin sumar el recargo de 3ª, 4ª o 5ª persona. El desayuno, si lo activan, se cobra aparte.
+            <div class="promo-form-row" id="p-row-single" style="display:none">
+                <label class="promo-check">
+                    <input type="checkbox" id="p-single-d" checked>
+                    <span>Un solo uso</span>
+                </label>
+            </div>
+            <p class="muted" id="p-help-rate" style="margin:0 0 12px;font-size:.76rem">
+                <b>Precio fijo:</b> el precio por noche es exactamente el indicado, sin sumar el recargo de 3ª, 4ª o 5ª persona. El desayuno, si lo activan, se cobra aparte.
+            </p>
+            <p class="muted" id="p-help-discount" style="margin:0 0 12px;font-size:.76rem;display:none">
+                <b>Cupón de descuento:</b> el monto indicado se <b>resta una sola vez</b> del total de la reserva, sin importar las noches ni las personas. Nunca deja el total por debajo de $0.
             </p>
             <button class="btn" id="p-create">Crear código</button>
             <span class="muted" id="promo-msg"></span>
@@ -351,9 +366,10 @@
                 : (p.singleUse !== false && p.usedAt) ? '<span class="badge warn">usado ' + esc(usado) + '</span>'
                     : (p.expiresAt && p.expiresAt < new Date().toISOString().slice(0, 10)) ? '<span class="badge warn">caducado</span>'
                         : '<span class="badge ok">disponible</span>';
+            const esDesc = p.kind === 'discount';
             const detalle = [
-                p.flat !== false ? 'tarifa plana' : 'tarifa + extras',
-                p.maxGuests ? 'máx. ' + esc(p.maxGuests) + ' personas' : null,
+                esDesc ? 'cupón de descuento' : (p.flat !== false ? 'tarifa plana' : 'tarifa + extras'),
+                !esDesc && p.maxGuests ? 'máx. ' + esc(p.maxGuests) + ' personas' : null,
                 p.singleUse !== false ? 'un solo uso' : 'multi-uso',
                 p.expiresAt ? 'vence ' + esc(p.expiresAt) : null,
                 p.guestName ? 'para ' + esc(p.guestName) : null,
@@ -361,7 +377,7 @@
             ].filter(Boolean).join(' · ');
             return '<div class="promo-item">'
                 + '<span class="promo-code">' + esc(p.code) + '</span>'
-                + '<span class="promo-rate">$' + esc(p.rate) + '/noche</span>'
+                + '<span class="promo-rate">$' + esc(p.rate) + (p.kind === 'discount' ? ' de descuento' : ' por noche') + '</span>'
                 + estado
                 + '<span class="promo-meta">' + detalle + '</span>'
                 + '<span class="promo-actions">'
@@ -495,21 +511,35 @@
         }));
     }
 
+    // Cambiar entre "precio fijo" y "cupón de descuento"
+    $('p-kind').addEventListener('change', () => {
+        const esDesc = $('p-kind').value === 'discount';
+        $('p-row-rate').style.display = esDesc ? 'none' : 'flex';
+        $('p-row-single').style.display = esDesc ? 'flex' : 'none';
+        $('p-help-rate').style.display = esDesc ? 'none' : 'block';
+        $('p-help-discount').style.display = esDesc ? 'block' : 'none';
+        $('p-rate-label').firstChild.textContent = esDesc ? 'Monto a rebajar (USD) ' : 'Precio por noche (USD) ';
+        $('p-rate').placeholder = esDesc ? '50' : '95';
+    });
+
     $('p-create').addEventListener('click', async () => {
         const msg = $('promo-msg');
         const code = $('p-code').value.trim();
         const rate = parseFloat($('p-rate').value);
+        const kind = $('p-kind').value;
+        const esDesc = kind === 'discount';
         if (!code) { msg.textContent = 'Escribe un código.'; return; }
-        if (!rate || rate <= 0) { msg.textContent = 'Escribe un precio por noche válido.'; return; }
+        if (!rate || rate <= 0) { msg.textContent = esDesc ? 'Escribe un monto de descuento válido.' : 'Escribe un precio por noche válido.'; return; }
         msg.textContent = 'Creando…';
         await promoAction({
             code: code,
+            kind: kind,
             rate: rate,
-            flat: $('p-flat').checked,
-            maxGuests: $('p-max').value ? parseInt($('p-max').value, 10) : null,
+            flat: esDesc ? false : $('p-flat').checked,
+            maxGuests: (!esDesc && $('p-max').value) ? parseInt($('p-max').value, 10) : null,
             note: $('p-note').value.trim(),
             guestName: $('p-guest').value.trim(),
-            singleUse: $('p-single').checked,
+            singleUse: esDesc ? $('p-single-d').checked : $('p-single').checked,
             expiresAt: $('p-expires').value || null
         }, 'create');
         if (!$('promo-msg').textContent) {

@@ -15,6 +15,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({
             valid: true,
             code: v.promo.code,
+            kind: v.promo.kind === 'discount' ? 'discount' : 'rate',
             rate: v.promo.rate,
             flat: v.promo.flat !== false,
             maxGuests: v.promo.maxGuests || null,
@@ -50,6 +51,7 @@ module.exports = async function handler(req, res) {
         if (accion === 'create') {
             const r = await addPromo({
                 code: body.code,
+                kind: body.kind,
                 rate: body.rate,
                 flat: body.flat,
                 maxGuests: body.maxGuests,

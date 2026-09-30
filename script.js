@@ -308,6 +308,10 @@ const I18N = {
         'direct.promoMaxShort': 'max.',
         'direct.promoOverGuests': 'This code is for a maximum of',
         'direct.promoMaxGuests': 'El código es para máximo 4 personas.',
+        'direct.promoOkDiscount': 'Cupón aplicado',
+        'direct.onTotal': 'sobre el total',
+        'direct.discountLabel': 'Descuento',
+        'direct.promoFullDiscount': 'El descuento cubre el total de esta reserva. Escríbenos por WhatsApp para confirmarla.',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -797,6 +801,7 @@ const payErrorMsg = (code) => {
         promo_used: tr('direct.promoUsed', 'Este código ya fue utilizado.'),
         promo_expired: tr('direct.promoExpired', 'Este código ha caducado.'),
         promo_max_guests: tr('direct.promoMaxGuests', 'El código es para máximo 4 personas.'),
+        promo_discount_full: tr('direct.promoFullDiscount', 'El descuento cubre el total de esta reserva. Escríbenos por WhatsApp para confirmarla.'),
         invalid_property: tr('direct.selectDates', 'Elige tus fechas'),
         dates_unavailable: tr('direct.unavailable', 'Fechas no disponibles'),
         paypal_not_configured: tr('direct.payUnavailable', 'El pago en línea está disponible en el sitio publicado.')
@@ -1075,6 +1080,8 @@ const directBreakfast = $('#direct-breakfast');
 const directPromo = $('#direct-promo');
 const directPromoApply = $('#direct-promo-apply');
 const directPromoMsg = $('#direct-promo-msg');
+const directDiscountLine = $('#direct-discount-line');
+const directDiscount = $('#direct-discount');
 // Código promocional aplicado: { code, rate } o null
 let directPromoActivo = null;
 const directName = $('#direct-name');
@@ -1258,10 +1265,12 @@ if (directLoft && directGuests && directIn && directOut) {
         let n = 0;
         const ratesSeen = [];
         const extraFee = extraGuestsFee(guests);
-        // Si hay un código aplicado, su tarifa sustituye a la de temporada.
+        // Si hay un código de precio fijo, su tarifa sustituye a la de temporada.
         // Con tarifa plana NO se suma el recargo por persona adicional.
-        const baseRate = directPromoActivo ? directPromoActivo.rate : null;
-        const extraAplicable = (directPromoActivo && directPromoActivo.flat) ? 0 : extraFee;
+        // Un cupón de descuento no toca la tarifa: se resta del total al final.
+        const esDescuento = Boolean(directPromoActivo && directPromoActivo.kind === 'discount');
+        const baseRate = (directPromoActivo && !esDescuento) ? directPromoActivo.rate : null;
+        const extraAplicable = (directPromoActivo && directPromoActivo.flat && !esDescuento) ? 0 : extraFee;
 
         if (hasDates) {
             const d = new Date(directIn.value);
@@ -1289,10 +1298,18 @@ if (directLoft && directGuests && directIn && directOut) {
                 : (rates.length ? `${fmtUSD(Math.min(...rates))}–${fmtUSD(Math.max(...rates))}` : '—');
         }
 
+        // Cupón de descuento: se resta una sola vez al total (nunca por debajo de 0)
+        let descuentoAplicado = 0;
+        if (esDescuento && hasDates) {
+            descuentoAplicado = Math.min(directPromoActivo.rate, Math.round(total * 100) / 100);
+            total = Math.round((total - descuentoAplicado) * 100) / 100;
+        }
+
         const deposit = total * BOOKING.depositPct / 100;
 
-        // Marca visual cuando la tarifa especial está aplicada
-        if (directRate && directPromoActivo) {
+        // Marca visual cuando el código de tarifa especial está aplicado
+        // (los cupones de descuento se muestran en su propia línea del resumen)
+        if (directRate && directPromoActivo && !esDescuento) {
             if (!directRate.querySelector('.promo-badge')) {
                 const b = document.createElement('span');
                 b.className = 'promo-badge';
@@ -1309,6 +1326,15 @@ if (directLoft && directGuests && directIn && directOut) {
         if (hasDates) {
             directNights.textContent = `${n} ${n === 1 ? tr('direct.night', 'noche') : tr('direct.nights', 'noches')}`;
             directTotal.textContent = fmtUSD(total);
+            if (directDiscountLine && directDiscount) {
+                if (descuentoAplicado > 0) {
+                    directDiscountLine.hidden = false;
+                    directDiscount.textContent = '−' + fmtUSD(descuentoAplicado);
+                } else {
+                    directDiscountLine.hidden = true;
+                    directDiscount.textContent = '—';
+                }
+            }
             directDeposit.textContent = BOOKING.depositPct >= 100
                 ? fmtUSD(total)
                 : `${fmtUSD(deposit)} (${BOOKING.depositPct}%)`;
@@ -1318,10 +1344,12 @@ if (directLoft && directGuests && directIn && directOut) {
                 ? tr('direct.maxNights', 'La estadía máxima es de 60 noches.')
                 : tr('direct.minNights', 'Mínimo 2 noches');
             directDeposit.textContent = '—';
+            if (directDiscountLine) directDiscountLine.hidden = true;
         } else {
             directNights.textContent = '—';
             directTotal.textContent = tr('direct.selectDates', 'Elige tus fechas');
             directDeposit.textContent = '—';
+            if (directDiscountLine) directDiscountLine.hidden = true;
         }
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
@@ -1371,17 +1399,27 @@ if (directLoft && directGuests && directIn && directOut) {
             const r = await fetch('/api/ical/admin?promo=' + encodeURIComponent(code));
             const d = await r.json();
             if (d && d.valid) {
-                directPromoActivo = { code: d.code, rate: d.rate, flat: d.flat !== false, maxGuests: d.maxGuests || null };
-                const ambito = directPromoActivo.flat
-                    ? tr('direct.promoFlat', 'tarifa plana')
-                    : tr('direct.promoPlusExtras', 'más extras por persona');
-                const tope = directPromoActivo.maxGuests
-                    ? ' · ' + tr('direct.promoMaxShort', 'máx.') + ' ' + directPromoActivo.maxGuests + ' ' + tr('direct.persons', 'personas')
-                    : '';
-                promoMsg(
-                    tr('direct.promoOk', 'Código aplicado') + ': ' + fmtUSD(d.rate) + ' ' + tr('direct.perNight', 'por noche') + ' (' + ambito + tope + ')',
-                    'ok'
-                );
+                directPromoActivo = {
+                    code: d.code,
+                    kind: d.kind === 'discount' ? 'discount' : 'rate',
+                    rate: d.rate,
+                    flat: d.flat !== false,
+                    maxGuests: d.maxGuests || null
+                };
+                if (directPromoActivo.kind === 'discount') {
+                    promoMsg(tr('direct.promoOkDiscount', 'Cupón aplicado') + ': −' + fmtUSD(d.rate) + ' ' + tr('direct.onTotal', 'sobre el total'), 'ok');
+                } else {
+                    const ambito = directPromoActivo.flat
+                        ? tr('direct.promoFlat', 'tarifa plana')
+                        : tr('direct.promoPlusExtras', 'más extras por persona');
+                    const tope = directPromoActivo.maxGuests
+                        ? ' · ' + tr('direct.promoMaxShort', 'máx.') + ' ' + directPromoActivo.maxGuests + ' ' + tr('direct.persons', 'personas')
+                        : '';
+                    promoMsg(
+                        tr('direct.promoOk', 'Código aplicado') + ': ' + fmtUSD(d.rate) + ' ' + tr('direct.perNight', 'por noche') + ' (' + ambito + tope + ')',
+                        'ok'
+                    );
+                }
             } else {
                 directPromoActivo = null;
                 const err = d && d.error;

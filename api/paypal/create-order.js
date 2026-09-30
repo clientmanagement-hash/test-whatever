@@ -72,20 +72,29 @@ module.exports = async function handler(req, res) {
     let promoCode = null;
     let promoFlat = false;
     let promoMaxGuests = null;
+    let promoDiscount = null;
     if (body.promo) {
         const v = await validatePromo(String(body.promo));
         if (!v.ok) return res.status(400).json({ error: 'promo_' + v.error });
-        promoRate = v.promo.rate;
         promoCode = v.promo.code;
-        promoFlat = v.promo.flat !== false;
-        promoMaxGuests = v.promo.maxGuests || null;
+        if (v.promo.kind === 'discount') {
+            // Cupón de descuento: se resta al total, no cambia la tarifa por noche
+            promoDiscount = v.promo.rate;
+        } else {
+            promoRate = v.promo.rate;
+            promoFlat = v.promo.flat !== false;
+            promoMaxGuests = v.promo.maxGuests || null;
+        }
     }
 
-    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges, promoRate, promoFlat });
+    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges, promoRate, promoFlat, promoDiscount });
     if (booking.error === 'min_nights' && (await isOrphanStay(propertyId, body.checkIn, body.checkOut))) {
-        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges, promoRate, promoFlat });
+        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges, promoRate, promoFlat, promoDiscount });
     }
     if (booking.error) return res.status(400).json({ error: booking.error });
+
+    // Un cupón no puede dejar la reserva por debajo del mínimo cobrable de PayPal (0.01)
+    if (booking.total <= 0) return res.status(400).json({ error: 'promo_discount_full' });
 
     // El código puede limitar cuántas personas aplican la tarifa especial
     if (promoMaxGuests && booking.guests > promoMaxGuests) {
