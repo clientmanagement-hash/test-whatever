@@ -217,7 +217,7 @@ async function isOrphanStay(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, breakfast, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, children, breakfast, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -226,6 +226,7 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, e
     if ((outMs - inMs) / dayMs > 90) return { error: 'too_long' };
     const list = await loadReservations(propertyId);
     const uid = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const kids = Number.isFinite(Number(children)) ? Math.max(0, Math.floor(Number(children))) : 0;
     list.push({
         uid,
         checkIn: norm(checkIn),
@@ -234,6 +235,7 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, e
         name: String(name || '').slice(0, 80),
         email: String(email || '').slice(0, 120),
         phone: String(phone || '').slice(0, 30),
+        children: kids,       // niños menores de 2 años (gratis, no cuentan como huésped)
         breakfast: Boolean(breakfast),
         source: source === 'web' ? 'web' : 'manual',
         createdAt: new Date().toISOString()

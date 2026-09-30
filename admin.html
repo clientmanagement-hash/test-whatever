@@ -282,7 +282,7 @@
                     <tbody>
                         ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
                             ? '<tr><td colspan="6" class="muted">Sin reservas todavía.</td></tr>'
-                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.email ? ' · ' + esc(r.email) : ''}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.75rem">${r.notify ? 'huésped: ' + esc(r.notify.guest || '—') + '<br>dueño: ' + esc(r.notify.owner || '—') : '—'}</td>
+                            : `<tr><td>${esc(r.checkIn)}</td><td>${esc(r.checkOut)}</td><td>${esc(r.name || '—')}${r.email ? ' · ' + esc(r.email) : ''}${r.phone ? ' · ' + esc(r.phone) : ''} <span class="muted">(${esc(r.guest)} pers.)</span>${r.children > 0 ? ' <span class="badge">👶 ' + esc(r.children) + ' menor(es) de 2 años (gratis)</span>' : ''}${r.breakfast ? ' <span class="badge ok">🥐 desayuno</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.75rem">${r.notify ? 'huésped: ' + esc(r.notify.guest || '—') + '<br>dueño: ' + esc(r.notify.owner || '—') : '—'}</td>
                                <td><button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
                     </tbody>
                 </table>

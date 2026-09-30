@@ -66,7 +66,7 @@ async function fetchWithTimeout(url, options, ms) {
 
 // Aviso al dueño de una nueva reserva.
 // Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
-async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, email, phone, breakfast, amount, currency, orderId }) {
+async function notifyReservation({ propertyId, checkIn, checkOut, guests, children, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -80,7 +80,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, name, 
         ['Entrada', checkIn],
         ['Salida', checkOut],
         ['Noches', String(nights)],
-        ['Huéspedes', String(guests)],
+        ['Huéspedes', String(guests) + (children > 0 ? ' + ' + children + ' menor(es) de 2 años (gratis)' : '')],
         ['Nombre', name || '—'],
         ['Email', email || '—'],
         ['Teléfono / WhatsApp', phone || '—'],
@@ -249,6 +249,7 @@ module.exports = async function handler(req, res) {
                     name: body.name,
                     email: body.email,
                     phone: body.phone,
+                    children: Number(body.children) || 0,
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
@@ -267,6 +268,7 @@ module.exports = async function handler(req, res) {
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
                     guests: body.guest,
+                    children: Number(body.children) || 0,
                     name: body.name,
                     email: body.email,
                     phone: body.phone,

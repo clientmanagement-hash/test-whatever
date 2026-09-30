@@ -6,6 +6,7 @@ const PRICING = {
     baseGuests: 2,        // la tarifa incluye 2 personas
     minNights: 2,         // estadía mínima (2 noches)
     maxGuests: 5,         // máximo 5 huéspedes
+    maxInfants: 3,        // tope de seguridad de niños menores de 2 años (gratis, no cuentan como huésped)
     maxNights: 60,
     // Persona adicional por noche: 3ª +$10 · 4ª +$10 · 5ª +$5
     // (equivale a un recargo acumulado de $10 por cada persona hasta la 4ª y $5 la 5ª)
@@ -64,6 +65,8 @@ function rateForDate(date) {
 
 // Recibe fechas 'YYYY-MM-DD', huéspedes y si incluye desayuno; devuelve { total, nights, guests, currency, breakfast } o { error }
 // `opts.allowOneNight` permite 1 noche (se usa solo para noches huérfanas validadas por el calendario)
+// `children` = número de niños MENORES DE 2 AÑOS: no pagan hospedaje, no suman personas adicionales
+//              y NO cuentan para el límite de maxGuests (solo se validan contra un tope de seguridad).
 function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const inMs = Date.parse(checkIn);
     const outMs = Date.parse(checkOut);
@@ -78,17 +81,22 @@ function computeBooking(checkIn, checkOut, guests, breakfast, opts) {
     const g = Number.isFinite(guests) ? Math.max(1, Math.floor(guests)) : PRICING.baseGuests;
     if (g > PRICING.maxGuests) return { error: 'too_many_guests' };
 
+    // Menores de 2 años: gratis y no cuentan en el límite de huéspedes
+    const kids = (opts && Number.isFinite(opts.children)) ? Math.max(0, Math.floor(opts.children)) : 0;
+    if (kids > PRICING.maxInfants) return { error: 'too_many_infants' };
+
     const extraFeePerNight = extraGuestsFee(g);
     const withBreakfast = breakfast === true;
     let total = 0;
     for (let i = 0; i < nights; i++) {
         const d = new Date(inMs + i * 86400000);
         let rate = rateForDate(d) + extraFeePerNight;
+        // El desayuno se cobra por persona mayor de 2 años (los bebés no pagan desayuno)
         if (withBreakfast) rate += PRICING.breakfast.perPersonPerNight * g;
         total += rate;
     }
     total = Math.round(total * PRICING.depositPct) / 100;
-    return { total: Math.round(total * 100) / 100, nights, guests: g, currency: PRICING.currency, breakfast: withBreakfast };
+    return { total: Math.round(total * 100) / 100, nights, guests: g, children: kids, currency: PRICING.currency, breakfast: withBreakfast };
 }
 
 module.exports = { PRICING, rateForDate, computeBooking, extraGuestsFee };

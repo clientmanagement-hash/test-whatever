@@ -268,6 +268,9 @@ const I18N = {
         'direct.maxGuests': 'Maximum 5 guests.',
         'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
+        'direct.children': 'Children under 2',
+        'direct.childrenNote': 'Free · they do not count as guests or towards the maximum of 5.',
+        'direct.infantsFree': 'niño(s) menor(es) de 2 años gratis',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -1007,6 +1010,7 @@ function rateForDate(date) {
 
 const directLoft = $('#direct-loft');
 const directGuests = $('#direct-guests');
+const directChildren = $('#direct-children');
 const directIn = $('#direct-in');
 const directOut = $('#direct-out');
 const directRate = $('#direct-rate');
@@ -1048,11 +1052,13 @@ if (directLoft && directGuests && directIn && directOut) {
         const isOrphan = isOrphanStay(directLoft.value, directIn.value, directOut.value);
         const hasDates = (nights >= BOOKING.minNights || isOrphan) && nights >= 1 && nights <= 60;
 
+        const kids = directChildren ? Math.max(0, Math.min(3, parseInt(directChildren.value, 10) || 0)) : 0;
+        const kidsNote = kids > 0 ? ` · ${kids} ${tr('direct.infantsFree', 'niño(s) menor(es) de 2 años gratis')}` : '';
         directFeeNote.textContent = (isOrphan && nights === 1)
             ? tr('direct.orphanOk', 'Última noche disponible — se permite 1 noche')
             : (breakfast
                 ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`
-                : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`);
+                : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`) + kidsNote;
 
         // Fechas ya bloqueadas (reservas propias o calendarios externos importados)
         if (hasDates && datesBlocked(directLoft.value, directIn.value, directOut.value)) {
@@ -1114,7 +1120,8 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
+            const children = directChildren ? Math.max(0, Math.min(3, parseInt(directChildren.value, 10) || 0)) : 0;
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, children, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
         } else {
             lastBooking = null;
         }
@@ -1130,6 +1137,7 @@ if (directLoft && directGuests && directIn && directOut) {
 
     directLoft.addEventListener('change', updateDirect);
     directGuests.addEventListener('input', updateDirect);
+    if (directChildren) directChildren.addEventListener('input', updateDirect);
     directIn.addEventListener('change', () => {
         // Si la noche elegida es huérfana, basta 1 noche; si no, se respeta el mínimo
         const minN = isOrphanNight(directLoft.value, directIn.value) ? 1 : BOOKING.minNights;
