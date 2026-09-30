@@ -66,7 +66,7 @@ async function fetchWithTimeout(url, options, ms) {
 
 // Aviso al dueño de una nueva reserva.
 // Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
-async function notifyReservation({ propertyId, checkIn, checkOut, guests, children, name, email, phone, breakfast, amount, currency, orderId }) {
+async function notifyReservation({ propertyId, checkIn, checkOut, guests, childAges, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -80,7 +80,16 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, childr
         ['Entrada', checkIn],
         ['Salida', checkOut],
         ['Noches', String(nights)],
-        ['Huéspedes', String(guests) + (children > 0 ? ' + ' + children + ' menor(es) de 2 años (gratis)' : '')],
+        ['Huéspedes', (() => {
+            const edades = (Array.isArray(childAges) ? childAges : []).map((a) => Number(a)).filter((a) => Number.isFinite(a));
+            const gratis = edades.filter((a) => a <= 2).length;
+            const pagan = edades.filter((a) => a > 2).length;
+            let txt = String(guests) + ' adulto(s)';
+            if (edades.length > 0) txt += ' · niños: ' + edades.join(', ') + ' años';
+            if (pagan > 0) txt += ' (' + pagan + ' paga(n) como persona)';
+            if (gratis > 0) txt += ' (' + gratis + ' gratis)';
+            return txt;
+        })()],
         ['Nombre', name || '—'],
         ['Email', email || '—'],
         ['Teléfono / WhatsApp', phone || '—'],
@@ -249,7 +258,9 @@ module.exports = async function handler(req, res) {
                     name: body.name,
                     email: body.email,
                     phone: body.phone,
-                    children: Number(body.children) || 0,
+                    children: Number(body.payingChildren) || 0,
+                    freeChildren: Number(body.freeChildren) || 0,
+                    childAges: Array.isArray(body.childAges) ? body.childAges : [],
                     breakfast: body.breakfast === true,
                     source: 'web'
                 });
@@ -263,12 +274,16 @@ module.exports = async function handler(req, res) {
             try {
                 const pu = (data.purchase_units && data.purchase_units[0]) || {};
                 const cap = (pu.payments && pu.payments.captures && pu.payments.captures[0]) || {};
+                // Huéspedes que pagan = adultos + niños de 3+ años
+                const edades = Array.isArray(body.childAges) ? body.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a)) : [];
+                const adultos = Number.isFinite(Number(body.guests)) ? Math.max(1, Math.floor(Number(body.guests))) : 2;
+                const pagan = edades.filter((a) => a > 2).length;
                 const canal = await notifyReservation({
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
-                    guests: body.guest,
-                    children: Number(body.children) || 0,
+                    guests: adultos + pagan,
+                    childAges: edades,
                     name: body.name,
                     email: body.email,
                     phone: body.phone,

@@ -63,9 +63,10 @@ module.exports = async function handler(req, res) {
     // El precio se calcula en el servidor (autoridad), no se acepta del cliente.
     // Excepción: una noche huérfana (1 noche libre entre dos periodos ocupados)
     // se puede reservar con 1 noche aunque el mínimo general sea mayor.
-    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { children: Number(body.children) || 0 });
+    const childAges = Array.isArray(body.childAges) ? body.childAges : [];
+    let booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { childAges });
     if (booking.error === 'min_nights' && (await isOrphanStay(propertyId, body.checkIn, body.checkOut))) {
-        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, children: Number(body.children) || 0 });
+        booking = computeBooking(body.checkIn, body.checkOut, body.guests, body.breakfast === true, { allowOneNight: true, childAges });
     }
     if (booking.error) return res.status(400).json({ error: booking.error });
 

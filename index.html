@@ -120,7 +120,7 @@
         { "@type": "Question", "name": "¿Ofrecen desayuno?", "acceptedAnswer": { "@type": "Answer", "text": "Sí, ofrecemos desayuno típico costarricense (gallo pinto, huevos, fruta fresca y café de la zona) por $11 por persona por noche, con reservación previa. Puedes agregarlo al reservar o coordinarlo por WhatsApp." } },
         { "@type": "Question", "name": "¿Sirven almuerzo o cena?", "acceptedAnswer": { "@type": "Answer", "text": "Preparamos paella para almuerzo o cena con reservación previa: vegetariana, de mariscos, de carne o mixta. Cuesta $18 por persona, con un mínimo de 2 personas, e incluye pan. Se pide por WhatsApp." } },
         { "@type": "Question", "name": "¿A qué hora es el check-in y el check-out?", "acceptedAnswer": { "@type": "Answer", "text": "El check-in es a partir de las 3:00 p. m. y es completamente automático: puedes entrar por tu cuenta siguiendo las instrucciones que te enviamos antes de llegar. El check-out es hasta las 11:00 a. m." } },
-        { "@type": "Question", "name": "¿Se permiten niños?", "acceptedAnswer": { "@type": "Answer", "text": "Sí, se permiten niños de cualquier edad. Los niños de 2 años o menos se alojan gratis, y hay cunas disponibles sin costo sujetas a disponibilidad." } },
+        { "@type": "Question", "name": "¿Se permiten niños?", "acceptedAnswer": { "@type": "Answer", "text": "Sí, se permiten niños de cualquier edad. Los niños de 2 años o menos son gratis y no ocupan plaza dentro del máximo de 5 personas. Desde los 3 años se cobran como una persona, con su recargo por persona adicional y el desayuno si lo eligen. Hay cunas disponibles sin costo, sujetas a disponibilidad. Al reservar solo debes indicar la edad de cada niño y el sistema aplica el precio automáticamente." } },
         { "@type": "Question", "name": "¿Se admiten mascotas?", "acceptedAnswer": { "@type": "Answer", "text": "No, no se admiten mascotas en las instalaciones." } },
         { "@type": "Question", "name": "¿Se puede fumar?", "acceptedAnswer": { "@type": "Answer", "text": "No se permite fumar dentro de las habitaciones ni en las áreas interiores o comunes. Solo está permitido en el área designada para fumadores ubicada en el parqueo." } },
         { "@type": "Question", "name": "¿Cuál es la política de cancelación?", "acceptedAnswer": { "@type": "Answer", "text": "Es flexible: puedes cancelar sin cargos hasta 5 días antes de la llegada y se reembolsa el 100% del importe pagado. Si cancelas dentro de los 5 días previos, o no te presentas, se cobra el 100% de la reserva." } },
@@ -538,7 +538,7 @@
 
                     <details class="faq-item">
                         <summary data-i18n="faq.q15">¿Se permiten niños?</summary>
-                        <p data-i18n="faq.a15">Sí, se permiten niños de cualquier edad. Los niños de 2 años o menos se alojan gratis, y hay cunas disponibles sin costo sujetas a disponibilidad.</p>
+                        <p data-i18n-html="faq.a15">Sí, se permiten niños de cualquier edad. Los <strong>niños de 2 años o menos son gratis</strong> y no ocupan plaza dentro del máximo de 5 personas. <strong>Desde los 3 años se cobran como una persona</strong>, con su recargo por persona adicional y el desayuno si lo eligen. Hay cunas disponibles sin costo, sujetas a disponibilidad. Al reservar solo debes indicar la edad de cada niño y el sistema aplica el precio automáticamente.</p>
                     </details>
 
                     <details class="faq-item">
@@ -598,17 +598,32 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="direct-guests" data-i18n="direct.guests">Huéspedes</label>
-                                        <input type="number" id="direct-guests" min="1" max="5" value="2">
+                                        <label data-i18n="direct.adults">Adultos</label>
+                                        <div class="stepper" data-stepper="adults">
+                                            <button type="button" class="step-btn" data-step="-1" aria-label="Menos adultos">−</button>
+                                            <span class="step-value" id="direct-adults-val">2</span>
+                                            <button type="button" class="step-btn" data-step="1" aria-label="Más adultos">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="direct-children" data-i18n="direct.children">Niños menores de 2 años</label>
-                                        <input type="number" id="direct-children" min="0" max="3" value="0">
-                                        <small class="field-note" data-i18n="direct.childrenNote">Gratis · no cuentan como huéspedes ni para el máximo de 5.</small>
+                                        <label data-i18n="direct.kidsLabel">Niños</label>
+                                        <div class="stepper" data-stepper="kids">
+                                            <button type="button" class="step-btn" data-step="-1" aria-label="Menos niños">−</button>
+                                            <span class="step-value" id="direct-kids-val">0</span>
+                                            <button type="button" class="step-btn" data-step="1" aria-label="Más niños">+</button>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="form-group kids-ages-wrap" id="direct-kids-ages-wrap" hidden>
+                                    <label data-i18n="direct.kidsAges">Edad de cada niño</label>
+                                    <div class="kids-ages" id="direct-kids-ages"></div>
+                                    <small class="field-note" data-i18n="direct.kidsNote">Los niños de 2 años o menos son gratis. Desde los 3 años se cobran como una persona.</small>
+                                </div>
+                                <input type="hidden" id="direct-guests" value="2">
+                                <input type="hidden" id="direct-children" value="0">
+                                <input type="hidden" id="direct-child-ages" value="[]">
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="direct-name" data-i18n="direct.name">Nombre *</label>

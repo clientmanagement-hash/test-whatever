@@ -1607,6 +1607,98 @@ footer { background: #070d0a; color: rgba(255, 255, 255, 0.72); }
     }
 }
 
+/* ============ CONTADORES ADULTOS / NIÑOS ============ */
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--arena-2);
+    border-radius: var(--r-sm);
+    background: #fff;
+    overflow: hidden;
+}
+
+.step-btn {
+    width: 42px;
+    height: 44px;
+    border: 0;
+    background: var(--arena);
+    color: var(--verde-800);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.step-btn:hover:not(:disabled) {
+    background: var(--tan-500);
+    color: #fff;
+}
+
+.step-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.step-value {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--verde-900);
+}
+
+.kids-ages-wrap {
+    padding: 14px 16px;
+    background: var(--arena);
+    border: 1px solid var(--arena-2);
+    border-radius: var(--r-sm);
+}
+
+.kids-ages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 8px 0 10px;
+}
+
+.kid-age-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.kid-age-row label {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.kid-age-row select {
+    flex: 0 0 130px;
+    margin: 0;
+}
+
+.kid-free-note {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.kid-free-note.free {
+    background: #e5f4ec;
+    color: var(--verde-700);
+}
+
+.kid-free-note.paid {
+    background: #fdeee0;
+    color: #a05a1c;
+}
+
 /* ============ SITIO OFICIAL ============ */
 .oficial {
     background: var(--verde-900, #1f3d2b);

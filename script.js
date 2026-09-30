@@ -109,7 +109,8 @@ const I18N = {
         'pol.stay.title': 'Accommodation conditions',
         'pol.stay.h1': 'Children',
         'pol.stay.li1': 'Children of any age are allowed.',
-        'pol.stay.li2': 'Children aged 2 and under stay free.',
+        'pol.stay.li2': 'Children aged 2 and under stay free and do not take up a place within the maximum of 5 people.',
+        'pol.stay.li3b': 'Children aged 3 and over are charged as a person (including the extra-person surcharge and breakfast if requested). Each child\'s age must be provided when booking.',
         'pol.stay.li3': 'Cribs are available free of charge, subject to availability.',
         'pol.stay.li4': 'Extra beds are subject to availability and may have an additional cost.',
         'pol.stay.h2': 'Pets',
@@ -180,7 +181,7 @@ const I18N = {
         'faq.q14': 'What time are check-in and check-out?',
         'faq.a14': 'Check-in is from 3:00 p.m. and is fully automatic: you can let yourself in following the instructions we send you before arrival. Check-out is until 11:00 a.m.',
         'faq.q15': 'Are children allowed?',
-        'faq.a15': 'Yes, children of any age are allowed. Children aged 2 and under stay free, and cribs are available at no cost subject to availability.',
+        'faq.a15': 'Yes, children of any age are allowed. <strong>Children aged 2 and under stay free</strong> and do not take up a place within the maximum of 5 people. <strong>From age 3 they are charged as a person</strong>, with the extra-person surcharge and breakfast if chosen. Cribs are available at no cost subject to availability. When booking you only need to enter each child\'s age and the system applies the price automatically.',
         'faq.q16': 'Are pets allowed?',
         'faq.a16': 'No, pets are not allowed on the premises.',
         'faq.q17': 'Is smoking allowed?',
@@ -268,9 +269,17 @@ const I18N = {
         'direct.maxGuests': 'Maximum 5 guests.',
         'paypal.item': 'Deposit · Cabañas La Maite',
         'direct.guests': 'Guests',
-        'direct.children': 'Children under 2',
-        'direct.childrenNote': 'Free · they do not count as guests or towards the maximum of 5.',
-        'direct.infantsFree': 'niño(s) menor(es) de 2 años gratis',
+        'direct.adults': 'Adults',
+        'direct.kidsLabel': 'Children',
+        'direct.kidsAges': 'Age of each child',
+        'direct.kidsNote': 'Children aged 2 and under stay free. From age 3 they are charged as a person.',
+        'direct.kidN': 'Child',
+        'direct.years': 'years',
+        'direct.year1': '1 year',
+        'direct.free': 'Free',
+        'direct.pays': 'Pays',
+        'direct.kidsFreeShort': 'child(ren) free',
+        'direct.kidsPaidShort': 'child(ren) as a person',
         'direct.name': 'Name *',
         'direct.email': 'Email *',
         'direct.phone': 'Phone / WhatsApp',
@@ -1011,6 +1020,16 @@ function rateForDate(date) {
 const directLoft = $('#direct-loft');
 const directGuests = $('#direct-guests');
 const directChildren = $('#direct-children');
+const directChildAges = $('#direct-child-ages');
+const directAdultsVal = $('#direct-adults-val');
+const directKidsVal = $('#direct-kids-val');
+const directKidsAgesWrap = $('#direct-kids-ages-wrap');
+const directKidsAges = $('#direct-kids-ages');
+const directSteppers = document.querySelectorAll('.stepper');
+let directAdultsCount = 2;
+const MAX_ADULTS = 5;
+const MAX_KIDS = 4;
+const KID_FREE_MAX_AGE = 2;
 const directIn = $('#direct-in');
 const directOut = $('#direct-out');
 const directRate = $('#direct-rate');
@@ -1034,14 +1053,109 @@ if (directLoft && directGuests && directIn && directOut) {
         return d.toISOString().slice(0, 10);
     };
 
+    // --- Contadores de adultos y niños ---
+    const kidsCount = () => {
+        const el = directKidsAges ? directKidsAges.querySelectorAll('.kid-age-row select') : [];
+        return el.length;
+    };
+    const readKidAges = () => {
+        if (!directKidsAges) return [];
+        return Array.from(directKidsAges.querySelectorAll('.kid-age-row select')).map((s) => parseInt(s.value, 10) || 0);
+    };
+    const payingKids = () => readKidAges().filter((a) => a > KID_FREE_MAX_AGE).length;
+    const freeKids = () => readKidAges().filter((a) => a <= KID_FREE_MAX_AGE).length;
+    const totalPaying = () => directAdultsCount + payingKids();
+
+    // Reconstruye la lista de edades conservando las ya elegidas
+    const renderKidAges = (count) => {
+        if (!directKidsAges || !directKidsAgesWrap) return;
+        const previos = readKidAges();
+        directKidsAges.innerHTML = '';
+        if (count <= 0) { directKidsAgesWrap.hidden = true; return; }
+        directKidsAgesWrap.hidden = false;
+        for (let i = 0; i < count; i++) {
+            const edad = Number.isFinite(previos[i]) ? previos[i] : 8;
+            const row = document.createElement('div');
+            row.className = 'kid-age-row';
+            const lab = document.createElement('label');
+            lab.textContent = `${tr('direct.kidN', 'Niño')} ${i + 1}`;
+            const sel = document.createElement('select');
+            for (let a = 0; a <= 17; a++) {
+                const o = document.createElement('option');
+                o.value = String(a);
+                o.textContent = a === 1 ? tr('direct.year1', '1 año') : `${a} ${tr('direct.years', 'años')}`;
+                if (a === edad) o.selected = true;
+                sel.appendChild(o);
+            }
+            const nota = document.createElement('span');
+            nota.className = 'kid-free-note ' + (edad <= KID_FREE_MAX_AGE ? 'free' : 'paid');
+            nota.textContent = edad <= KID_FREE_MAX_AGE ? tr('direct.free', 'Gratis') : tr('direct.pays', 'Paga');
+            sel.addEventListener('change', () => {
+                const v = parseInt(sel.value, 10) || 0;
+                nota.className = 'kid-free-note ' + (v <= KID_FREE_MAX_AGE ? 'free' : 'paid');
+                nota.textContent = v <= KID_FREE_MAX_AGE ? tr('direct.free', 'Gratis') : tr('direct.pays', 'Paga');
+                updateDirect();
+            });
+            row.appendChild(lab);
+            row.appendChild(sel);
+            row.appendChild(nota);
+            directKidsAges.appendChild(row);
+        }
+    };
+
+    const syncCounters = () => {
+        const kids = kidsCount();
+        if (directAdultsVal) directAdultsVal.textContent = String(directAdultsCount);
+        if (directKidsVal) directKidsVal.textContent = String(kids);
+        if (directGuests) directGuests.value = String(directAdultsCount);
+        if (directChildren) directChildren.value = String(kids);
+        if (directChildAges) directChildAges.value = JSON.stringify(readKidAges());
+        // Un niño se puede añadir si quedan plazas libres en el cupo de 5
+        directSteppers.forEach((st) => {
+            const tipo = st.getAttribute('data-stepper');
+            const menos = st.querySelector('[data-step="-1"]');
+            const mas = st.querySelector('[data-step="1"]');
+            if (!menos || !mas) return;
+            if (tipo === 'adults') {
+                menos.disabled = directAdultsCount <= 1;
+                mas.disabled = directAdultsCount >= MAX_ADULTS || totalPaying() >= MAX_ADULTS;
+            } else {
+                menos.disabled = kids <= 0;
+                mas.disabled = kids >= MAX_KIDS || totalPaying() >= MAX_ADULTS;
+            }
+        });
+    };
+
+    if (directSteppers.length) {
+        directSteppers.forEach((st) => {
+            st.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('.step-btn');
+                if (!btn || btn.disabled) return;
+                const delta = parseInt(btn.getAttribute('data-step'), 10) || 0;
+                const tipo = st.getAttribute('data-stepper');
+                if (tipo === 'adults') {
+                    directAdultsCount = Math.max(1, Math.min(MAX_ADULTS, directAdultsCount + delta));
+                } else {
+                    const n = Math.max(0, Math.min(MAX_KIDS, kidsCount() + delta));
+                    renderKidAges(n);
+                }
+                syncCounters();
+                updateDirect();
+            });
+        });
+    }
+    renderKidAges(0);
+    syncCounters();
+
     const updateDirect = () => {
         const label = directDepositLabel;
         label.textContent = BOOKING.depositPct >= 100
             ? tr('direct.totalPay', 'Pago total')
             : `${tr('direct.deposit', 'Seña')} (${BOOKING.depositPct}%)`;
 
-        const guests = Math.max(1, parseInt(directGuests.value, 10) || BOOKING.baseGuests);
         const breakfast = directBreakfast ? directBreakfast.checked : false;
+        // Personas que pagan: adultos + niños de 3+ años (los de 2- son gratis)
+        const guests = Math.max(1, directAdultsCount + payingKids());
         const breakfastPerNight = breakfast ? BOOKING.breakfast.perPersonPerNight * guests : 0;
 
         const nights = directIn.value && directOut.value
@@ -1052,13 +1166,15 @@ if (directLoft && directGuests && directIn && directOut) {
         const isOrphan = isOrphanStay(directLoft.value, directIn.value, directOut.value);
         const hasDates = (nights >= BOOKING.minNights || isOrphan) && nights >= 1 && nights <= 60;
 
-        const kids = directChildren ? Math.max(0, Math.min(3, parseInt(directChildren.value, 10) || 0)) : 0;
-        const kidsNote = kids > 0 ? ` · ${kids} ${tr('direct.infantsFree', 'niño(s) menor(es) de 2 años gratis')}` : '';
+        const free = freeKids();
+        const paid = payingKids();
+        const kidsNote = free > 0 ? ` · ${free} ${tr('direct.kidsFreeShort', 'niño(s) gratis')}` : '';
+        const paidNote = paid > 0 ? ` · ${paid} ${tr('direct.kidsPaidShort', 'niño(s) como persona')}` : '';
         directFeeNote.textContent = (isOrphan && nights === 1)
             ? tr('direct.orphanOk', 'Última noche disponible — se permite 1 noche')
             : (breakfast
                 ? `${tr('direct.bfast', 'Desayuno')} ${fmtUSD(BOOKING.breakfast.perPersonPerNight)} ${tr('direct.bfastPer', 'por persona/noche')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`
-                : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`) + kidsNote;
+                : `${tr('direct.feeNote', 'Tarifa para 2 personas')} · ${tr('direct.extra5', '3ª-4ª persona')} ${fmtUSD(BOOKING.extraGuestFee)} · ${tr('direct.extra6', '5ª persona')} ${fmtUSD(BOOKING.extraGuestFee5 || 5)}`) + kidsNote + paidNote;
 
         // Fechas ya bloqueadas (reservas propias o calendarios externos importados)
         if (hasDates && datesBlocked(directLoft.value, directIn.value, directOut.value)) {
@@ -1120,8 +1236,9 @@ if (directLoft && directGuests && directIn && directOut) {
 
         // Parámetros de la reserva para el cobro (el servidor calcula el monto)
         if (hasDates) {
-            const children = directChildren ? Math.max(0, Math.min(3, parseInt(directChildren.value, 10) || 0)) : 0;
-            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests, children, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
+            syncCounters();
+            const childAges = readKidAges();
+            lastBooking = { propertyId: directLoft.value, checkIn: directIn.value, checkOut: directOut.value, guests: directAdultsCount, childAges, breakfast, name: directName ? directName.value.trim() : '', email: directEmail ? directEmail.value.trim() : '', phone: directPhone ? directPhone.value.trim() : '' };
         } else {
             lastBooking = null;
         }
@@ -1136,8 +1253,6 @@ if (directLoft && directGuests && directIn && directOut) {
     directOut.min = addDays(today, BOOKING.minNights);
 
     directLoft.addEventListener('change', updateDirect);
-    directGuests.addEventListener('input', updateDirect);
-    if (directChildren) directChildren.addEventListener('input', updateDirect);
     directIn.addEventListener('change', () => {
         // Si la noche elegida es huérfana, basta 1 noche; si no, se respeta el mínimo
         const minN = isOrphanNight(directLoft.value, directIn.value) ? 1 : BOOKING.minNights;
