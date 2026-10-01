@@ -64,11 +64,22 @@
             position: fixed; inset: 0; background: rgba(20,35,25,.55);
             display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 999;
         }
+        /* El atributo hidden debe ganar al display:flex; si no, el modal queda
+           abierto siempre y bloquea el resto del panel. */
+        .modal-bg[hidden] { display: none !important; }
         .modal {
+            position: relative;
             background: var(--paper, #fff); border-radius: 14px; padding: 22px;
             max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto;
             box-shadow: 0 18px 50px rgba(0,0,0,.3);
         }
+        .modal-x {
+            position: absolute; top: 10px; right: 12px;
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid var(--arena-2); background: var(--arena); color: #7a5a2c;
+            font-size: 1rem; font-weight: 700; line-height: 1; cursor: pointer;
+        }
+        .modal-x:hover { background: var(--tan-500); color: #fff; border-color: var(--tan-500); }
         .modal h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--verde-800); }
         .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 16px 0; }
         .edit-grid label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; font-weight: 700; color: var(--verde-800); }
@@ -234,6 +245,7 @@
     <!-- ===== Modal para editar una reserva ===== -->
     <div class="modal-bg" id="edit-modal" hidden>
         <div class="modal">
+            <button type="button" class="modal-x" id="e-close" aria-label="Cerrar">✕</button>
             <h2>✏️ Editar reserva</h2>
             <p class="muted" id="edit-sub"></p>
             <div class="edit-grid">
@@ -469,8 +481,11 @@
     }
 
     $('e-cancel').addEventListener('click', cerrarEditor);
+    $('e-close').addEventListener('click', cerrarEditor);
     $('edit-modal').addEventListener('click', (ev) => { if (ev.target === $('edit-modal')) cerrarEditor(); });
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('edit-modal').hidden) cerrarEditor(); });
+    // Si abrirEditor fallara antes de terminar, el modal nunca debe quedar bloqueando
+    window.addEventListener('error', () => { if (!$('edit-modal').hidden) cerrarEditor(); });
 
     $('e-save').addEventListener('click', async () => {
         if (!editando) return;
