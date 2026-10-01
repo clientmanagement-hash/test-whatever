@@ -3,7 +3,7 @@
 //
 // También sirve la disponibilidad pública para el widget con ?public=1
 // (rangos bloqueados + noches huérfanas), para no usar dos funciones serverless.
-const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation, consumePromo } = require('./_lib');
+const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation, consumePromo, markNotify } = require('./_lib');
 const { PRICING } = require('../paypal/_pricing');
 
 // Añade a cada reserva el desglose de huéspedes y los totales del panel.
