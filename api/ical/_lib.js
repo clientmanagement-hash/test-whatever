@@ -387,6 +387,43 @@ async function markNotify(propertyId, uid, notify) {
     return { ok: true };
 }
 
+// Corrige los datos de una reserva ya guardada (para arreglar registros
+// antiguos o incompletos). Solo actualiza los campos que se envíen.
+async function updateReservation(propertyId, uid, cambios) {
+    if (!propId(propertyId) || !uid) return { error: 'invalid' };
+    const list = await loadReservations(propertyId);
+    const item = list.find((r) => r.uid === uid);
+    if (!item) return { error: 'not_found' };
+
+    if (cambios.adults !== undefined) {
+        const n = Number(cambios.adults);
+        if (Number.isFinite(n) && n >= 1) { item.adults = Math.floor(n); item.guest = String(Math.floor(n)); }
+    }
+    if (cambios.childAges !== undefined && Array.isArray(cambios.childAges)) {
+        const ages = cambios.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a) && a >= 0 && a <= 17).map((a) => Math.floor(a));
+        item.childAges = ages;
+        item.children = ages.filter((a) => a > 2).length;
+        item.freeChildren = ages.filter((a) => a <= 2).length;
+    }
+    if (cambios.promo !== undefined) item.promo = String(cambios.promo || '').slice(0, 24).toUpperCase();
+    if (cambios.amount !== undefined) {
+        const n = Number(cambios.amount);
+        item.amount = Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
+    }
+    if (cambios.currency !== undefined) item.currency = String(cambios.currency || 'USD').slice(0, 8);
+    if (cambios.orderId !== undefined) item.orderId = String(cambios.orderId || '').slice(0, 40);
+    if (cambios.breakfast !== undefined) item.breakfast = cambios.breakfast === true;
+    if (cambios.name !== undefined) item.name = String(cambios.name || '').slice(0, 80);
+    if (cambios.phone !== undefined) item.phone = String(cambios.phone || '').slice(0, 30);
+    if (cambios.email !== undefined) item.email = String(cambios.email || '').slice(0, 120);
+    // Al corregir a mano, el desglose deja de ser estimado
+    if (cambios.estimated !== undefined) item.estimated = Boolean(cambios.estimated);
+    else item.estimated = false;
+
+    await saveReservations(propertyId, list);
+    return { ok: true, reservation: item };
+}
+
 // ---------- utilidades HTTP ----------
 function readBody(req) {
     if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
@@ -434,6 +471,7 @@ module.exports = {
     orphanNightsFromRanges,
     isOrphanStay,
     recordReservation,
+    updateReservation,
     markNotify,
     readBody,
     adminPinOk,
