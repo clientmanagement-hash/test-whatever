@@ -333,7 +333,7 @@ async function isOrphanStay(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, name, email, phone, children, freeChildren, childAges, promo, breakfast, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, adults, name, email, phone, children, freeChildren, childAges, promo, breakfast, amount, currency, orderId, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -353,6 +353,8 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, e
         checkIn: norm(checkIn),
         checkOut: norm(checkOut),
         guest: String(guest || '').slice(0, 80),
+        // adultos: número de adultos (se guarda aparte para mostrar el desglose correcto)
+        adults: Number.isFinite(Number(adults)) ? Math.max(1, Math.floor(Number(adults))) : null,
         name: String(name || '').slice(0, 80),
         email: String(email || '').slice(0, 120),
         phone: String(phone || '').slice(0, 30),
@@ -361,6 +363,10 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, name, e
         childAges: ages,          // edades declaradas
         promo: String(promo || '').slice(0, 24),   // código promocional usado, si lo hubo
         breakfast: Boolean(breakfast),
+        // Importe realmente cobrado en PayPal (para poder validar la reserva después)
+        amount: Number.isFinite(Number(amount)) ? Math.round(Number(amount) * 100) / 100 : null,
+        currency: String(currency || 'USD').slice(0, 8),
+        orderId: String(orderId || '').slice(0, 40),
         source: source === 'web' ? 'web' : 'manual',
         createdAt: new Date().toISOString()
     });

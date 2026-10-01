@@ -1,7 +1,9 @@
 // Vercel Function — POST /api/paypal/capture-order (CommonJS)
 // Captura (cobra) una orden ya aprobada por el comprador en PayPal Orders API v2.
-// Tras el cobro: registra la reserva (iCal), avisa al dueño (FormSubmit) y
+// Tras el cobro: registra la reserva (iCal), avisa al dueño (Resend) y
 // envía confirmación al cliente vía Resend (si RESEND_API_KEY está configurada).
+
+const { PRICING } = require('./_pricing');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -66,7 +68,7 @@ async function fetchWithTimeout(url, options, ms) {
 
 // Aviso al dueño de una nueva reserva.
 // Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
-async function notifyReservation({ propertyId, checkIn, checkOut, guests, childAges, promo, name, email, phone, breakfast, amount, currency, orderId }) {
+async function notifyReservation({ propertyId, checkIn, checkOut, adults, childAges, promo, name, email, phone, breakfast, amount, currency, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -81,13 +83,16 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, childA
         ['Salida', checkOut],
         ['Noches', String(nights)],
         ['Huéspedes', (() => {
+            const nAdultos = Number.isFinite(Number(adults)) ? Math.max(1, Math.floor(Number(adults))) : PRICING.baseGuests;
             const edades = (Array.isArray(childAges) ? childAges : []).map((a) => Number(a)).filter((a) => Number.isFinite(a));
-            const gratis = edades.filter((a) => a <= 2).length;
-            const pagan = edades.filter((a) => a > 2).length;
-            let txt = String(guests) + ' adulto(s)';
+            const gratis = edades.filter((a) => a <= PRICING.childFreeMaxAge).length;
+            const pagan = edades.filter((a) => a > PRICING.childFreeMaxAge).length;
+            let txt = nAdultos + ' adulto(s)';
             if (edades.length > 0) txt += ' · niños: ' + edades.join(', ') + ' años';
             if (pagan > 0) txt += ' (' + pagan + ' paga(n) como persona)';
             if (gratis > 0) txt += ' (' + gratis + ' gratis)';
+            // Total de personas que se cobran (adultos + niños de 3+)
+            txt += ' → ' + (nAdultos + pagan) + ' ' + ((nAdultos + pagan) === 1 ? 'persona que paga' : 'personas que pagan');
             return txt;
         })()],
         ['Nombre', name || '—'],
@@ -145,7 +150,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, guests, childA
 }
 
 // Confirmación al CLIENTE usando Resend (solo si RESEND_API_KEY está en Vercel)
-async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, guests, breakfast, orderId }) {
+async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, adults, childAges, breakfast, orderId }) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey || !to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
         return; // sin key válida o email no escribible: no bloquea el cobro
@@ -155,12 +160,23 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
     const outMs = Date.parse(checkOut);
     const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
     const firstName = (name || 'Cliente').split(' ')[0];
+    // Desglose de huéspedes tal como quedó la reserva
+    const nAdultos = Number.isFinite(Number(adults)) ? Math.max(1, Math.floor(Number(adults))) : PRICING.baseGuests;
+    const edades = (Array.isArray(childAges) ? childAges : []).map((a) => Number(a)).filter((a) => Number.isFinite(a));
+    const ninosGratis = edades.filter((a) => a <= PRICING.childFreeMaxAge).length;
+    const ninosPagan = edades.filter((a) => a > PRICING.childFreeMaxAge).length;
+    let guestsTxt = String(nAdultos) + (nAdultos === 1 ? ' adulto' : ' adultos');
+    if (edades.length > 0) {
+        guestsTxt += ' · ' + edades.length + (edades.length === 1 ? ' niño (' : ' niños (') + edades.join(', ') + ' años)';
+        if (ninosGratis > 0) guestsTxt += ' — ' + ninosGratis + (ninosGratis === 1 ? ' gratis' : ' gratis');
+        if (ninosPagan > 0) guestsTxt += ' — ' + ninosPagan + (ninosPagan === 1 ? ' como persona' : ' como personas');
+    }
     const detailRows = ''
         + '<tr><th align="left">Loft / Room</th><td>' + escapeHtml(propName) + '</td></tr>'
         + '<tr><th align="left">Check-in / Entrada</th><td>' + escapeHtml(checkIn) + '</td></tr>'
         + '<tr><th align="left">Check-out / Salida</th><td>' + escapeHtml(checkOut) + '</td></tr>'
         + '<tr><th align="left">Nights / Noches</th><td>' + escapeHtml(String(nights)) + '</td></tr>'
-        + '<tr><th align="left">Guests / Huéspedes</th><td>' + escapeHtml(String(guests)) + '</td></tr>'
+        + '<tr><th align="left">Guests / Huéspedes</th><td>' + escapeHtml(guestsTxt) + '</td></tr>'
         + (breakfast ? '<tr><th align="left">Breakfast / Desayuno</th><td>Sí ☕ / Yes ☕</td></tr>' : '')
         + '<tr><th align="left">Reference / Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>';
 
@@ -248,6 +264,22 @@ module.exports = async function handler(req, res) {
             const { recordReservation, markNotify, consumePromo } = require('../ical/_lib');
             const notify = {};
 
+            // Datos comunes: importe realmente cobrado (de PayPal, no del cliente)
+            // y cuántos huéspedes pagaron (adultos + niños de 3+ años).
+            const pu0 = (data.purchase_units && data.purchase_units[0]) || {};
+            const cap0 = (pu0.payments && pu0.payments.captures && pu0.payments.captures[0]) || {};
+            const amountPaid = cap0.amount ? Number(cap0.amount.value) : null;
+            const amountCurrency = (cap0.amount && cap0.amount.currency_code) || 'USD';
+            const promoDeOrden = String(pu0.custom_id || '').indexOf('promo:') === 0 ? String(pu0.custom_id).slice(6) : '';
+            const edadesHuesped = Array.isArray(body.childAges)
+                ? body.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a))
+                : [];
+            const adultosReserva = Number.isFinite(Number(body.guests))
+                ? Math.max(1, Math.floor(Number(body.guests)))
+                : (Number.isFinite(Number(body.guest)) ? Math.max(1, Math.floor(Number(body.guest))) : PRICING.baseGuests);
+            const ninosPagan = edadesHuesped.filter((a) => a > PRICING.childFreeMaxAge).length;
+            const ninosGratis = edadesHuesped.filter((a) => a <= PRICING.childFreeMaxAge).length;
+
             // 1) Registra la reserva en el calendario iCal (con datos del huésped)
             let uid = null;
             try {
@@ -255,19 +287,19 @@ module.exports = async function handler(req, res) {
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
-                    guest: body.guest,
+                    guest: adultosReserva,
+                    adults: adultosReserva,
                     name: body.name,
                     email: body.email,
                     phone: body.phone,
-                    children: Number(body.payingChildren) || 0,
-                    freeChildren: Number(body.freeChildren) || 0,
-                    childAges: Array.isArray(body.childAges) ? body.childAges : [],
-                    promo: (() => {
-                        const puP = (data.purchase_units && data.purchase_units[0]) || {};
-                        const cid = String(puP.custom_id || '');
-                        return cid.indexOf('promo:') === 0 ? cid.slice(6) : '';
-                    })(),
+                    children: ninosPagan,
+                    freeChildren: ninosGratis,
+                    childAges: edadesHuesped,
+                    promo: promoDeOrden,
                     breakfast: body.breakfast === true,
+                    amount: amountPaid,
+                    currency: amountCurrency,
+                    orderId: orderID,
                     source: 'web'
                 });
                 uid = rec && rec.uid ? rec.uid : null;
@@ -297,27 +329,19 @@ module.exports = async function handler(req, res) {
 
             // 2) Aviso al dueño (monto real tomado de PayPal)
             try {
-                const pu = (data.purchase_units && data.purchase_units[0]) || {};
-                const cap = (pu.payments && pu.payments.captures && pu.payments.captures[0]) || {};
-                // Huéspedes que pagan = adultos + niños de 3+ años
-                const edades = Array.isArray(body.childAges) ? body.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a)) : [];
-                const adultos = Number.isFinite(Number(body.guests)) ? Math.max(1, Math.floor(Number(body.guests))) : 2;
-                const pagan = edades.filter((a) => a > 2).length;
-                const puPromo = (data.purchase_units && data.purchase_units[0]) || {};
-                const promoUsado = String(puPromo.custom_id || '').indexOf('promo:') === 0 ? String(puPromo.custom_id).slice(6) : null;
                 const canal = await notifyReservation({
                     propertyId: body.propertyId,
                     checkIn: body.checkIn,
                     checkOut: body.checkOut,
-                    guests: adultos + pagan,
-                    childAges: edades,
-                    promo: promoUsado,
+                    adults: adultosReserva,
+                    childAges: edadesHuesped,
+                    promo: promoDeOrden || null,
                     name: body.name,
                     email: body.email,
                     phone: body.phone,
                     breakfast: body.breakfast === true,
-                    amount: cap.amount ? cap.amount.value : null,
-                    currency: cap.amount ? cap.amount.currency_code : 'USD',
+                    amount: amountPaid,
+                    currency: amountCurrency,
                     orderId: orderID
                 });
                 notify.owner = canal ? 'ok:' + canal : 'error:sin_canal';
@@ -334,7 +358,8 @@ module.exports = async function handler(req, res) {
                         name: body.name,
                         checkIn: body.checkIn,
                         checkOut: body.checkOut,
-                        guests: body.guest,
+                        adults: adultosReserva,
+                        childAges: edadesHuesped,
                         breakfast: body.breakfast === true,
                         orderId: orderID
                     });

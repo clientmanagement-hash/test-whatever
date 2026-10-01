@@ -4,6 +4,35 @@
 // También sirve la disponibilidad pública para el widget con ?public=1
 // (rangos bloqueados + noches huérfanas), para no usar dos funciones serverless.
 const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody } = require('./_lib');
+const { PRICING } = require('../paypal/_pricing');
+
+// Añade a cada reserva el desglose de huéspedes y los totales del panel.
+// Los registros antiguos (antes de guardar adults/childAges) se muestran
+// con la información disponible, sin inventar datos.
+function conDesglose(r) {
+    const adultos = Number.isFinite(Number(r.adults))
+        ? Math.max(1, Math.floor(Number(r.adults)))
+        : (Number.isFinite(Number(r.guest)) ? Math.max(1, Math.floor(Number(r.guest))) : null);
+    const edades = Array.isArray(r.childAges) ? r.childAges.map(Number).filter((a) => Number.isFinite(a)) : [];
+    const gratis = Number.isFinite(Number(r.freeChildren)) ? Math.floor(Number(r.freeChildren)) : edades.filter((a) => a <= PRICING.childFreeMaxAge).length;
+    const pagan = Number.isFinite(Number(r.children)) ? Math.floor(Number(r.children)) : edades.filter((a) => a > PRICING.childFreeMaxAge).length;
+    // Personas que ocupan cupo y se cobran: adultos + niños de 3+ años
+    const personasQuePagan = adultos !== null ? (adultos + pagan) : null;
+    return Object.assign({}, r, {
+        breakdown: {
+            adults: adultos,
+            freeChildren: gratis,
+            payingChildren: pagan,
+            childAges: edades,
+            totalPeople: adultos !== null ? (adultos + gratis + pagan) : null,
+            payingPeople: personasQuePagan,
+            hasDetail: edades.length > 0 || Number.isFinite(Number(r.adults))
+        },
+        amount: Number.isFinite(Number(r.amount)) ? Number(r.amount) : null,
+        currency: r.currency || null,
+        orderId: r.orderId || null
+    });
+}
 
 module.exports = async function handler(req, res) {
     // Modo público: validar un código promocional desde el widget (sin PIN).
@@ -96,7 +125,7 @@ module.exports = async function handler(req, res) {
             id: p.id,
             name: p.name,
             exportUrl: `${hostUrl(req)}/api/ical/property/${p.id}`,
-            reservations: await loadReservations(p.id),
+            reservations: (await loadReservations(p.id)).map(conDesglose),
             external: await loadExternal(p.id),
             blocked,
             // Noches huérfanas: 1 noche libre entre dos periodos ocupados (reservables 1 noche)

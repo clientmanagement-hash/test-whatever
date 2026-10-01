@@ -859,7 +859,10 @@ async function initPayPal() {
                     const r = await fetch('/api/paypal/capture-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID, propertyId: lastBooking ? lastBooking.propertyId : '', checkIn: lastBooking ? lastBooking.checkIn : '', checkOut: lastBooking ? lastBooking.checkOut : '', guest: lastBooking ? lastBooking.guests : '', name: lastBooking ? lastBooking.name : '', email: lastBooking ? lastBooking.email : '', phone: lastBooking ? lastBooking.phone : '', breakfast: lastBooking ? Boolean(lastBooking.breakfast) : false })
+                        // Se envía el mismo objeto que creó la orden (adultos, edades de
+                        // los niños, promoción, desayuno, datos del huésped) para que la
+                        // reserva guardada refleje exactamente lo que se cobró.
+                        body: JSON.stringify(Object.assign({}, lastBooking || {}, { orderID: data.orderID }))
                     });
                     const d = await r.json();
                     if (r.ok && d.success) {
