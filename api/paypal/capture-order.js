@@ -3,7 +3,8 @@
 // Tras el cobro: registra la reserva (iCal), avisa al dueño (Resend) y
 // envía confirmación al cliente vía Resend (si RESEND_API_KEY está configurada).
 
-const { PRICING } = require('./_pricing');
+const { PRICING, computeBooking } = require('./_pricing');
+const { validatePromo } = require('../ical/_lib');
 
 let cachedToken = null;
 let cachedAt = 0;
@@ -68,7 +69,7 @@ async function fetchWithTimeout(url, options, ms) {
 
 // Aviso al dueño de una nueva reserva.
 // Canal principal: Resend (fiable). Respaldo: FormSubmit (ha estado caído, por eso no es el principal).
-async function notifyReservation({ propertyId, checkIn, checkOut, adults, childAges, promo, name, email, phone, breakfast, amount, currency, orderId }) {
+async function notifyReservation({ propertyId, checkIn, checkOut, adults, childAges, promo, name, email, phone, breakfast, amount, currency, discount, descuentoTipo, desgloseEstimado, orderId }) {
     const emailToOwner = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -76,6 +77,8 @@ async function notifyReservation({ propertyId, checkIn, checkOut, adults, childA
     const nights = (Number.isFinite(inMs) && Number.isFinite(outMs)) ? Math.round((outMs - inMs) / 86400000) : 0;
     const perNight = (amount && nights) ? (Number(amount) / nights) : null;
     const total = amount ? (amount + ' ' + (currency || 'USD')) : '—';
+    // Cuando hay un cupón de descuento, el "precio por noche" efectivo ya lo refleja
+    const notaNoche = (discount && descuentoTipo === 'cupon') ? ' (tras el descuento)' : '';
 
     const filas = [
         ['Loft', propName],
@@ -93,14 +96,15 @@ async function notifyReservation({ propertyId, checkIn, checkOut, adults, childA
             if (gratis > 0) txt += ' (' + gratis + ' gratis)';
             // Total de personas que se cobran (adultos + niños de 3+)
             txt += ' → ' + (nAdultos + pagan) + ' ' + ((nAdultos + pagan) === 1 ? 'persona que paga' : 'personas que pagan');
+            if (desgloseEstimado) txt += ' (reconstruido del importe cobrado)';
             return txt;
         })()],
         ['Nombre', name || '—'],
         ['Email', email || '—'],
         ['Teléfono / WhatsApp', phone || '—'],
         ['Desayuno incluido', breakfast ? 'SÍ ☕' : 'No'],
-        ['Precio por noche', perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD')) : '—'],
-        ...(promo ? [['🎟️ Código promocional', promo + ' (tarifa especial aplicada)']] : []),
+        ['Precio por noche', perNight ? (perNight.toFixed(2) + ' ' + (currency || 'USD') + notaNoche) : '—'],
+        ...(promo ? [['🎟️ Código aplicado', promo + (discount ? ' · ' + (descuentoTipo === 'tarifa' ? 'precio fijo ' + discount + ' ' + (currency || 'USD') + '/noche' : 'descuento ' + discount + ' ' + (currency || 'USD') + ' al total') : '')]] : []),
         ['Monto cobrado', total],
         ['Orden PayPal', orderId]
     ];
@@ -150,7 +154,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, adults, childA
 }
 
 // Confirmación al CLIENTE usando Resend (solo si RESEND_API_KEY está en Vercel)
-async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, adults, childAges, breakfast, orderId }) {
+async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, adults, childAges, breakfast, amount, currency, descuento, descuentoTipo, desgloseEstimado, orderId }) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey || !to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
         return; // sin key válida o email no escribible: no bloquea el cobro
@@ -178,6 +182,8 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
         + '<tr><th align="left">Nights / Noches</th><td>' + escapeHtml(String(nights)) + '</td></tr>'
         + '<tr><th align="left">Guests / Huéspedes</th><td>' + escapeHtml(guestsTxt) + '</td></tr>'
         + (breakfast ? '<tr><th align="left">Breakfast / Desayuno</th><td>Sí ☕ / Yes ☕</td></tr>' : '')
+        + (descuento ? '<tr><th align="left">Code applied / Código aplicado</th><td>' + escapeHtml(descuentoTipo === 'tarifa' ? ('Precio fijo / Fixed rate: ' + descuento + ' ' + (currency || 'USD') + ' por noche') : ('Descuento / Discount: −' + descuento + ' ' + (currency || 'USD'))) + '</td></tr>' : '')
+        + (amount ? '<tr><th align="left">Total</th><td>' + escapeHtml(String(amount) + ' ' + (currency || 'USD')) + '</td></tr>' : '')
         + '<tr><th align="left">Reference / Referencia</th><td>' + escapeHtml(String(orderId)) + '</td></tr>';
 
     const html =
@@ -231,8 +237,82 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
     }
 }
 
-module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+// ---------- Recuperación fiable de datos tras el cobro ----------
+
+// Extrae el código promocional de TODOS los sitios donde PayPal puede dejarlo.
+// Antes se leía solo de purchase_units[0].custom_id, que en la respuesta de
+// captura puede venir vacío: por eso el código nunca se marcaba como usado.
+function extraerPromo(data, body) {
+    const vistos = [];
+    const push = (v) => { if (v) vistos.push(String(v)); };
+    const unidades = Array.isArray(data && data.purchase_units) ? data.purchase_units : [];
+    for (const pu of unidades) {
+        push(pu && pu.custom_id);
+        const caps = (pu && pu.payments && pu.payments.captures) || [];
+        for (const c of caps) push(c && c.custom_id);
+    }
+    // payment_source.paypal suele conservar también la referencia
+    const ps = data && data.payment_source && data.payment_source.paypal;
+    if (ps) {
+        push(ps.custom_id);
+        const sca = ps.attributes && ps.attributes.vault;
+        if (sca) push(sca.custom_id);
+    }
+    // Respaldo: lo que envió el navegador (ahora sí incluye el código).
+    // Aquí el valor es el código "en crudo" (sin el prefijo promo:).
+    if (body && body.promo) {
+        const limpio = String(body.promo).trim().toUpperCase();
+        if (limpio) return limpio;
+    }
+    for (const v of vistos) {
+        const i = v.indexOf('promo:');
+        if (i === 0) return v.slice(6).trim().toUpperCase();
+        if (i > 0) return v.slice(i + 6).trim().toUpperCase();
+    }
+    return null;
+}
+
+// Si el importe cobrado no cuadra con el desglose recibido, busca la
+// combinación de adultos + niños que SÍ explica ese importe.
+// Devuelve { adults, childAges } o null.
+function ajustarPersonas(body, amountPaid, edadesOriginales, promo) {
+    const esFlat = Boolean(promo && promo.flat && promo.rate);
+    const promoRate = esFlat ? promo.rate : null;
+    const promoDiscount = (promo && promo.rate && !promo.flat) ? promo.rate : null;
+
+    const probar = (adults, ages) => {
+        const r = computeBooking(body.checkIn, body.checkOut, adults, body.breakfast === true, {
+            childAges: ages, promoRate, promoFlat: esFlat, promoDiscount
+        });
+        return (!r.error && Math.abs(r.total - amountPaid) <= 0.01) ? r : null;
+    };
+
+    // 1) Mantener las edades declaradas y probar con más adultos
+    if (edadesOriginales.length > 0) {
+        for (let a = 1; a <= PRICING.maxGuests; a++) {
+            const r = probar(a, edadesOriginales);
+            if (r && r.guests === a + edadesOriginales.filter((x) => x > PRICING.childFreeMaxAge).length) {
+                return { adults: a, childAges: edadesOriginales };
+            }
+        }
+    }
+    // 2) Probar solo con adultos (sin niños)
+    for (let a = 1; a <= PRICING.maxGuests; a++) {
+        const r = probar(a, []);
+        if (r) return { adults: a, childAges: [] };
+    }
+    // 3) Probar añadiendo niños de pago (edades típicas) manteniendo 1 adulto..5
+    for (let a = 1; a <= PRICING.maxGuests; a++) {
+        for (let n = 1; n <= PRICING.maxGuests - a; n++) {
+            const ages = Array.from({ length: n }, () => 8);   // 8 años = niño de pago
+            const r = probar(a, ages);
+            if (r) return { adults: a, childAges: ages };
+        }
+    }
+    return null;
+}
+
+module.exports = async function handler(req, res) {    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
     const env = process.env.PAYPAL_ENV === 'live' ? 'live' : 'sandbox';
     const base = env === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -264,21 +344,48 @@ module.exports = async function handler(req, res) {
             const { recordReservation, markNotify, consumePromo } = require('../ical/_lib');
             const notify = {};
 
-            // Datos comunes: importe realmente cobrado (de PayPal, no del cliente)
-            // y cuántos huéspedes pagaron (adultos + niños de 3+ años).
+            // ---- Datos fiables del cobro (todo leído de la respuesta de PayPal) ----
             const pu0 = (data.purchase_units && data.purchase_units[0]) || {};
             const cap0 = (pu0.payments && pu0.payments.captures && pu0.payments.captures[0]) || {};
             const amountPaid = cap0.amount ? Number(cap0.amount.value) : null;
             const amountCurrency = (cap0.amount && cap0.amount.currency_code) || 'USD';
-            const promoDeOrden = String(pu0.custom_id || '').indexOf('promo:') === 0 ? String(pu0.custom_id).slice(6) : '';
-            const edadesHuesped = Array.isArray(body.childAges)
+            const promoDeOrden = extraerPromo(data, body);
+
+            // Datos del código (si lo hubo) para poder reconstruir el importe
+            const promoSegunCodigo = promoDeOrden ? (await validatePromo(promoDeOrden)).promo || null : null;
+
+            // ---- Desglose de huéspedes ----
+            // Se prefiere lo que envió el navegador; si no llega, se reconstruye
+            // a partir del importe realmente cobrado (para que el registro NUNCA
+            // muestre menos personas de las que se pagaron).
+            const edadesCrudas = Array.isArray(body.childAges)
                 ? body.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a))
                 : [];
-            const adultosReserva = Number.isFinite(Number(body.guests))
+            let adultosReserva = Number.isFinite(Number(body.guests))
                 ? Math.max(1, Math.floor(Number(body.guests)))
-                : (Number.isFinite(Number(body.guest)) ? Math.max(1, Math.floor(Number(body.guest))) : PRICING.baseGuests);
+                : (Number.isFinite(Number(body.guest)) ? Math.max(1, Math.floor(Number(body.guest))) : null);
+            let edadesHuesped = edadesCrudas;
+            let desgloseEstimado = false;
+
+            const esperado = computeBooking(body.checkIn, body.checkOut, adultosReserva || PRICING.baseGuests, body.breakfast === true, {
+                childAges: edadesHuesped,
+                promoRate: promoSegunCodigo && promoSegunCodigo.rate && promoSegunCodigo.flat ? promoSegunCodigo.rate : null,
+                promoFlat: Boolean(promoSegunCodigo && promoSegunCodigo.flat),
+                promoDiscount: promoSegunCodigo && promoSegunCodigo.rate && !promoSegunCodigo.flat ? promoSegunCodigo.rate : null
+            });
+            // Si el importe cobrado no coincide con el desglose recibido, se
+            // reconstruye el número de personas que explican el importe real.
+            if (amountPaid !== null && adultosReserva !== null && !esperado.error && Math.abs(esperado.total - amountPaid) > 0.01) {
+                const ajuste = ajustarPersonas(body, amountPaid, edadesHuesped, promoSegunCodigo);
+                if (ajuste) {
+                    adultosReserva = ajuste.adults;
+                    edadesHuesped = ajuste.childAges;
+                    desgloseEstimado = true;
+                }
+            }
             const ninosPagan = edadesHuesped.filter((a) => a > PRICING.childFreeMaxAge).length;
             const ninosGratis = edadesHuesped.filter((a) => a <= PRICING.childFreeMaxAge).length;
+            if (desgloseEstimado) notify.desglose = 'estimado_del_importe';
 
             // 1) Registra la reserva en el calendario iCal (con datos del huésped)
             let uid = null;
@@ -295,11 +402,12 @@ module.exports = async function handler(req, res) {
                     children: ninosPagan,
                     freeChildren: ninosGratis,
                     childAges: edadesHuesped,
-                    promo: promoDeOrden,
+                    promo: promoDeOrden || '',
                     breakfast: body.breakfast === true,
                     amount: amountPaid,
                     currency: amountCurrency,
                     orderId: orderID,
+                    estimated: desgloseEstimado,
                     source: 'web'
                 });
                 uid = rec && rec.uid ? rec.uid : null;
@@ -308,20 +416,20 @@ module.exports = async function handler(req, res) {
                 notify.reservation = 'error:' + String((e && e.message) || e);
             }
 
-            // 1b) Si la orden llevaba un código promocional, se marca como usado.
-            // El código se lee de custom_id (lo fijó el servidor al crear la orden),
-            // no del cuerpo del cliente, para que no pueda falsearse.
+            // 1b) Si la reserva llevaba un código promocional, se marca como usado.
+            // promoDeOrden se extrajo antes buscando en la orden, en las capturas,
+            // en payment_source y en el cuerpo: así no depende de un único campo.
             try {
-                const pu0 = (data.purchase_units && data.purchase_units[0]) || {};
-                const raw = String(pu0.custom_id || '');
-                if (raw.indexOf('promo:') === 0) {
-                    const usado = await consumePromo(raw.slice(6), {
+                if (promoDeOrden) {
+                    const usado = await consumePromo(promoDeOrden, {
                         propertyId: body.propertyId,
                         checkIn: body.checkIn,
                         checkOut: body.checkOut,
                         orderId: orderID
                     });
-                    notify.promo = usado ? 'ok:' + usado.code : 'no_encontrado';
+                    notify.promo = usado ? 'ok:' + usado.code : 'no_encontrado:' + promoDeOrden;
+                } else {
+                    notify.promo = 'sin_codigo';
                 }
             } catch (e) {
                 notify.promo = 'error:' + String((e && e.message) || e);
@@ -342,6 +450,9 @@ module.exports = async function handler(req, res) {
                     breakfast: body.breakfast === true,
                     amount: amountPaid,
                     currency: amountCurrency,
+                    discount: promoSegunCodigo ? promoSegunCodigo.rate : null,
+                    descuentoTipo: promoSegunCodigo ? (promoSegunCodigo.flat ? 'tarifa' : 'cupon') : null,
+                    desgloseEstimado: desgloseEstimado,
                     orderId: orderID
                 });
                 notify.owner = canal ? 'ok:' + canal : 'error:sin_canal';
@@ -361,6 +472,11 @@ module.exports = async function handler(req, res) {
                         adults: adultosReserva,
                         childAges: edadesHuesped,
                         breakfast: body.breakfast === true,
+                        amount: amountPaid,
+                        currency: amountCurrency,
+                        descuento: promoSegunCodigo ? promoSegunCodigo.rate : null,
+                        descuentoTipo: promoSegunCodigo ? (promoSegunCodigo.flat ? 'tarifa' : 'cupon') : null,
+                        desgloseEstimado: desgloseEstimado,
                         orderId: orderID
                     });
                     notify.guest = 'ok:' + body.email;
@@ -381,3 +497,7 @@ module.exports = async function handler(req, res) {
         return res.status(502).json({ error: 'paypal_capture_failed' });
     }
 };
+
+// Expuestas para pruebas (no las usa el handler)
+module.exports.extraerPromo = extraerPromo;
+module.exports.ajustarPersonas = ajustarPersonas;

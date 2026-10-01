@@ -333,7 +333,7 @@ async function isOrphanStay(pid, checkIn, checkOut) {
 }
 
 // registra una reserva (sin validar solapamiento: el guardián es create-order)
-async function recordReservation({ propertyId, checkIn, checkOut, guest, adults, name, email, phone, children, freeChildren, childAges, promo, breakfast, amount, currency, orderId, source }) {
+async function recordReservation({ propertyId, checkIn, checkOut, guest, adults, name, email, phone, children, freeChildren, childAges, promo, breakfast, amount, currency, orderId, estimated, source }) {
     const prop = propId(propertyId);
     if (!prop) return { error: 'invalid_property' };
     const inMs = Date.parse(checkIn);
@@ -367,6 +367,8 @@ async function recordReservation({ propertyId, checkIn, checkOut, guest, adults,
         amount: Number.isFinite(Number(amount)) ? Math.round(Number(amount) * 100) / 100 : null,
         currency: String(currency || 'USD').slice(0, 8),
         orderId: String(orderId || '').slice(0, 40),
+        // true cuando el desglose se reconstruyó a partir del importe cobrado
+        estimated: Boolean(estimated),
         source: source === 'web' ? 'web' : 'manual',
         createdAt: new Date().toISOString()
     });

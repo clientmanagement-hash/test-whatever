@@ -30,7 +30,11 @@ function conDesglose(r) {
         },
         amount: Number.isFinite(Number(r.amount)) ? Number(r.amount) : null,
         currency: r.currency || null,
-        orderId: r.orderId || null
+        orderId: r.orderId || null,
+        // Aviso para el panel: reserva sin datos completos (registros antiguos
+        // anteriores a que se guardaran las edades y el importe).
+        incompleta: !(Number.isFinite(Number(r.amount)) && (Number.isFinite(Number(r.adults)) || edades.length > 0)),
+        estimated: Boolean(r.estimated)
     });
 }
 
