@@ -3,7 +3,7 @@
 //
 // También sirve la disponibilidad pública para el widget con ?public=1
 // (rangos bloqueados + noches huérfanas), para no usar dos funciones serverless.
-const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation } = require('./_lib');
+const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation, consumePromo } = require('./_lib');
 const { PRICING } = require('../paypal/_pricing');
 
 // Añade a cada reserva el desglose de huéspedes y los totales del panel.
@@ -122,6 +122,11 @@ module.exports = async function handler(req, res) {
             });
             if (r.error) return res.status(404).json({ error: r.error });
             return res.status(200).json({ ok: true, reservation: r.reservation });
+        }
+        if (accion === 'consume-promo') {
+            const r = await consumePromo(String(body.code || req.query.code), body.usedIn || { manual: true });
+            if (!r) return res.status(404).json({ error: 'not_found' });
+            return res.status(200).json({ ok: true, promo: r });
         }
         return res.status(400).json({ error: 'unknown_action' });
     }
