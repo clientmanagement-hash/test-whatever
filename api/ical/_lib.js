@@ -389,20 +389,61 @@ async function markNotify(propertyId, uid, notify) {
 
 // Corrige los datos de una reserva ya guardada (para arreglar registros
 // antiguos o incompletos). Solo actualiza los campos que se envíen.
-async function updateReservation(propertyId, uid, cambios) {
+// `opts.evitarSolapes` bloquea el cambio de fechas si chocan con otra reserva
+// o con un calendario externo (Booking/Airbnb/Expedia).
+async function updateReservation(propertyId, uid, cambios, opts) {
     if (!propId(propertyId) || !uid) return { error: 'invalid' };
     const list = await loadReservations(propertyId);
     const item = list.find((r) => r.uid === uid);
     if (!item) return { error: 'not_found' };
 
+    // --- Fechas (con comprobación de disponibilidad) ---
+    if (cambios.checkIn !== undefined || cambios.checkOut !== undefined) {
+        const nuevoIn = norm(cambios.checkIn !== undefined ? cambios.checkIn : item.checkIn);
+        const nuevoOut = norm(cambios.checkOut !== undefined ? cambios.checkOut : item.checkOut);
+        const inMs = Date.parse(nuevoIn);
+        const outMs = Date.parse(nuevoOut);
+        if (!Number.isFinite(inMs) || !Number.isFinite(outMs) || outMs <= inMs) {
+            return { error: 'invalid_dates' };
+        }
+        if ((outMs - inMs) / dayMs > 90) return { error: 'too_long' };
+
+        if (opts && opts.evitarSolapes) {
+            // Se ignoran las reservas externas del propio rango: se comprueba
+            // contra las OTRAS reservas y contra los calendarios importados.
+            const otras = list.filter((r) => r.uid !== uid).map((r) => ({ checkIn: norm(r.checkIn), checkOut: norm(r.checkOut) }));
+            const externos = await availability(propertyId);
+            const solapa = (rango) => {
+                const a = Date.parse(rango.checkIn);
+                const b = Date.parse(rango.checkOut);
+                return inMs < b && outMs > a;   // solapamiento de intervalos
+            };
+            // Solo se miran los rangos propios (las reservas ya están incluidas
+            // en availability con el rango antiguo, por eso se excluye ese rango).
+            const propioViejo = { checkIn: norm(item.checkIn), checkOut: norm(item.checkOut) };
+            const colisionesExternas = externos.filter((r) => !(r.checkIn === propioViejo.checkIn && r.checkOut === propioViejo.checkOut));
+            if (otras.some(solapa) || colisionesExternas.some(solapa)) {
+                return { error: 'dates_unavailable' };
+            }
+        }
+        item.checkIn = nuevoIn;
+        item.checkOut = nuevoOut;
+    }
+
     if (cambios.adults !== undefined) {
         const n = Number(cambios.adults);
-        if (Number.isFinite(n) && n >= 1) { item.adults = Math.floor(n); item.guest = String(Math.floor(n)); }
+        if (Number.isFinite(n) && n >= 1 && n <= 5) { item.adults = Math.floor(n); item.guest = String(Math.floor(n)); }
+        else return { error: 'invalid_adults' };
     }
     if (cambios.childAges !== undefined && Array.isArray(cambios.childAges)) {
         const ages = cambios.childAges.map((a) => Number(a)).filter((a) => Number.isFinite(a) && a >= 0 && a <= 17).map((a) => Math.floor(a));
+        if (ages.length > 4) return { error: 'too_many_children' };
+        // Cupo: adultos + niños de 3+ no pueden pasar de 5
+        const adultos = Number.isFinite(Number(item.adults)) ? Number(item.adults) : (Number(item.guest) || 2);
+        const pagan = ages.filter((a) => a > 2).length;
+        if (adultos + pagan > 5) return { error: 'too_many_guests' };
         item.childAges = ages;
-        item.children = ages.filter((a) => a > 2).length;
+        item.children = pagan;
         item.freeChildren = ages.filter((a) => a <= 2).length;
     }
     if (cambios.promo !== undefined) item.promo = String(cambios.promo || '').slice(0, 24).toUpperCase();
@@ -419,6 +460,7 @@ async function updateReservation(propertyId, uid, cambios) {
     // Al corregir a mano, el desglose deja de ser estimado
     if (cambios.estimated !== undefined) item.estimated = Boolean(cambios.estimated);
     else item.estimated = false;
+    item.updatedAt = new Date().toISOString();
 
     await saveReservations(propertyId, list);
     return { ok: true, reservation: item };

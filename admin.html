@@ -60,6 +60,27 @@
             border: 1px solid var(--arena-2); background: var(--arena); color: var(--verde-800);
         }
         .promo-actions button:hover { background: var(--verde-700); color: #fff; border-color: var(--verde-700); }
+        .modal-bg {
+            position: fixed; inset: 0; background: rgba(20,35,25,.55);
+            display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 999;
+        }
+        .modal {
+            background: var(--paper, #fff); border-radius: 14px; padding: 22px;
+            max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 18px 50px rgba(0,0,0,.3);
+        }
+        .modal h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--verde-800); }
+        .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 16px 0; }
+        .edit-grid label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; font-weight: 700; color: var(--verde-800); }
+        .edit-grid input {
+            padding: 8px 10px; border: 1px solid var(--arena-2); border-radius: 7px;
+            font-size: .88rem; font-weight: 400; background: #fff;
+        }
+        .edit-grid .promo-check { flex-direction: row; align-items: center; gap: 8px; }
+        .modal-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+        .modal-actions button { padding: 9px 16px; border-radius: 8px; border: 1px solid var(--arena-2); background: var(--verde-700); color: #fff; font-weight: 700; cursor: pointer; }
+        .modal-actions button.danger { background: var(--arena); color: #a05a1c; }
+        .modal-actions button:disabled { opacity: .5; cursor: not-allowed; }
         .export-url {
             display: flex; gap: 8px; align-items: center; margin: 8px 0 14px;
         }
@@ -210,6 +231,58 @@
     </div>
 
     <div id="props"></div>
+    <!-- ===== Modal para editar una reserva ===== -->
+    <div class="modal-bg" id="edit-modal" hidden>
+        <div class="modal">
+            <h2>✏️ Editar reserva</h2>
+            <p class="muted" id="edit-sub"></p>
+            <div class="edit-grid">
+                <label>Entrada
+                    <input type="date" id="e-in">
+                </label>
+                <label>Salida
+                    <input type="date" id="e-out">
+                </label>
+                <label>Adultos (1-5)
+                    <input type="number" id="e-adults" min="1" max="5">
+                </label>
+                <label>Niños (edades separadas por coma)
+                    <input type="text" id="e-ages" placeholder="Ej: 5, 7  ·  vacío si no hay">
+                </label>
+                <label>Nombre del huésped
+                    <input type="text" id="e-name" maxlength="80">
+                </label>
+                <label>Email
+                    <input type="email" id="e-email" maxlength="120">
+                </label>
+                <label>Teléfono
+                    <input type="tel" id="e-phone" maxlength="30">
+                </label>
+                <label>Importe cobrado (USD)
+                    <input type="number" id="e-amount" min="0" step="0.01" placeholder="Vacío si no cobraste">
+                </label>
+                <label>Código promocional
+                    <input type="text" id="e-promo" maxlength="24" placeholder="Vacío si no usó ninguno">
+                </label>
+                <label>Orden de PayPal
+                    <input type="text" id="e-order" maxlength="40">
+                </label>
+                <label class="promo-check">
+                    <input type="checkbox" id="e-breakfast">
+                    <span>Con desayuno</span>
+                </label>
+            </div>
+            <p class="muted" style="font-size:.78rem">
+                Si cambias las fechas, el sistema comprueba que no choquen con otra reserva ni con Booking/Airbnb/Expedia.
+            </p>
+            <div class="modal-actions">
+                <button id="e-save">💾 Guardar cambios</button>
+                <button id="e-cancel" class="danger">Cancelar</button>
+                <span class="muted" id="e-msg"></span>
+            </div>
+        </div>
+    </div>
+
 </main>
 
 <script>
@@ -265,6 +338,7 @@
             $('stg-pin').className = 'badge ' + (data.adminPinSet ? 'ok' : 'warn');
             $('stg-cron').textContent = 'Cron diario: ' + (data.cronConfigured ? 'con CRON_SECRET' : 'sin CRON_SECRET (opcional)');
             $('stg-cron').className = 'badge ok';
+            window.__props = data.properties || [];   // datos accesibles para el editor
             renderProps(data.properties);
             renderInquiries(data.inquiries || []);
             renderPromos(data.promos || []);
@@ -364,6 +438,95 @@
         return esc(s || '—');
     }
 
+    // ===== Editar una reserva existente =====
+    let editando = null;   // { propertyId, uid }
+
+    function abrirEditor(pid, uid) {
+        const props = window.__props || [];
+        const prop = props.find((x) => x.id === pid);
+        const r = prop ? prop.reservations.find((x) => x.uid === uid) : null;
+        if (!r) { $('global-msg').textContent = 'No encontré esa reserva; recarga la página.'; return; }
+        editando = { propertyId: pid, uid: uid };
+        $('edit-sub').textContent = prop.name + ' · ' + r.checkIn + ' → ' + r.checkOut;
+        $('e-in').value = r.checkIn || '';
+        $('e-out').value = r.checkOut || '';
+        $('e-adults').value = (r.breakdown && r.breakdown.adults) || r.adults || Number(r.guest) || 2;
+        $('e-ages').value = (r.breakdown && r.breakdown.childAges && r.breakdown.childAges.length) ? r.breakdown.childAges.join(', ') : '';
+        $('e-name').value = r.name || '';
+        $('e-email').value = r.email || '';
+        $('e-phone').value = r.phone || '';
+        $('e-amount').value = (r.amount !== null && r.amount !== undefined) ? r.amount : '';
+        $('e-promo').value = r.promo || '';
+        $('e-order').value = r.orderId || '';
+        $('e-breakfast').checked = r.breakfast === true;
+        $('e-msg').textContent = '';
+        $('edit-modal').hidden = false;
+    }
+
+    function cerrarEditor() {
+        $('edit-modal').hidden = true;
+        editando = null;
+    }
+
+    $('e-cancel').addEventListener('click', cerrarEditor);
+    $('edit-modal').addEventListener('click', (ev) => { if (ev.target === $('edit-modal')) cerrarEditor(); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('edit-modal').hidden) cerrarEditor(); });
+
+    $('e-save').addEventListener('click', async () => {
+        if (!editando) return;
+        const msg = $('e-msg');
+        const btn = $('e-save');
+        // Las edades llegan como texto "5, 7" o vacío
+        const agesTxt = $('e-ages').value.trim();
+        const ages = agesTxt ? agesTxt.split(/[,\s]+/).filter(Boolean).map((x) => parseInt(x, 10)).filter((x) => Number.isFinite(x)) : [];
+        if (agesTxt && ages.some((a) => a < 0 || a > 17)) { msg.textContent = 'Las edades deben estar entre 0 y 17.'; return; }
+        const amountTxt = $('e-amount').value.trim();
+        btn.disabled = true;
+        msg.textContent = 'Guardando…';
+        try {
+            const r = await fetch(API + '/admin?action=update-reservation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
+                body: JSON.stringify({
+                    propertyId: editando.propertyId,
+                    uid: editando.uid,
+                    checkIn: $('e-in').value,
+                    checkOut: $('e-out').value,
+                    adults: parseInt($('e-adults').value, 10) || 2,
+                    childAges: ages,
+                    name: $('e-name').value,
+                    email: $('e-email').value,
+                    phone: $('e-phone').value,
+                    amount: amountTxt === '' ? null : parseFloat(amountTxt),
+                    promo: $('e-promo').value,
+                    orderId: $('e-order').value,
+                    breakfast: $('e-breakfast').checked
+                })
+            });
+            const d = await r.json();
+            if (!r.ok) {
+                const errores = {
+                    dates_unavailable: 'Esas fechas ya están ocupadas (otra reserva o un calendario externo).',
+                    invalid_dates: 'La fecha de salida debe ser posterior a la de entrada.',
+                    too_many_guests: 'Con esos niños se superan las 5 personas máximo.',
+                    too_many_children: 'Máximo 4 niños por reserva.',
+                    invalid_adults: 'El número de adultos debe estar entre 1 y 5.',
+                    too_long: 'La estadía no puede pasar de 90 noches.',
+                    not_found: 'Esa reserva ya no existe; recarga la página.'
+                };
+                msg.textContent = '⚠️ ' + (errores[d.error] || ('Error: ' + (d.error || r.status)));
+                return;
+            }
+            msg.textContent = 'Guardado ✅';
+            await loadAll();
+            setTimeout(cerrarEditor, 350);
+        } catch (e) {
+            msg.textContent = 'Error: ' + e.message;
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
     function renderPromos(list) {
         $('promo-count').textContent = list.length;
         if (!list.length) {
@@ -446,7 +609,7 @@
                         ${(p.reservations.length ? p.reservations : [{ empty: true }]).map((r) => r.empty
                             ? '<tr><td colspan="8" class="muted">Sin reservas todavía.</td></tr>'
                             : `<tr><td>${esc(r.checkIn)}<br><span class="muted" style="font-size:.72rem">${r.orderId ? 'orden ' + esc(r.orderId) : ''}</span></td><td>${esc(r.checkOut)}</td><td><b>${esc(r.name || '—')}</b>${r.email ? '<br><span class="muted" style="font-size:.75rem">' + esc(r.email) + '</span>' : ''}${r.phone ? '<br><span class="muted" style="font-size:.75rem">' + esc(r.phone) + '</span>' : ''}</td><td>${r.breakdown && r.breakdown.totalPeople !== null ? '<span class="badge ' + (r.incompleta ? 'warn' : 'ok') + '">👥 ' + esc(r.breakdown.payingPeople) + ' paga(n)</span><br><span class="muted" style="font-size:.75rem">' + esc(r.breakdown.adults) + ' adulto(s)' + (r.breakdown.payingChildren > 0 ? ' · ' + esc(r.breakdown.payingChildren) + ' niño(s) 3+' : '') + (r.breakdown.freeChildren > 0 ? ' · ' + esc(r.breakdown.freeChildren) + ' gratis' : '') + (r.breakdown.childAges.length ? '<br>edades: ' + esc(r.breakdown.childAges.join(', ')) : '') + '</span>' : '<span class="badge warn">sin desglose</span>'}${r.estimated ? ' <span class="badge warn" title="Reconstruido a partir del importe cobrado">est.</span>' : ''}</td><td>${r.amount !== null && r.amount !== undefined ? '<span class="badge ok">💵 ' + esc(r.currency || 'USD') + ' ' + esc(r.amount) + '</span>' : '<span class="badge err">sin importe</span>'}${r.breakfast ? '<br><span class="badge ok">🥐 desayuno</span>' : ''}${r.promo ? '<br><span class="badge">🎟️ ' + esc(r.promo) + '</span>' : ''}</td><td>${esc(r.source)}</td><td class="muted" style="font-size:.72rem">${r.notify && r.notify.guestId ? '<br><span style="font-size:.68rem">msg ' + esc(String(r.notify.guestId).slice(0, 12)) + '</span>' : ''}</td><td class="muted" style="font-size:.72rem">${r.notify ? 'huésped: ' + estadoCorreo(r.notify.guest) + '<br>dueño: ' + esc(r.notify.owner || '—') + (r.notify.promo ? '<br>código: ' + esc(r.notify.promo) : '') + (r.notify.desglose ? '<br>desglose: ' + esc(r.notify.desglose) : '') + (r.notify.guestReenviado ? '<br>reenviado ' + esc(String(r.notify.guestReenviado).slice(0, 16).replace('T', ' ')) : '') : '—'}</td>
-                               <td><button class="small" data-remail="${esc(p.id)}|${esc(r.uid)}" title="Volver a enviar el correo de confirmación al huésped">✉️ Reenviar correo</button> <button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
+                               <td><button class="small" data-edit-res="${esc(p.id)}|${esc(r.uid)}">✏️ Editar</button> <button class="small" data-remail="${esc(p.id)}|${esc(r.uid)}" title="Volver a enviar el correo de confirmación al huésped">✉️ Reenviar</button> <button class="danger small" data-del-res="${esc(p.id)}|${esc(r.uid)}">Borrar</button></td></tr>`).join('')}
                     </tbody>
                 </table>
                 <div class="form-row">
@@ -494,6 +657,10 @@
                 $('global-msg').textContent = 'Reserva creada ✓';
                 loadAll();
             } catch (e) { $('global-msg').textContent = 'Error: ' + e.message; }
+        }));
+        document.querySelectorAll('[data-edit-res]').forEach((b) => b.addEventListener('click', () => {
+            const [pid, uid] = b.dataset.editRes.split('|');
+            abrirEditor(pid, uid);
         }));
         document.querySelectorAll('[data-remail]').forEach((b) => b.addEventListener('click', async () => {
             const [pid, uid] = b.dataset.remail.split('|');

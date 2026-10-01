@@ -109,6 +109,8 @@ module.exports = async function handler(req, res) {
         }
         if (accion === 'update-reservation') {
             const r = await updateReservation(body.propertyId, body.uid, {
+                checkIn: body.checkIn,
+                checkOut: body.checkOut,
                 adults: body.adults,
                 childAges: body.childAges,
                 promo: body.promo,
@@ -119,8 +121,8 @@ module.exports = async function handler(req, res) {
                 name: body.name,
                 phone: body.phone,
                 email: body.email
-            });
-            if (r.error) return res.status(404).json({ error: r.error });
+            }, { evitarSolapes: true });
+            if (r.error) return res.status(400).json({ error: r.error });
             return res.status(200).json({ ok: true, reservation: r.reservation });
         }
         // Reenvía el correo de confirmación al huésped de una reserva concreta.
