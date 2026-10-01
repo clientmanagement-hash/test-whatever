@@ -867,6 +867,15 @@ async function initPayPal() {
                     const d = await r.json();
                     if (r.ok && d.success) {
                         setPayStatus(tr('direct.payOk', '¡Pago recibido! Tu reserva está confirmada. Te contactaremos para coordinar los detalles.'), 'success');
+                        // Si el correo de confirmación no llegó a enviarse, se avisa al
+                        // dueño por correo para que lo reenvíe desde el panel.
+                        if (d.correoHuesped && String(d.correoHuesped).indexOf('aceptado:') !== 0) {
+                            fetch('/api/ical/admin?action=aviso-correo', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ uid: d.uid, propertyId: lastBooking.propertyId, estado: d.correoHuesped })
+                            }).catch(() => {});
+                        }
                     } else {
                         setPayStatus(tr('direct.payErr', 'Hubo un error con el pago. Inténtalo de nuevo o escríbenos por WhatsApp.'), 'error');
                     }

@@ -123,8 +123,68 @@ module.exports = async function handler(req, res) {
             if (r.error) return res.status(404).json({ error: r.error });
             return res.status(200).json({ ok: true, reservation: r.reservation });
         }
-        if (accion === 'consume-promo') {
-            const r = await consumePromo(String(body.code || req.query.code), body.usedIn || { manual: true });
+        // Reenvía el correo de confirmación al huésped de una reserva concreta.
+        // Es la red de seguridad cuando el envío automático no llegó a completarse.
+        if (accion === 'reenviar-correo') {
+            const pid = String(body.propertyId || req.query.propertyId || '');
+            const uid = String(body.uid || req.query.uid || '');
+            const list = await loadReservations(pid);
+            const res0 = list.find((r) => r.uid === uid);
+            if (!res0) return res.status(404).json({ error: 'reservation_not_found' });
+            if (!res0.email) return res.status(400).json({ error: 'sin_email' });
+            try {
+                const { sendGuestConfirmation } = require('../paypal/capture-order');
+                const env = await sendGuestConfirmation({
+                    propertyId: pid,
+                    to: res0.email,
+                    name: res0.name,
+                    checkIn: res0.checkIn,
+                    checkOut: res0.checkOut,
+                    adults: res0.adults || Number(res0.guest) || 2,
+                    childAges: res0.childAges || [],
+                    breakfast: res0.breakfast === true,
+                    amount: res0.amount,
+                    currency: res0.currency || 'USD',
+                    orderId: res0.orderId || ''
+                });
+                const notify = Object.assign({}, res0.notify || {});
+                notify.guest = env && env.ok ? ('aceptado:' + res0.email) : ('omitido:' + ((env && env.motivo) || 'desconocido'));
+                if (env && env.id) notify.guestId = env.id;
+                notify.guestReenviado = new Date().toISOString();
+                await markNotify(pid, uid, notify);
+                return res.status(200).json({ ok: Boolean(env && env.ok), resultado: notify.guest, id: (env && env.id) || null });
+            } catch (e) {
+                return res.status(502).json({ error: String((e && e.message) || e).slice(0, 160) });
+            }
+        }
+
+        // Aviso al dueño de que un correo al huésped no se envió (lo llama el
+        // navegador tras el pago). Evita que un huésped se quede sin confirmación
+        // sin que nadie lo note.
+        if (accion === 'aviso-correo') {
+            const apiKey = process.env.RESEND_API_KEY;
+            if (!apiKey) return res.status(200).json({ ok: false, motivo: 'sin_resend' });
+            const destino = process.env.NOTIFY_EMAIL || 'cabanaslamaite@gmail.com';
+            try {
+                await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from: process.env.RESEND_FROM || 'Cabañas La Maite <onboarding@resend.dev>',
+                        to: [destino],
+                        subject: '⚠️ Una reserva quedó sin correo de confirmación',
+                        html: '<p>El correo de confirmación al huésped <b>no se envió</b> en la reserva ' + String(body.uid || '') + ' (' + String(body.propertyId || '') + ').</p>'
+                            + '<p>Motivo: <code>' + String(body.estado || 'desconocido') + '</code></p>'
+                            + '<p>Entra al panel y usa el botón <b>Reenviar correo</b> en esa reserva.</p>'
+                    })
+                });
+                return res.status(200).json({ ok: true });
+            } catch (e) {
+                return res.status(200).json({ ok: false });
+            }
+        }
+
+        if (accion === 'consume-promo') {            const r = await consumePromo(String(body.code || req.query.code), body.usedIn || { manual: true });
             if (!r) return res.status(404).json({ error: 'not_found' });
             return res.status(200).json({ ok: true, promo: r });
         }

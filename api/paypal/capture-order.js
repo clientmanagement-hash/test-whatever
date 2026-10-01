@@ -157,7 +157,7 @@ async function notifyReservation({ propertyId, checkIn, checkOut, adults, childA
 async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, adults, childAges, breakfast, amount, currency, descuento, descuentoTipo, desgloseEstimado, orderId }) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey || !to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
-        return; // sin key válida o email no escribible: no bloquea el cobro
+        return { ok: false, motivo: 'sin_destino_valido' };
     }
     const propName = propertyId === 'loft2' ? 'Loft 2' : 'Loft 1';
     const inMs = Date.parse(checkIn);
@@ -232,9 +232,13 @@ async function sendGuestConfirmation({ propertyId, to, name, checkIn, checkOut, 
             ...(logoAttachment ? { attachments: [logoAttachment] } : {})
         })
     }, 12000);
+    const cuerpo = await res.json().catch(() => ({}));
     if (!res.ok) {
-        throw new Error('resend_failed_' + res.status);
+        // Se guarda el motivo real del rechazo (p. ej. dominio no verificado)
+        throw new Error('resend_' + res.status + ':' + String(cuerpo.message || cuerpo.name || '').slice(0, 120));
     }
+    // Resend devuelve el id del mensaje: permite consultar después si se entregó
+    return { ok: true, id: cuerpo.id || null, para: to };
 }
 
 // ---------- Recuperación fiable de datos tras el cobro ----------
@@ -416,6 +420,12 @@ module.exports = async function handler(req, res) {    if (req.method !== 'POST'
                 notify.reservation = 'error:' + String((e && e.message) || e);
             }
 
+            // 1b) La reserva se guarda YA, antes de enviar correos: si la función
+            // se quedara sin tiempo, la reserva (y el consumo del cupón) no se pierden.
+            if (uid) {
+                try { await markNotify(body.propertyId, uid, notify); } catch (e) { /* no bloquear */ }
+            }
+
             // 1b) Si la reserva llevaba un código promocional, se marca como usado.
             // promoDeOrden se extrajo antes buscando en la orden, en las capturas,
             // en payment_source y en el cuerpo: así no depende de un único campo.
@@ -460,10 +470,12 @@ module.exports = async function handler(req, res) {    if (req.method !== 'POST'
                 notify.owner = 'error:' + String((e && e.message) || e);
             }
 
-            // 3) Confirmación al cliente (Resend) — sólo si su email existe
+            // 3) Confirmación al cliente (Resend) — sólo si su email existe.
+            // Se guarda el id del mensaje y se persiste el resultado justo después.
+            let guestMsgId = null;
             if (body.email) {
                 try {
-                    await sendGuestConfirmation({
+                    const env = await sendGuestConfirmation({
                         propertyId: body.propertyId,
                         to: body.email,
                         name: body.name,
@@ -479,18 +491,29 @@ module.exports = async function handler(req, res) {    if (req.method !== 'POST'
                         desgloseEstimado: desgloseEstimado,
                         orderId: orderID
                     });
-                    notify.guest = 'ok:' + body.email;
+                    if (env && env.ok) {
+                        guestMsgId = env.id;
+                        notify.guest = 'aceptado:' + body.email;
+                        notify.guestId = env.id || null;
+                    } else {
+                        notify.guest = 'omitido:' + ((env && env.motivo) || 'desconocido');
+                    }
                 } catch (e) {
                     notify.guest = 'error:' + String((e && e.message) || e);
                 }
             } else {
-                notify.guest = 'skipped:sin email';
+                notify.guest = 'sin_email';
             }
 
-            // Guarda el resultado de los correos en la reserva (visible en el panel)
+            // Guarda el resultado final de los correos (incluido el id del mensaje)
             try {
                 if (uid) await markNotify(body.propertyId, uid, notify);
             } catch (e) { /* no bloquear el cobro */ }
+            // Se devuelve el resultado para que el navegador pueda avisar al dueño
+            // si el correo del huésped no llegó a enviarse.
+            if (uid) {
+                return res.status(200).json({ success: true, status: data.status || null, uid, correoHuesped: notify.guest, correoId: guestMsgId });
+            }
         }
         return res.status(ok ? 200 : 422).json({ success: ok, status: data.status || null });
     } catch (e) {
@@ -501,3 +524,4 @@ module.exports = async function handler(req, res) {    if (req.method !== 'POST'
 // Expuestas para pruebas (no las usa el handler)
 module.exports.extraerPromo = extraerPromo;
 module.exports.ajustarPersonas = ajustarPersonas;
+module.exports.sendGuestConfirmation = sendGuestConfirmation;
