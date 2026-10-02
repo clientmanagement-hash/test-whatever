@@ -130,10 +130,11 @@ module.exports = async function handler(req, res) {
             const r = await moveReservation(
                 String(body.uid || ''),
                 String(body.propertyId || ''),
-                String(body.targetPropertyId || '')
+                String(body.targetPropertyId || ''),
+                { forzar: body.forzar === true }
             );
             if (r.error) return res.status(400).json({ error: r.error, conflicto: r.conflicto || null });
-            return res.status(200).json({ ok: true, reservation: r.reservation, desde: r.desde, hacia: r.hacia });
+            return res.status(200).json({ ok: true, reservation: r.reservation, desde: r.desde, hacia: r.hacia, forzado: body.forzar === true });
         }
         // Reenvía el correo de confirmación al huésped de una reserva concreta.
         // Es la red de seguridad cuando el envío automático no llegó a completarse.

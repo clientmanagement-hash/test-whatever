@@ -293,6 +293,10 @@
             <p class="muted" style="font-size:.78rem">
                 Si cambias las fechas, el sistema comprueba que no choquen con otra reserva ni con Booking/Airbnb/Expedia.
             </p>
+            <label class="promo-check" style="margin:0 0 12px">
+                <input type="checkbox" id="e-forzar">
+                <span style="font-size:.8rem">Forzar el cambio aunque esas fechas aparezcan ocupadas en un calendario externo</span>
+            </label>
             <div class="modal-actions">
                 <button id="e-save">💾 Guardar cambios</button>
                 <button id="e-cancel" class="danger">Cancelar</button>
@@ -478,6 +482,7 @@
         $('e-promo').value = r.promo || '';
         $('e-order').value = r.orderId || '';
         $('e-breakfast').checked = r.breakfast === true;
+        $('e-forzar').checked = false;   // se reinicia en cada apertura
         $('e-msg').textContent = '';
         $('edit-modal').hidden = false;
     }
@@ -515,7 +520,7 @@
                 const rm = await fetch(API + '/admin?action=move-reservation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
-                    body: JSON.stringify({ propertyId: editando.propertyId, uid: editando.uid, targetPropertyId: nuevoLoft })
+                    body: JSON.stringify({ propertyId: editando.propertyId, uid: editando.uid, targetPropertyId: nuevoLoft, forzar: $('e-forzar').checked })
                 });
                 const dm = await rm.json();
                 if (!rm.ok) {
