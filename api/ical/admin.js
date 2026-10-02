@@ -3,7 +3,7 @@
 //
 // También sirve la disponibilidad pública para el widget con ?public=1
 // (rangos bloqueados + noches huérfanas), para no usar dos funciones serverless.
-const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation, consumePromo, markNotify } = require('./_lib');
+const { PROPERTIES, storageMode, loadReservations, loadExternal, availability, orphanNightsFromRanges, loadInquiries, adminPinOk, hostUrl, loadPromos, addPromo, deletePromo, togglePromo, validatePromo, normCode, readBody, updateReservation, consumePromo, markNotify, moveReservation } = require('./_lib');
 const { PRICING } = require('../paypal/_pricing');
 
 // Añade a cada reserva el desglose de huéspedes y los totales del panel.
@@ -124,6 +124,16 @@ module.exports = async function handler(req, res) {
             }, { evitarSolapes: true });
             if (r.error) return res.status(400).json({ error: r.error });
             return res.status(200).json({ ok: true, reservation: r.reservation });
+        }
+        // Mueve una reserva a otro loft (cambia de calendario)
+        if (accion === 'move-reservation') {
+            const r = await moveReservation(
+                String(body.uid || ''),
+                String(body.propertyId || ''),
+                String(body.targetPropertyId || '')
+            );
+            if (r.error) return res.status(400).json({ error: r.error, conflicto: r.conflicto || null });
+            return res.status(200).json({ ok: true, reservation: r.reservation, desde: r.desde, hacia: r.hacia });
         }
         // Reenvía el correo de confirmación al huésped de una reserva concreta.
         // Es la red de seguridad cuando el envío automático no llegó a completarse.

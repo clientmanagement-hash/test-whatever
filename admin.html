@@ -83,7 +83,7 @@
         .modal h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--verde-800); }
         .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 16px 0; }
         .edit-grid label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; font-weight: 700; color: var(--verde-800); }
-        .edit-grid input {
+        .edit-grid input, .edit-grid select {
             padding: 8px 10px; border: 1px solid var(--arena-2); border-radius: 7px;
             font-size: .88rem; font-weight: 400; background: #fff;
         }
@@ -249,6 +249,12 @@
             <h2>✏️ Editar reserva</h2>
             <p class="muted" id="edit-sub"></p>
             <div class="edit-grid">
+                <label>Loft
+                    <select id="e-loft">
+                        <option value="loft1">Loft 1</option>
+                        <option value="loft2">Loft 2</option>
+                    </select>
+                </label>
                 <label>Entrada
                     <input type="date" id="e-in">
                 </label>
@@ -458,8 +464,9 @@
         const prop = props.find((x) => x.id === pid);
         const r = prop ? prop.reservations.find((x) => x.uid === uid) : null;
         if (!r) { $('global-msg').textContent = 'No encontré esa reserva; recarga la página.'; return; }
-        editando = { propertyId: pid, uid: uid };
+        editando = { propertyId: pid, uid: uid, original: pid };
         $('edit-sub').textContent = prop.name + ' · ' + r.checkIn + ' → ' + r.checkOut;
+        $('e-loft').value = pid;
         $('e-in').value = r.checkIn || '';
         $('e-out').value = r.checkOut || '';
         $('e-adults').value = (r.breakdown && r.breakdown.adults) || r.adults || Number(r.guest) || 2;
@@ -499,12 +506,41 @@
         btn.disabled = true;
         msg.textContent = 'Guardando…';
         try {
+            // 1) Si se cambió el loft, primero se mueve la reserva al otro calendario
+            let pidActual = editando.propertyId;
+            let uidActual = editando.uid;
+            const nuevoLoft = $('e-loft').value;
+            if (nuevoLoft && nuevoLoft !== editando.propertyId) {
+                msg.textContent = 'Moviendo al ' + (nuevoLoft === 'loft2' ? 'Loft 2' : 'Loft 1') + '…';
+                const rm = await fetch(API + '/admin?action=move-reservation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
+                    body: JSON.stringify({ propertyId: editando.propertyId, uid: editando.uid, targetPropertyId: nuevoLoft })
+                });
+                const dm = await rm.json();
+                if (!rm.ok) {
+                    const errM = {
+                        dates_unavailable: 'No se puede mover: esas fechas ya están ocupadas en el ' + (nuevoLoft === 'loft2' ? 'Loft 2' : 'Loft 1') + '.',
+                        same_property: 'La reserva ya está en ese loft.',
+                        not_found: 'Esa reserva ya no existe; recarga la página.'
+                    };
+                    msg.textContent = '⚠️ ' + (errM[dm.error] || ('Error al mover: ' + (dm.error || rm.status)));
+                    return;
+                }
+                // A partir de aquí se edita la copia que vive en el loft nuevo
+                pidActual = nuevoLoft;
+                uidActual = dm.reservation ? dm.reservation.uid : editando.uid;
+                editando.propertyId = pidActual;
+                editando.uid = uidActual;
+            }
+
+            // 2) Se guardan los demás cambios sobre la reserva (ya en su loft correcto)
             const r = await fetch(API + '/admin?action=update-reservation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
                 body: JSON.stringify({
-                    propertyId: editando.propertyId,
-                    uid: editando.uid,
+                    propertyId: pidActual,
+                    uid: uidActual,
                     checkIn: $('e-in').value,
                     checkOut: $('e-out').value,
                     adults: parseInt($('e-adults').value, 10) || 2,
@@ -532,9 +568,11 @@
                 msg.textContent = '⚠️ ' + (errores[d.error] || ('Error: ' + (d.error || r.status)));
                 return;
             }
-            msg.textContent = 'Guardado ✅';
+            msg.textContent = (nuevoLoft && nuevoLoft !== editando.original)
+                ? ('Guardado ✅ Movida al ' + (pidActual === 'loft2' ? 'Loft 2' : 'Loft 1'))
+                : 'Guardado ✅';
             await loadAll();
-            setTimeout(cerrarEditor, 350);
+            setTimeout(cerrarEditor, 600);
         } catch (e) {
             msg.textContent = 'Error: ' + e.message;
         } finally {

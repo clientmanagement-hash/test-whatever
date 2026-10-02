@@ -466,6 +466,44 @@ async function updateReservation(propertyId, uid, cambios, opts) {
     return { ok: true, reservation: item };
 }
 
+// Mueve una reserva de un loft a otro: la copia, la guarda en el destino y
+// la elimina del origen. Comprueba que las fechas estén libres en el destino
+// para no provocar una doble reserva.
+async function moveReservation(uid, desdePid, haciaPid) {
+    if (!propId(desdePid) || !propId(haciaPid)) return { error: 'invalid_property' };
+    if (desdePid === haciaPid) return { error: 'same_property' };
+
+    const origen = await loadReservations(desdePid);
+    const item = origen.find((r) => r.uid === uid);
+    if (!item) return { error: 'not_found' };
+
+    const checkIn = norm(item.checkIn);
+    const checkOut = norm(item.checkOut);
+    const inMs = Date.parse(checkIn);
+    const outMs = Date.parse(checkOut);
+
+    // ¿Está libre en el loft de destino? (reservas propias + calendarios externos)
+    const rangosDestino = await availability(haciaPid);
+    const solapa = rangosDestino.find((r) => {
+        const a = Date.parse(norm(r.checkIn));
+        const b = Date.parse(norm(r.checkOut));
+        return inMs < b && outMs > a;
+    });
+    if (solapa) return { error: 'dates_unavailable', conflicto: solapa };
+
+    // Se copia la reserva completa con un uid nuevo y se registra el cambio
+    const destino = await loadReservations(haciaPid);
+    const nueva = Object.assign({}, item, {
+        uid: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        movedFrom: desdePid,
+        movedAt: new Date().toISOString()
+    });
+    destino.push(nueva);
+    await saveReservations(haciaPid, destino);
+    await saveReservations(desdePid, origen.filter((r) => r.uid !== uid));
+    return { ok: true, reservation: nueva, desde: desdePid, hacia: haciaPid };
+}
+
 // ---------- utilidades HTTP ----------
 function readBody(req) {
     if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
@@ -514,6 +552,7 @@ module.exports = {
     isOrphanStay,
     recordReservation,
     updateReservation,
+    moveReservation,
     markNotify,
     readBody,
     adminPinOk,
