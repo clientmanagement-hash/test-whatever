@@ -29,6 +29,15 @@
         </image:image>
     </url>
     <url>
+        <loc>https://www.cabanaslamaite.com/hospedaje-samara.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+        <image:image>
+            <image:loc>https://www.cabanaslamaite.com/img/hero.jpg</image:loc>
+            <image:title>Hospedaje en Sámara, Costa Rica — Cabañas La Maite</image:title>
+        </image:image>
+    </url>
+    <url>
         <loc>https://www.cabanaslamaite.com/preguntas-frecuentes.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
