@@ -41,6 +41,15 @@ function buildCalendar({ property, reservations, domain }) {
 
 // Parsea un texto .ics externo (Airbnb/Booking/Expedia) → [{ checkIn, checkOut }]
 // Soporta DTSTART/DTEND con VALUE=DATE, VALUE=DATE-TIME y TZID; líneas continuadas.
+
+// Algunos canales publican en su .ics tanto reservas como "bloqueos de inventario".
+// Expedia, por ejemplo, emite una VEVENT de UNA noche por cada noche que tiene
+// cerrada a la venta ("Unavailable on Expedia"): no son reservas reales y, si se
+// importan, ocupan el calendario de la web y bloquean la venta directa.
+// OJO: Booking.com exporta "CLOSED - Not available" incluso para sus reservas
+// reales, así que esos eventos SÍ deben contar como ocupados.
+const esBloqueoDeInventario = (summary) => /^unavailable\b/i.test(String(summary || '').trim());
+
 function parseIcs(text) {
     const unfolded = String(text).replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '');
     const events = [];
@@ -51,7 +60,7 @@ function parseIcs(text) {
     for (const raw of unfolded.split(/\r?\n/)) {
         const line = raw.trim();
         if (!line) continue;
-        if (line === 'BEGIN:VEVENT') { cur = { checkIn: null, checkOut: null }; continue; }
+        if (line === 'BEGIN:VEVENT') { cur = { checkIn: null, checkOut: null, summary: '' }; continue; }
         if (line === 'END:VEVENT') { push(); cur = null; continue; }
         if (!cur) continue;
         const idx = line.indexOf(':');
@@ -64,9 +73,11 @@ function parseIcs(text) {
         };
         if (name.startsWith('DTSTART')) cur.checkIn = datePart(value);
         if (name.startsWith('DTEND')) cur.checkOut = datePart(value);
+        if (name.startsWith('SUMMARY')) cur.summary = value;
     }
     push();
     return events
+        .filter((e) => !esBloqueoDeInventario(e.summary))
         .map((e) => {
             let out = e.checkOut;
             if (!out && e.checkIn) {
