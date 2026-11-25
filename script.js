@@ -1087,6 +1087,9 @@ const BOOKING = {
     ],
     // Eventos puntuales con fecha completa (YYYY-MM-DD) — tienen prioridad sobre seasons
     events: [
+        // Ofertas puntuales de temporada baja 2026 (prioridad sobre las temporadas)
+        { from: '2026-11-25', to: '2026-11-27', rate: 99 },    // 25-27 nov: $99/noche
+        { from: '2026-12-01', to: '2026-12-14', rate: 110 },   // 1-14 dic: $110/noche
         // Fin de año 2026-2027 (prioridad sobre las temporadas)
         { from: '2026-12-24', to: '2026-12-28', rate: 170 },   // Navidad
         { from: '2026-12-29', to: '2027-01-01', rate: 210 },   // Fin de año

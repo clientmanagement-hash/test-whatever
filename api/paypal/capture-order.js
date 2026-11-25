@@ -377,9 +377,14 @@ module.exports = async function handler(req, res) {    if (req.method !== 'POST'
                 promoFlat: Boolean(promoSegunCodigo && promoSegunCodigo.flat),
                 promoDiscount: promoSegunCodigo && promoSegunCodigo.rate && !promoSegunCodigo.flat ? promoSegunCodigo.rate : null
             });
-            // Si el importe cobrado no coincide con el desglose recibido, se
-            // reconstruye el número de personas que explican el importe real.
-            if (amountPaid !== null && adultosReserva !== null && !esperado.error && Math.abs(esperado.total - amountPaid) > 0.01) {
+            // Si no llegó el número de adultos, o el importe cobrado no coincide
+            // con el desglose recibido, se reconstruye el número de personas que
+            // explica el importe real. Antes, si `guests` no llegaba, se asumían
+            // 2 personas y el correo decía "2 adultos" aunque se hubieran cobrado
+            // 4 (así salió la confirmación de la reserva de Monnier).
+            const faltanAdultos = adultosReserva === null;
+            const noCuadra = amountPaid !== null && !esperado.error && Math.abs(esperado.total - amountPaid) > 0.01;
+            if (amountPaid !== null && (faltanAdultos || noCuadra)) {
                 const ajuste = ajustarPersonas(body, amountPaid, edadesHuesped, promoSegunCodigo);
                 if (ajuste) {
                     adultosReserva = ajuste.adults;
